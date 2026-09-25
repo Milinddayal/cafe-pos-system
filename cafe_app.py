@@ -1,14 +1,23 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import sqlite3
 import base64
 from io import BytesIO
 from datetime import datetime
 from PIL import Image
+from supabase import create_client, Client
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Cafe POS System", page_icon="☕", layout="wide")
+
+# --- INITIALIZE SUPABASE CONNECTION ---
+@st.cache_resource
+def init_supabase():
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+supabase: Client = init_supabase()
 
 # --- INITIALIZE SESSION STATE ---
 if 'cart' not in st.session_state:
@@ -23,6 +32,51 @@ if 'custom_menu' not in st.session_state:
         "Butter Croissant": {"category": "Snacks", "price": 120.00, "image": None, "icon": "🥐"},
         "Ice Cream Sundae": {"category": "Desserts", "price": 140.00, "image": None, "icon": "🍦"}
     }
+
+# --- DATABASE LOGGING & LOADING FUNCTIONS ---
+def log_sale(total_amount, payment_mode, cart_items):
+    order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    # Insert into Supabase 'sales' table
+    supabase.table("sales").insert({
+        "date": order_date,
+        "total": float(total_amount),
+        "payment_mode": payment_mode
+    }).execute()
+    
+    # Insert items into Supabase 'order_items' table
+    items_to_insert = []
+    for item in cart_items:
+        items_to_insert.append({
+            "date": order_date,
+            "item_name": item['Item'],
+            "unit_price": float(item['Price']),
+            "quantity": int(item['Qty']),
+            "subtotal": float(item['Total'])
+        })
+    supabase.table("order_items").insert(items_to_insert).execute()
+
+def load_sales_data():
+    response = supabase.table("sales").select("*").execute()
+    df = pd.DataFrame(response.data)
+    if not df.empty:
+        df['Date'] = pd.to_datetime(df['date'])
+    return df
+
+def load_item_sales_data():
+    response = supabase.table("order_items").select("*").execute()
+    df = pd.DataFrame(response.data)
+    if not df.empty:
+        df['Date'] = pd.to_datetime(df['date'])
+        df['Day'] = df['Date'].dt.date
+    return df
+
+def convert_dfs_to_excel(df_sales, df_items):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_sales.to_excel(writer, index=False, sheet_name='Revenue Summary')
+        df_items.to_excel(writer, index=False, sheet_name='Item Wise Sales')
+    return output.getvalue()
 
 # --- SIDEBAR: SYSTEM PORTAL SELECTION ---
 st.sidebar.title("🔐 System Login Portal")
@@ -72,7 +126,6 @@ st.markdown(f"""
         font-family: 'Inter', 'Segoe UI', sans-serif;
     }}
     
-    /* Clean Streamlined Item Card */
     .pos-card {{
         background-color: rgba(255, 255, 255, 0.96);
         padding: 18px 12px;
@@ -83,7 +136,6 @@ st.markdown(f"""
         margin-bottom: 12px;
     }}
     
-    /* Cart Summary Box */
     .cart-box {{
         background-color: #ffffff !important;
         padding: 22px;
@@ -95,7 +147,6 @@ st.markdown(f"""
         color: #000000 !important;
     }}
     
-    /* Olive Green to White Button Styling */
     div.stButton > button {{
         background-color: #556B2F !important;
         color: white !important;
@@ -130,7 +181,6 @@ st.markdown(f"""
         color: #000 !important;
     }}
     
-    /* Active Menu Directory Black Text Styling */
     .menu-directory-item {{
         color: #000000 !important;
         font-weight: 500;
@@ -143,72 +193,6 @@ st.markdown(f"""
     }}
     </style>
 """, unsafe_allow_html=True)
-
-# --- DATABASE SETUP & MIGRATION ---
-def init_db():
-    conn = sqlite3.connect('cafe_sales.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS sales (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT,
-            total REAL,
-            payment_mode TEXT
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT,
-            item_name TEXT,
-            unit_price REAL,
-            quantity INTEGER,
-            subtotal REAL
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
-def log_sale(total_amount, payment_mode, cart_items):
-    conn = sqlite3.connect('cafe_sales.db')
-    cursor = conn.cursor()
-    order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-    cursor.execute("INSERT INTO sales (date, total, payment_mode) VALUES (?, ?, ?)", 
-                   (order_date, total_amount, payment_mode))
-    
-    for item in cart_items:
-        cursor.execute("INSERT INTO order_items (date, item_name, unit_price, quantity, subtotal) VALUES (?, ?, ?, ?, ?)",
-                       (order_date, item['Item'], item['Price'], item['Qty'], item['Total']))
-    
-    conn.commit()
-    conn.close()
-
-def load_sales_data():
-    conn = sqlite3.connect('cafe_sales.db')
-    df = pd.read_sql_query("SELECT * FROM sales", conn)
-    conn.close()
-    if not df.empty:
-        df['Date'] = pd.to_datetime(df['date'])
-    return df
-
-def load_item_sales_data():
-    conn = sqlite3.connect('cafe_sales.db')
-    df = pd.read_sql_query("SELECT * FROM order_items", conn)
-    conn.close()
-    if not df.empty:
-        df['Date'] = pd.to_datetime(df['date'])
-        df['Day'] = df['Date'].dt.date
-    return df
-
-def convert_dfs_to_excel(df_sales, df_items):
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df_sales.to_excel(writer, index=False, sheet_name='Revenue Summary')
-        df_items.to_excel(writer, index=False, sheet_name='Item Wise Sales')
-    return output.getvalue()
 
 # ==========================================
 # GATEWAY 1: COUNTER STAFF LOGIN & BILLING TERMINAL
@@ -452,9 +436,8 @@ elif portal_mode == "🔑 Admin Management Login":
             df_items = load_item_sales_data()
             
             if df_sales.empty:
-                st.warning("No sales recorded yet across counters.")
+                st.warning("No sales recorded yet across cloud counters.")
             else:
-                # 1. Payment Breakdown Summary Cards
                 payment_summary = df_sales.groupby('payment_mode')['total'].sum().to_dict()
                 cash_total = payment_summary.get('Cash', 0.0)
                 upi_total = payment_summary.get('UPI QR', 0.0)
@@ -470,7 +453,6 @@ elif portal_mode == "🔑 Admin Management Login":
                 
                 st.divider()
 
-                # 2. Daily Item Breakdown View
                 st.markdown("### 📋 Daily Itemized Sales Report")
                 if not df_items.empty:
                     available_days = sorted(df_items['Day'].astype(str).unique(), reverse=True)
@@ -503,7 +485,6 @@ elif portal_mode == "🔑 Admin Management Login":
 
                 st.divider()
 
-                # 3. Excel Download Option
                 st.markdown("### 📥 Download System Reports")
                 excel_file = convert_dfs_to_excel(df_sales, df_items)
                 st.download_button(
@@ -516,7 +497,6 @@ elif portal_mode == "🔑 Admin Management Login":
                 
                 st.divider()
 
-                # 4. Timeline Revenue Charts
                 df_sales_indexed = df_sales.set_index('Date')
                 stat_view = st.selectbox("Select Timeframe Revenue Report", ["Daily", "Weekly", "Monthly", "Yearly"])
                 
