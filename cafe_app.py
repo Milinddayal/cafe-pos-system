@@ -25,26 +25,26 @@ if 'cart' not in st.session_state:
 
 if 'custom_menu' not in st.session_state:
     st.session_state.custom_menu = {
-        "Special Burger": {"category": "Burgers", "price": 199.00, "image": None, "icon": "🍔"},
-        "Crispy Fries": {"category": "Sides", "price": 99.00, "image": None, "icon": "🍟"},
-        "Cafe Latte": {"category": "Beverages", "price": 150.00, "image": None, "icon": "☕"},
-        "Chocolate Shake": {"category": "Beverages", "price": 180.00, "image": None, "icon": "🥤"},
-        "Butter Croissant": {"category": "Snacks", "price": 120.00, "image": None, "icon": "🥐"},
-        "Ice Cream Sundae": {"category": "Desserts", "price": 140.00, "image": None, "icon": "🍦"}
+        "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
+        "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
+        "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕"},
+        "Chocolate Shake": {"category": "Beverages", "price": 180.00, "stock": 30, "icon": "🥤"},
+        "Butter Croissant": {"category": "Snacks", "price": 120.00, "stock": 20, "icon": "🥐"},
+        "Ice Cream Sundae": {"category": "Desserts", "price": 140.00, "stock": 15, "icon": "🍦"}
     }
 
 # --- DATABASE LOGGING & LOADING FUNCTIONS ---
-def log_sale(total_amount, payment_mode, cart_items):
+def log_sale(total_amount, payment_mode, cart_items, counter_id):
     order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
-    # Insert into Supabase 'sales' table
-    supabase.table("sales").insert({
+    # 1. Log main sale
+    sales_res = supabase.table("sales").insert({
         "date": order_date,
         "total": float(total_amount),
         "payment_mode": payment_mode
     }).execute()
     
-    # Insert items into Supabase 'order_items' table
+    # 2. Log order items & KOT queue
     items_to_insert = []
     for item in cart_items:
         items_to_insert.append({
@@ -52,8 +52,14 @@ def log_sale(total_amount, payment_mode, cart_items):
             "item_name": item['Item'],
             "unit_price": float(item['Price']),
             "quantity": int(item['Qty']),
-            "subtotal": float(item['Total'])
+            "subtotal": float(item['Total']),
+            "counter": counter_id,
+            "status": "Pending"
         })
+        # Deduct local session stock
+        if item['Item'] in st.session_state.custom_menu:
+            st.session_state.custom_menu[item['Item']]['stock'] = max(0, st.session_state.custom_menu[item['Item']]['stock'] - item['Qty'])
+
     supabase.table("order_items").insert(items_to_insert).execute()
 
 def load_sales_data():
@@ -80,7 +86,12 @@ def convert_dfs_to_excel(df_sales, df_items):
 
 # --- SIDEBAR: SYSTEM PORTAL SELECTION ---
 st.sidebar.title("🔐 System Login Portal")
-portal_mode = st.sidebar.selectbox("Choose Login Gateway", ["Select Portal...", "🛒 Counter Staff Login", "🔑 Admin Management Login"])
+portal_mode = st.sidebar.selectbox("Choose Login Gateway", [
+    "Select Portal...", 
+    "🛒 Counter Staff Login", 
+    "👨‍🍳 Kitchen Display (KDS)", 
+    "🔑 Admin Management Login"
+])
 
 cafe_name = st.sidebar.text_input("Cafe Name", "Green Fusion")
 logo_file = st.sidebar.file_uploader("Upload Cafe Logo", type=["png", "jpg", "jpeg"])
@@ -195,7 +206,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# GATEWAY 1: COUNTER STAFF LOGIN & BILLING TERMINAL
+# GATEWAY 1: COUNTER STAFF LOGIN & BILLING
 # ==========================================
 if portal_mode == "🛒 Counter Staff Login":
     st.title(f"☕ {cafe_name} - Counter Staff Portal")
@@ -236,31 +247,31 @@ if portal_mode == "🛒 Counter Staff Login":
                             with cols[j]:
                                 st.markdown('<div class="pos-card">', unsafe_allow_html=True)
                                 
-                                if isinstance(item_info.get("image"), Image.Image):
-                                    st.image(item_info["image"], use_container_width=True, height=90)
-                                else:
-                                    icon = item_info.get("icon", "☕")
-                                    st.markdown(f"<div style='font-size: 38px; margin-bottom: 5px;'>{icon}</div>", unsafe_allow_html=True)
-                                    
+                                icon = item_info.get("icon", "☕")
+                                st.markdown(f"<div style='font-size: 38px; margin-bottom: 5px;'>{icon}</div>", unsafe_allow_html=True)
                                 st.markdown(f"<h4 style='margin: 4px 0 2px 0; font-size: 14px; color: #000 !important;'>{item_name}</h4>", unsafe_allow_html=True)
-                                st.markdown(f"<p style='margin: 0 0 8px 0; color: #556B2F !important; font-weight: bold; font-size: 14px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin: 0 0 4px 0; color: #556B2F !important; font-weight: bold; font-size: 14px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin: 0 0 8px 0; color: #666 !important; font-size: 12px;'>Stock Left: <b>{item_info['stock']}</b></p>", unsafe_allow_html=True)
                                 
-                                if st.button("Add to Order", key=f"counter_add_{item_name}", use_container_width=True):
-                                    found = False
-                                    for cart_item in st.session_state.cart:
-                                        if cart_item["Item"] == item_name:
-                                            cart_item["Qty"] += 1
-                                            cart_item["Total"] = cart_item["Qty"] * cart_item["Price"]
-                                            found = True
-                                            break
-                                    if not found:
-                                        st.session_state.cart.append({
-                                            "Item": item_name, 
-                                            "Qty": 1, 
-                                            "Price": item_info['price'], 
-                                            "Total": item_info['price']
-                                        })
-                                    st.rerun()
+                                if item_info['stock'] > 0:
+                                    if st.button("Add to Order", key=f"counter_add_{item_name}", use_container_width=True):
+                                        found = False
+                                        for cart_item in st.session_state.cart:
+                                            if cart_item["Item"] == item_name:
+                                                cart_item["Qty"] += 1
+                                                cart_item["Total"] = cart_item["Qty"] * cart_item["Price"]
+                                                found = True
+                                                break
+                                        if not found:
+                                            st.session_state.cart.append({
+                                                "Item": item_name, 
+                                                "Qty": 1, 
+                                                "Price": item_info['price'], 
+                                                "Total": item_info['price']
+                                            })
+                                        st.rerun()
+                                else:
+                                    st.error("Out of Stock")
                                     
                                 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -323,18 +334,12 @@ if portal_mode == "🛒 Counter Staff Login":
                     if payment_mode == "Cash" and cash_given < grand_total:
                         st.error("Insufficient cash given!")
                     else:
-                        log_sale(grand_total, payment_mode, st.session_state.cart)
+                        log_sale(grand_total, payment_mode, st.session_state.cart, counter_id)
                         order_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         
                         st.markdown("---")
-                        
-                        # 1. CUSTOMER BILL RECEIPT
                         st.markdown(f"### 🧾 Customer Bill Receipt ({counter_id})")
-                        if logo_img_obj is not None:
-                            col_l1, col_l2, col_l3 = st.columns([1, 1, 1])
-                            with col_l2:
-                                st.image(logo_img_obj, width=80)
-                                
+                        
                         receipt_html = f"""
                         <div class="receipt-box">
                             <h2 style="text-align: center; margin: 0; color: #556B2F !important;">{cafe_name}</h2>
@@ -356,43 +361,56 @@ if portal_mode == "🛒 Counter Staff Login":
                             <p>Cash Given - ₹{cash_given:.2f}</p>
                             <p>Change Returned - ₹{cash_given - grand_total:.2f}</p>
                             """
-                        
                         receipt_html += f"""
                             <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
                         </div>
                         """
                         st.markdown(receipt_html, unsafe_allow_html=True)
-                        
-                        # 2. CHEF KITCHEN TOKEN
-                        st.markdown("### 👨‍🍳 Chef Kitchen Token")
-                        token_html = f"""
-                        <div class="chef-token">
-                            <h3 style="text-align: center; margin: 0; color: #000 !important;">KITCHEN ORDER TICKET (KOT)</h3>
-                            <p style="text-align: center; font-size: 12px; margin: 5px 0;">Terminal: {counter_id} | Time: {order_time}</p>
-                            <hr style="border: 1px solid #333;">
-                            <ul style="list-style-type: none; padding: 0;">
-                        """
-                        for item in st.session_state.cart:
-                            token_html += f"<li style='font-size: 16px; font-weight: bold; margin-bottom: 5px;'>▪ {item['Qty']}x {item['Item']}</li>"
-                            
-                        token_html += """
-                            </ul>
-                            <hr style="border: 1px solid #333;">
-                            <p style="text-align: center; font-size: 12px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
-                        </div>
-                        """
-                        st.markdown(token_html, unsafe_allow_html=True)
-                        
                         st.session_state.cart = []
+                        st.rerun()
                         
             st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# GATEWAY 2: ADMIN MANAGEMENT LOGIN
+# GATEWAY 2: KITCHEN DISPLAY SCREEN (KDS)
+# ==========================================
+elif portal_mode == "👨‍🍳 Kitchen Display (KDS)":
+    st.title("👨‍🍳 Live Kitchen Display Screen (KDS)")
+    st.write("Real-time order ticket monitoring for kitchen staff.")
+    
+    if st.button("🔄 Refresh Kitchen Queue"):
+        st.rerun()
+        
+    df_items = load_item_sales_data()
+    if df_items.empty:
+        st.info("No active orders in the kitchen queue.")
+    else:
+        # Show recent orders for today
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        today_orders = df_items[df_items['Day'].astype(str) == today_str]
+        
+        if today_orders.empty:
+            st.info("No orders placed yet for today.")
+        else:
+            st.markdown("### 🔥 Live Order Tickets")
+            # Group by order timestamp & counter
+            grouped_orders = today_orders.groupby(['date', 'counter'])
+            
+            for (order_time, counter), group in grouped_orders:
+                with st.expander(f"📦 Order from {counter} at {order_time}", expanded=True):
+                    col_k1, col_k2 = st.columns([2, 1])
+                    with col_k1:
+                        for idx, row in group.iterrows():
+                            st.markdown(f"<p style='font-size: 18px; font-weight: bold; margin: 2px 0;'>▪ {row['quantity']}x {row['item_name']}</p>", unsafe_allow_html=True)
+                    with col_k2:
+                        st.markdown(f"<span style='background-color: #fffef0; padding: 6px 12px; border-radius: 6px; border: 1px solid #333; font-weight: bold;'>Status: Preparing</span>", unsafe_allow_html=True)
+
+# ==========================================
+# GATEWAY 3: ADMIN MANAGEMENT LOGIN
 # ==========================================
 elif portal_mode == "🔑 Admin Management Login":
     st.title("🔑 Admin Management Login Gateway")
-    st.write("Secure login required to access business analytics and menu inventory controls.")
+    st.write("Secure login required to access business analytics, live inventory, and reports.")
     
     admin_password = st.text_input("Enter Master Admin Password", type="password")
     
@@ -400,25 +418,28 @@ elif portal_mode == "🔑 Admin Management Login":
         st.success("Master Admin Authentication Successful.")
         st.divider()
         
-        admin_action = st.selectbox("Select Admin Control Module", ["➕ Manage Menu & Pictures", "📊 Business Revenue & Daily Item Reports"])
+        admin_action = st.selectbox("Select Admin Control Module", [
+            "➕ Manage Menu & Stock", 
+            "📊 Business Revenue & Daily Item Reports"
+        ])
         
-        if admin_action == "➕ Manage Menu & Pictures":
-            st.subheader("Manage Menu Directory & Upload Item Pictures")
+        if admin_action == "➕ Manage Menu & Stock":
+            st.subheader("Manage Menu Directory & Live Stock Quantities")
+            
             with st.form("admin_menu_form"):
                 new_item_name = st.text_input("Item Name (e.g., Cold Brew Coffee)")
                 new_item_cat = st.selectbox("Category", ["Burgers", "Sides", "Snacks", "Beverages", "Desserts"])
                 new_item_price = st.number_input("Price (₹)", min_value=1.0, value=150.0)
-                new_item_image = st.file_uploader("Upload Item Picture (PNG, JPG)", type=["png", "jpg", "jpeg"])
+                initial_stock = st.number_input("Initial Stock Quantity", min_value=1, value=50)
                 
                 submit_btn = st.form_submit_button("➕ Add Item to POS Menu")
                 
                 if submit_btn:
                     if new_item_name:
-                        img_to_store = Image.open(new_item_image) if new_item_image else None
                         st.session_state.custom_menu[new_item_name] = {
                             "category": new_item_cat,
                             "price": new_item_price,
-                            "image": img_to_store,
+                            "stock": initial_stock,
                             "icon": "🍽️"
                         }
                         st.success(f"Successfully added '{new_item_name}' to the live POS menu!")
@@ -426,9 +447,9 @@ elif portal_mode == "🔑 Admin Management Login":
                         st.error("Please enter a valid item name.")
 
             st.divider()
-            st.subheader("Active Menu Directory")
+            st.subheader("Active Menu Directory & Stock Status")
             for name, data in st.session_state.custom_menu.items():
-                st.markdown(f"<div class='menu-directory-item'>• <b>{name}</b> ({data['category']}) - ₹{data['price']:.2f}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='menu-directory-item'>• <b>{name}</b> ({data['category']}) - ₹{data['price']:.2f} | Stock: <span style='color: #556B2F; font-weight: bold;'>{data['stock']} units</span></div>", unsafe_allow_html=True)
 
         elif admin_action == "📊 Business Revenue & Daily Item Reports":
             st.subheader("📊 Detailed Item Sales & Daily Revenue Report")
@@ -530,4 +551,4 @@ elif portal_mode == "🔑 Admin Management Login":
             st.info("🔒 Please enter the master password to unlock admin privileges. (Default: `admin123`)")
 
 else:
-    st.info("👉 Please select a login portal from the sidebar (`Counter Staff Login` or `Admin Management Login`) to begin.")
+    st.info("👉 Please select a login portal from the sidebar (`Counter Staff Login`, `Kitchen Display (KDS)`, or `Admin Management Login`) to begin.")
