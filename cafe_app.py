@@ -7,9 +7,13 @@ from datetime import datetime
 from PIL import Image
 from supabase import create_client, Client
 import os
+from streamlit_autorefresh import st_autorefresh
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Green Fusion - POS System", page_icon="☕", layout="wide")
+
+# --- LIVE AUTO-REFRESH (Every 5 seconds for real-time cloud sync) ---
+st_autorefresh(interval=5000, key="greenfusion_live_sync")
 
 # --- INITIALIZE SUPABASE CONNECTION ---
 @st.cache_resource
@@ -109,13 +113,13 @@ portal_mode = st.sidebar.selectbox("Choose Login Gateway", [
 
 st.sidebar.divider()
 if logo_img_obj is not None:
-    st.sidebar.image(logo_img_obj, use_container_width=True, caption="Green Fusion - Bite & Sip by Dayals")
+    st.sidebar.image(logo_img_obj, use_container_width=True, caption="Green Fusion - Bite & Sip by Dayals[cite: 1]")
 
 st.sidebar.divider()
 upi_id = st.sidebar.text_input("UPI ID / Paytm ID", "greenfusion@paytm")
 qr_image_file = st.sidebar.file_uploader("Upload QR Code Image", type=["png", "jpg", "jpeg"])
 
-# --- WATERMARK BACKGROUND & SEMI-TRANSPARENT CARDS CSS ---
+# --- WATERMARK BACKGROUND & REFINED MODIFICATION BOX CSS ---
 if logo_base64:
     bg_watermark_css = f"""
     .stApp {{
@@ -169,6 +173,16 @@ st.markdown(f"""
     }}
     .cart-box h1, .cart-box h2, .cart-box h3, .cart-box h4, .cart-box h5, .cart-box h6, .cart-box p, .cart-box span, .cart-box label {{
         color: #000000 !important;
+    }}
+    
+    /* Refined Style for Order Modification Panel */
+    .mod-container {{
+        background: linear-gradient(135deg, rgba(245, 247, 240, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+        padding: 22px;
+        border-radius: 14px;
+        border: 2px solid #8fbc8f;
+        box-shadow: 0 6px 20px rgba(85, 107, 47, 0.12);
+        margin-bottom: 20px;
     }}
     
     div.stButton > button {{
@@ -225,7 +239,7 @@ st.markdown(f"""
 # ==========================================
 if portal_mode == "🛒 Counter Staff Login":
     st.title("☕ *Green Fusion - Counter Staff Portal*")
-    st.markdown("*Bite & Sip by Dayals*")
+    st.markdown("*Bite & Sip by Dayals[cite: 1]*")
     
     col_login1, col_login2 = st.columns(2)
     with col_login1:
@@ -238,17 +252,20 @@ if portal_mode == "🛒 Counter Staff Login":
     if counter_id:
         st.success(f"Logged in successfully as **{counter_id}**. Ready for billing operations.")
         
-        # 1. COUNTER MODIFICATION & APPROVED REFUND WORKFLOW
-        with st.expander("🛠️ Request Order Modification / Cancellation & View Live Status"):
+        # RESTYLED ORDER MODIFICATION & LIVE STATUS TRACKER
+        with st.expander("🛠️ Request Order Modification / Cancellation & View Live Status", expanded=False):
+            st.markdown('<div class="mod-container">', unsafe_allow_html=True)
+            st.markdown("### *🔄 Order Modification & Refund Center*")
+            st.write("Manage active order statuses, submit change requests to admin, or process approved refunds.")
+            
             df_all_items = load_item_sales_data()
             if not df_all_items.empty:
                 counter_orders = df_all_items[df_all_items['counter'] == counter_id]
                 if not counter_orders.empty:
-                    st.markdown("### *📋 Recent Orders & Approval Status Tracker*")
+                    st.markdown("#### *📋 Recent Orders & Approval Tracker*")
                     summary_df = counter_orders[['date', 'item_name', 'quantity', 'subtotal', 'status']].drop_duplicates()
                     st.dataframe(summary_df, hide_index=True, use_container_width=True)
                     
-                    # Check for orders approved by admin awaiting counter processing
                     approved_orders = counter_orders[counter_orders['status'] == "Approved & Modified"]
                     if not approved_orders.empty:
                         st.markdown("---")
@@ -263,10 +280,8 @@ if portal_mode == "🛒 Counter Staff Login":
                         refund_mode = st.radio("Select Refund Mode for Customer", ["Cash Refund", "Online/UPI Refund", "Store Credit"], horizontal=True, key="ref_mode")
                         
                         if st.button("✅ Process Refund & Clear Approved Order"):
-                            # Update status to completely closed/resolved
                             supabase.table("order_items").update({"status": "Refunded & Closed"}).eq("date", selected_app_time).eq("counter", counter_id).execute()
                             
-                            # Restore stock for refunded items back into session custom menu
                             for idx, row in app_group.iterrows():
                                 item_name = row['item_name']
                                 qty = row['quantity']
@@ -276,8 +291,8 @@ if portal_mode == "🛒 Counter Staff Login":
                             st.success(f"Successfully processed {refund_mode} of ₹{total_refund_amt:.2f} and restored inventory!")
                             st.rerun()
 
-                    st.divider()
-                    st.markdown("### *📤 Submit New Change Request to Admin*")
+                    st.markdown("---")
+                    st.markdown("#### *📤 Submit New Change Request to Admin*")
                     unique_order_times = sorted(counter_orders['date'].astype(str).unique(), reverse=True)
                     selected_mod_time = st.selectbox("Select Order Timestamp to Modify", unique_order_times, key="mod_time_sel")
                     mod_reason = st.text_area("Reason for Change/Cancellation", placeholder="e.g., Customer changed item flavor / requested full refund...")
@@ -296,6 +311,7 @@ if portal_mode == "🛒 Counter Staff Login":
                     st.info("No orders found for this counter yet.")
             else:
                 st.info("No orders recorded in the system yet.")
+            st.markdown('</div>', unsafe_allow_html=True)
 
         if st.session_state.get('last_receipt'):
             st.markdown("---")
@@ -446,7 +462,7 @@ if portal_mode == "🛒 Counter Staff Login":
                         receipt_html = f"""
                         <div class="receipt-box">
                             <h2 style="text-align: center; margin: 0; color: #556B2F !important;">GREEN FUSION</h2>
-                            <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
+                            <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals[cite: 1]</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {counter_id} | Date: {order_time}</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Payment Mode: <b>{clean_payment_mode}</b></p>
                             <hr style="border: 0.5px dashed #556B2F;">
@@ -505,7 +521,7 @@ elif portal_mode == "🍽️ Menu Display Screen":
             st.image(logo_img_obj, width=110)
         with col_m_title:
             st.title("*Green Fusion - Live Digital Menu*")
-            st.markdown("*Bite & Sip by Dayals*")
+            st.markdown("*Bite & Sip by Dayals[cite: 1]*")
     else:
         st.title("*Green Fusion - Live Digital Menu*")
     
@@ -545,11 +561,8 @@ elif portal_mode == "🍽️ Menu Display Screen":
 # ==========================================
 elif portal_mode == "👨‍🍳 Kitchen Display (KDS)":
     st.title("*👨‍🍳 Live Kitchen Display Screen (KDS)*")
-    st.markdown("*Green Fusion - Bite & Sip by Dayals*")
+    st.markdown("*Green Fusion - Bite & Sip by Dayals[cite: 1]*")
     
-    if st.button("🔄 Refresh Kitchen Queue"):
-        st.rerun()
-        
     df_items = load_item_sales_data()
     if df_items.empty:
         st.info("No active orders in the kitchen queue.")
@@ -564,7 +577,6 @@ elif portal_mode == "👨‍🍳 Kitchen Display (KDS)":
             grouped_orders = today_orders.groupby(['date', 'counter'])
             
             for (order_time, counter), group in grouped_orders:
-                # Skip orders that are fully refunded and closed
                 if group.iloc[0]['status'] == "Refunded & Closed":
                     continue
                     
@@ -582,7 +594,7 @@ elif portal_mode == "👨‍🍳 Kitchen Display (KDS)":
 # ==========================================
 elif portal_mode == "🔑 Admin Management Login":
     st.title("*🔑 Admin Management Login Gateway*")
-    st.markdown("*Green Fusion - Bite & Sip by Dayals*")
+    st.markdown("*Green Fusion - Bite & Sip by Dayals[cite: 1]*")
     
     admin_password = st.text_input("Enter Master Admin Password", type="password")
     actual_admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
