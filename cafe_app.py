@@ -31,6 +31,9 @@ if 'cart' not in st.session_state:
 if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
 
+if 'target_mod_time' not in st.session_state:
+    st.session_state.target_mod_time = None
+
 if 'custom_menu' not in st.session_state:
     st.session_state.custom_menu = {
         "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔", "image": None},
@@ -78,6 +81,7 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id):
             st.session_state.custom_menu[item['Item']]['stock'] = max(0, st.session_state.custom_menu[item['Item']]['stock'] - item['Qty'])
 
     supabase.table("order_items").insert(items_to_insert).execute()
+    return order_date
 
 def load_sales_data():
     response = supabase.table("sales").select("*").execute()
@@ -103,14 +107,22 @@ def convert_dfs_to_excel(df_sales, df_items):
 
 # --- SIDEBAR: SYSTEM PORTAL SELECTION & BRANDING ---
 st.sidebar.title("🔐 System Login Portal")
-portal_mode = st.sidebar.selectbox("Choose Login Gateway", [
+
+default_portal_index = 0
+portals_list = [
     "Select Portal...", 
     "🛒 Counter Staff Billing", 
     "🛠️ Order Modification & Cancellation",
     "🍽️ Menu Display Screen",
     "👨‍🍳 Kitchen Display (KDS)", 
     "🔑 Admin Management Login"
-])
+]
+
+if st.session_state.get('navigate_to_mod', False):
+    default_portal_index = 2
+    st.session_state.navigate_to_mod = False
+
+portal_mode = st.sidebar.selectbox("Choose Login Gateway", portals_list, index=default_portal_index)
 
 st.sidebar.divider()
 if logo_img_obj is not None:
@@ -221,13 +233,6 @@ st.markdown(f"""
         color: #000 !important;
     }}
     
-    .menu-directory-item {{
-        color: #000000 !important;
-        font-weight: 500;
-        font-size: 16px;
-        margin-bottom: 6px;
-    }}
-    
     section[data-testid="stSidebar"] {{
         background-color: rgba(238, 242, 235, 0.92) !important;
     }}
@@ -260,6 +265,15 @@ if portal_mode == "🛒 Counter Staff Billing":
             with col_rc1:
                 st.markdown("### *🧾 Customer Bill Receipt*")
                 st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
+                
+                # HIGH-VISIBILITY BUTTON TO JUMP DIRECTLY TO MODIFICATION PAGE
+                st.markdown("---")
+                if st.button("🛠️ [ MODIFY / CANCEL THIS ORDER ]", key="btn_jump_mod_highlighted", use_container_width=True):
+                    st.session_state.target_mod_time = st.session_state.last_receipt['order_time']
+                    st.session_state.target_counter = counter_id
+                    st.session_state.navigate_to_mod = True
+                    st.rerun()
+
             with col_rc2:
                 st.markdown("### *👨‍🍳 Chef Kitchen Ticket (KOT)*")
                 st.markdown(st.session_state.last_receipt['token_html'], unsafe_allow_html=True)
@@ -395,8 +409,7 @@ if portal_mode == "🛒 Counter Staff Billing":
                         st.error("Insufficient cash given!")
                     else:
                         current_cart_snapshot = list(st.session_state.cart)
-                        log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
-                        order_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
                         
                         receipt_html = f"""
                         <div class="receipt-box">
@@ -443,7 +456,8 @@ if portal_mode == "🛒 Counter Staff Billing":
 
                         st.session_state.last_receipt = {
                             "receipt_html": receipt_html,
-                            "token_html": token_html
+                            "token_html": token_html,
+                            "order_time": order_time
                         }
                         st.session_state.cart = []
                         st.rerun()
@@ -451,7 +465,7 @@ if portal_mode == "🛒 Counter Staff Billing":
             st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# GATEWAY 2: ORDER MODIFICATION & CANCELLATION (ITEM-LEVEL)
+# GATEWAY 2: ORDER MODIFICATION & CANCELLATION
 # ==========================================
 elif portal_mode == "🛠️ Order Modification & Cancellation":
     st.title("🛠️ *Order Item Modification & Partial Refund Center*")
@@ -459,7 +473,8 @@ elif portal_mode == "🛠️ Order Modification & Cancellation":
     
     col_mod_login, col_mod_empty = st.columns([1, 1])
     with col_mod_login:
-        counter_id = st.text_input("Enter Counter Number / Staff ID", "Counter 1", key="mod_counter_id")
+        default_counter = st.session_state.get('target_counter', 'Counter 1')
+        counter_id = st.text_input("Enter Counter Number / Staff ID", default_counter, key="mod_counter_id")
         
     st.divider()
     
@@ -476,7 +491,6 @@ elif portal_mode == "🛠️ Order Modification & Cancellation":
                 summary_df = counter_orders[['date', 'item_name', 'quantity', 'unit_price', 'subtotal', 'status']]
                 st.dataframe(summary_df, hide_index=True, use_container_width=True)
                 
-                # Check for admin approved item modifications
                 approved_orders = counter_orders[counter_orders['status'] == "Approved & Modified"]
                 if not approved_orders.empty:
                     st.markdown("---")
@@ -485,16 +499,13 @@ elif portal_mode == "🛠️ Order Modification & Cancellation":
                     for idx, row in approved_orders.iterrows():
                         st.markdown(f"**Order:** {row['date']} | **Item:** {row['quantity']}x {row['item_name']} | **Refund Due:** ₹{row['subtotal']:.2f}")
                         if st.button(f"✅ Process Refund for {row['item_name']} ({row['date']})", key=f"proc_ref_{row['date']}_{row['item_name']}"):
-                            # Update status to closed
                             supabase.table("order_items").update({"status": "Refunded & Closed"}).eq("date", row['date']).eq("counter", counter_id).eq("item_name", row['item_name']).execute()
                             
-                            # Restore stock for this specific item
                             item_name = row['item_name']
                             qty = row['quantity']
                             if item_name in st.session_state.custom_menu:
                                 st.session_state.custom_menu[item_name]['stock'] += qty
                                 
-                            # Adjust sales total in sales table for true reporting
                             sales_res = supabase.table("sales").select("*").eq("date", row['date']).execute()
                             if sales_res.data:
                                 old_total = float(sales_res.data[0]['total'])
@@ -509,9 +520,15 @@ elif portal_mode == "🛠️ Order Modification & Cancellation":
                 active_orders = counter_orders[counter_orders['status'] == "Completed"]
                 if not active_orders.empty:
                     active_order_times = sorted(active_orders['date'].astype(str).unique(), reverse=True)
-                    selected_order_time = st.selectbox("Select Order Timestamp", active_order_times, key="sel_ord_time")
                     
-                    # Filter items belonging to this specific order timestamp
+                    target_time = st.session_state.get('target_mod_time')
+                    default_time_index = 0
+                    if target_time in active_order_times:
+                        default_time_index = active_order_times.index(target_time)
+                        st.session_state.target_mod_time = None
+
+                    selected_order_time = st.selectbox("Select Order Timestamp", active_order_times, index=default_time_index, key="sel_ord_time")
+                    
                     order_items_subset = active_orders[active_orders['date'].astype(str) == selected_order_time]
                     item_choices = order_items_subset['item_name'].tolist()
                     
@@ -775,7 +792,6 @@ elif portal_mode == "🔑 Admin Management Login":
 
                 st.markdown("### *📋 Daily Itemized Sales Report*")
                 if not df_items.empty:
-                    # Exclude refunded/closed items from reports for true net accuracy
                     valid_items = df_items[df_items['status'] != "Refunded & Closed"]
                     available_days = sorted(valid_items['Day'].astype(str).unique(), reverse=True)
                     selected_day = st.selectbox("Select Date for Item Breakdown", available_days)
