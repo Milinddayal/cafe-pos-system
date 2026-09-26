@@ -34,6 +34,9 @@ if 'last_receipt' not in st.session_state:
 if 'target_mod_time' not in st.session_state:
     st.session_state.target_mod_time = None
 
+if 'active_portal' not in st.session_state:
+    st.session_state.active_portal = "🛒 Counter Staff Billing"
+
 if 'custom_menu' not in st.session_state:
     st.session_state.custom_menu = {
         "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔", "image": None},
@@ -108,9 +111,7 @@ def convert_dfs_to_excel(df_sales, df_items):
 # --- SIDEBAR: SYSTEM PORTAL SELECTION & BRANDING ---
 st.sidebar.title("🔐 System Login Portal")
 
-default_portal_index = 0
 portals_list = [
-    "Select Portal...", 
     "🛒 Counter Staff Billing", 
     "🛠️ Order Modification & Cancellation",
     "🍽️ Menu Display Screen",
@@ -118,11 +119,16 @@ portals_list = [
     "🔑 Admin Management Login"
 ]
 
-if st.session_state.get('navigate_to_mod', False):
-    default_portal_index = 2
-    st.session_state.navigate_to_mod = False
+# Ensure active portal is valid
+if st.session_state.active_portal not in portals_list:
+    st.session_state.active_portal = "🛒 Counter Staff Billing"
 
-portal_mode = st.sidebar.selectbox("Choose Login Gateway", portals_list, index=default_portal_index)
+current_portal_index = portals_list.index(st.session_state.active_portal)
+portal_mode = st.sidebar.selectbox("Choose Login Gateway", portals_list, index=current_portal_index)
+
+# Update session state when user manually changes sidebar selection
+if portal_mode != st.session_state.active_portal:
+    st.session_state.active_portal = portal_mode
 
 st.sidebar.divider()
 if logo_img_obj is not None:
@@ -242,7 +248,7 @@ st.markdown(f"""
 # ==========================================
 # GATEWAY 1: COUNTER STAFF BILLING
 # ==========================================
-if portal_mode == "🛒 Counter Staff Billing":
+if st.session_state.active_portal == "🛒 Counter Staff Billing":
     st.title("☕ *Green Fusion - Counter Staff Portal*")
     st.markdown("*Bite & Sip by Dayals*")
     
@@ -266,12 +272,11 @@ if portal_mode == "🛒 Counter Staff Billing":
                 st.markdown("### *🧾 Customer Bill Receipt*")
                 st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
                 
-                # HIGH-VISIBILITY BUTTON TO JUMP DIRECTLY TO MODIFICATION PAGE
                 st.markdown("---")
                 if st.button("🛠️ [ MODIFY / CANCEL THIS ORDER ]", key="btn_jump_mod_highlighted", use_container_width=True):
                     st.session_state.target_mod_time = st.session_state.last_receipt['order_time']
                     st.session_state.target_counter = counter_id
-                    st.session_state.navigate_to_mod = True
+                    st.session_state.active_portal = "🛠️ Order Modification & Cancellation"
                     st.rerun()
 
             with col_rc2:
@@ -467,7 +472,7 @@ if portal_mode == "🛒 Counter Staff Billing":
 # ==========================================
 # GATEWAY 2: ORDER MODIFICATION & CANCELLATION
 # ==========================================
-elif portal_mode == "🛠️ Order Modification & Cancellation":
+elif st.session_state.active_portal == "🛠️ Order Modification & Cancellation":
     st.title("🛠️ *Order Item Modification & Partial Refund Center*")
     st.markdown("*Green Fusion - Bite & Sip by Dayals*")
     
@@ -556,7 +561,7 @@ elif portal_mode == "🛠️ Order Modification & Cancellation":
 # ==========================================
 # GATEWAY 3: MENU DISPLAY SCREEN (CUSTOMER VIEW)
 # ==========================================
-elif portal_mode == "🍽️ Menu Display Screen":
+elif st.session_state.active_portal == "🍽️ Menu Display Screen":
     if logo_img_obj is not None:
         col_m_logo, col_m_title = st.columns([1, 4])
         with col_m_logo:
@@ -601,7 +606,7 @@ elif portal_mode == "🍽️ Menu Display Screen":
 # ==========================================
 # GATEWAY 4: KITCHEN DISPLAY SCREEN (KDS)
 # ==========================================
-elif portal_mode == "👨‍🍳 Kitchen Display (KDS)":
+elif st.session_state.active_portal == "👨‍🍳 Kitchen Display (KDS)":
     st.title("*👨‍🍳 Live Kitchen Display Screen (KDS)*")
     st.markdown("*Green Fusion - Bite & Sip by Dayals*")
     
@@ -635,7 +640,7 @@ elif portal_mode == "👨‍🍳 Kitchen Display (KDS)":
 # ==========================================
 # GATEWAY 5: ADMIN MANAGEMENT LOGIN
 # ==========================================
-elif portal_mode == "🔑 Admin Management Login":
+elif st.session_state.active_portal == "🔑 Admin Management Login":
     st.title("*🔑 Admin Management Login Gateway*")
     st.markdown("*Green Fusion - Bite & Sip by Dayals*")
     
@@ -866,6 +871,3 @@ elif portal_mode == "🔑 Admin Management Login":
             st.error("Incorrect Admin Password.")
         else:
             st.info("🔒 Please enter the master password to unlock admin privileges.")
-
-else:
-    st.info("👉 Please select a login portal from the sidebar (`Counter Staff Billing`, `Order Modification & Cancellation`, `Menu Display Screen`, `Kitchen Display (KDS)`, or `Admin Management Login`) to begin.")
