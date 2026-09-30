@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Green Fusion — Live Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Mrs+Saint+Delafield&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --cream: #FAF5EA;
+    --cream-card: #F4EEDC;
+    --olive: #45552E;
+    --olive-deep: #333F20;
+    --terracotta: #BD5B34;
+    --ink: #2B2822;
+    --line: rgba(43,40,34,0.14);
+  }
+  body {
+    margin: 0; background-color: var(--cream); color: var(--ink);
+    font-family: 'Jost', sans-serif; line-height: 1.6;
+    padding-bottom: 60px;
+  }
+  
+  /* Header Section */
+  header {
+    text-align: center;
+    padding: 60px 24px 40px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+  .script-tag { font-family: 'Mrs Saint Delafield', cursive; color: var(--terracotta); font-size: 32px; display: block; margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(40px, 6vw, 56px); color: var(--olive-deep); margin: 0 0 10px 0; line-height: 1.1; }
+  .status-badge { font-size: 13px; color: var(--olive); font-weight: 500; background: var(--cream-card); padding: 6px 12px; border-radius: 20px; display: inline-block; margin-top: 15px; border: 1px solid var(--line); }
+  
+  /* Menu Layout */
+  .menu-container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+  .menu-grid-categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+  .category-box { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+  .category-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 26px; color: var(--olive-deep); margin: 0 0 4px 0; }
+  .category-subtitle { font-family: 'Mrs Saint Delafield', cursive; color: var(--terracotta); font-size: 22px; margin-bottom: 24px; display: block; }
+  
+  /* Menu Items */
+  .menu-item-row { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px dashed rgba(43,40,34,0.12); }
+  .menu-item-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .menu-item-name { font-weight: 500; font-size: 16px; }
+  .menu-item-price { font-family: 'Cormorant Garamond', serif; font-size: 19px; color: var(--terracotta); font-weight: 600; }
+  .sold-out-badge { font-size: 12px; color: #888; font-style: italic; margin-left: 8px; font-weight: 400; }
+
+  @media(max-width: 768px) {
+    .menu-grid-categories { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="script-tag">Bite & Sip by Dayals</span>
+  <h1>Green Fusion</h1>
+  <p style="margin:0; opacity:0.8;">100% Pure Vegetarian Cafe • Katihar</p>
+  <div id="live-sync-status" class="status-badge">Connecting to live kitchen inventory...</div>
+</header>
+
+<div class="menu-container">
+  <div class="menu-grid-categories" id="dynamic-menu-container">
+    <!-- Menu items load here automatically -->
+  </div>
+</div>
+
+<script>
+  // Connect to your Supabase POS Database
+  const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function fetchLiveWebsiteMenu() {
+    try {
+      const { data, error } = await sb.from('menu_items').select('*').order('category').order('name');
+      if (error) throw error;
+
+      document.getElementById('live-sync-status').innerHTML = "🟢 Live inventory synchronized";
+      renderWebsiteMenu(data || []);
+    } catch (err) {
+      document.getElementById('live-sync-status').innerHTML = "⚠️ Offline mode";
+      console.error(err);
+    }
+  }
+
+  function renderWebsiteMenu(items) {
+    const container = document.getElementById('dynamic-menu-container');
+    container.innerHTML = '';
+
+    const grouped = {};
+    items.forEach(item => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+
+    for (const [category, catItems] of Object.entries(grouped)) {
+      const box = document.createElement('div');
+      box.className = 'category-box';
+      
+      let rowsHTML = '';
+      catItems.forEach(item => {
+        const isSoldOut = item.stock <= 0;
+        rowsHTML += `
+          <div class="menu-item-row" style="${isSoldOut ? 'opacity: 0.45;' : ''}">
+            <span class="menu-item-name">${escapeHtml(item.name)} ${isSoldOut ? '<span class="sold-out-badge">— Sold Out</span>' : ''}</span>
+            <span class="menu-item-price">₹${Number(item.price).toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      box.innerHTML = `
+        <h3>${escapeHtml(category)}</h3>
+        <span class="category-subtitle">fresh & handmade</span>
+        <div>${rowsHTML}</div>
+      `;
+      container.appendChild(box);
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Real-time listener: updates instantly when you change prices/stock in the POS
+  sb.channel('website_menu_realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
+      fetchLiveWebsiteMenu();
+    })
+    .subscribe();
+
+  fetchLiveWebsiteMenu();
+</script>
+</body>
+</html>
