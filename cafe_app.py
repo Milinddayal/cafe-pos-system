@@ -37,15 +37,30 @@ if 'target_mod_time' not in st.session_state:
 if 'active_portal' not in st.session_state:
     st.session_state.active_portal = "🛒 Counter Staff Billing"
 
-if 'custom_menu' not in st.session_state:
-    st.session_state.custom_menu = {
-        "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔", "image": None},
-        "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟", "image": None},
-        "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕", "image": None},
-        "Chocolate Shake": {"category": "Beverages", "price": 180.00, "stock": 30, "icon": "🥤", "image": None},
-        "Butter Croissant": {"category": "Snacks", "price": 120.00, "stock": 20, "icon": "🥐", "image": None},
-        "Ice Cream Sundae": {"category": "Desserts", "price": 140.00, "stock": 15, "icon": "🍦", "image": None}
-    }
+# --- LOAD LIVE MENU FROM SUPABASE ---
+def fetch_live_menu():
+    try:
+        response = supabase.table("menu_items").select("*").execute()
+        menu_dict = {}
+        if response.data:
+            for row in response.data:
+                menu_dict[row['name']] = {
+                    "category": row['category'],
+                    "price": float(row['price']),
+                    "stock": int(row['stock']),
+                    "icon": row.get('icon', '☕'),
+                    "image": None
+                }
+        return menu_dict
+    except Exception as e:
+        # Fallback dictionary if table is empty or offline
+        return {
+            "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔", "image": None},
+            "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟", "image": None},
+            "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕", "image": None}
+        }
+
+current_menu = fetch_live_menu()
 
 # --- LOAD BRAND LOGO AUTOMATICALLY ---
 LOGO_PATH = "logo.jpeg"
@@ -80,8 +95,12 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id):
             "status": "Completed",
             "modification_reason": ""
         })
-        if item['Item'] in st.session_state.custom_menu:
-            st.session_state.custom_menu[item['Item']]['stock'] = max(0, st.session_state.custom_menu[item['Item']]['stock'] - item['Qty'])
+        
+        # Deduct stock directly in Supabase menu_items table
+        item_name = item['Item']
+        if item_name in current_menu:
+            new_stock = max(0, current_menu[item_name]['stock'] - item['Qty'])
+            supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
 
     supabase.table("order_items").insert(items_to_insert).execute()
     return order_date
@@ -119,14 +138,12 @@ portals_list = [
     "🔑 Admin Management Login"
 ]
 
-# Ensure active portal is valid
 if st.session_state.active_portal not in portals_list:
     st.session_state.active_portal = "🛒 Counter Staff Billing"
 
 current_portal_index = portals_list.index(st.session_state.active_portal)
 portal_mode = st.sidebar.selectbox("Choose Login Gateway", portals_list, index=current_portal_index)
 
-# Update session state when user manually changes sidebar selection
 if portal_mode != st.session_state.active_portal:
     st.session_state.active_portal = portal_mode
 
@@ -297,7 +314,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
             st.write("")
             
             filtered_menu = {}
-            for item_name, data in st.session_state.custom_menu.items():
+            for item_name, data in current_menu.items():
                 if selected_cat == "All Items" or data["category"] == selected_cat:
                     filtered_menu[item_name] = data
                     
@@ -313,11 +330,8 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             with cols[j]:
                                 st.markdown('<div class="pos-card">', unsafe_allow_html=True)
                                 
-                                if item_info.get("image") is not None:
-                                    st.image(item_info["image"], use_container_width=True, height=75)
-                                else:
-                                    icon = item_info.get("icon", "☕")
-                                    st.markdown(f"<div style='font-size: 32px; margin-bottom: 4px;'>{icon}</div>", unsafe_allow_html=True)
+                                icon = item_info.get("icon", "☕")
+                                st.markdown(f"<div style='font-size: 32px; margin-bottom: 4px;'>{icon}</div>", unsafe_allow_html=True)
                                     
                                 st.markdown(f"<h4 style='margin: 2px 0; font-size: 13px; color: #000 !important;'>{item_name}</h4>", unsafe_allow_html=True)
                                 st.markdown(f"<p style='margin: 0 0 2px 0; color: #556B2F !important; font-weight: bold; font-size: 13px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
@@ -508,8 +522,9 @@ elif st.session_state.active_portal == "🛠️ Order Modification & Cancellatio
                             
                             item_name = row['item_name']
                             qty = row['quantity']
-                            if item_name in st.session_state.custom_menu:
-                                st.session_state.custom_menu[item_name]['stock'] += qty
+                            if item_name in current_menu:
+                                new_stock = current_menu[item_name]['stock'] + qty
+                                supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
                                 
                             sales_res = supabase.table("sales").select("*").eq("date", row['date']).execute()
                             if sales_res.data:
@@ -559,7 +574,7 @@ elif st.session_state.active_portal == "🛠️ Order Modification & Cancellatio
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# GATEWAY 3: MENU DISPLAY SCREEN (CUSTOMER VIEW)
+# GATEWAY 3: MENU DISPLAY SCREEN (INTERNAL APP VIEW)
 # ==========================================
 elif st.session_state.active_portal == "🍽️ Menu Display Screen":
     if logo_img_obj is not None:
@@ -578,7 +593,7 @@ elif st.session_state.active_portal == "🍽️ Menu Display Screen":
     st.divider()
     
     filtered_menu = {}
-    for item_name, data in st.session_state.custom_menu.items():
+    for item_name, data in current_menu.items():
         if selected_cat == "All Items" or data["category"] == selected_cat:
             filtered_menu[item_name] = data
             
@@ -593,14 +608,11 @@ elif st.session_state.active_portal == "🍽️ Menu Display Screen":
                     item_name, item_info = menu_items_list[i + j]
                     with cols[j]:
                         st.markdown('<div class="pos-card">', unsafe_allow_html=True)
-                        if item_info.get("image") is not None:
-                            st.image(item_info["image"], use_container_width=True, height=85)
-                        else:
-                            icon = item_info.get("icon", "☕")
-                            st.markdown(f"<div style='font-size: 40px; margin-bottom: 6px;'>{icon}</div>", unsafe_allow_html=True)
+                        icon = item_info.get("icon", "☕")
+                        st.markdown(f"<div style='font-size: 40px; margin-bottom: 6px;'>{icon}</div>", unsafe_allow_html=True)
                         st.markdown(f"<h3 style='margin: 4px 0; color: #000 !important; font-size: 16px;'>{item_name}</h3>", unsafe_allow_html=True)
                         st.markdown(f"<p style='margin: 0; color: #556B2F !important; font-weight: bold; font-size: 16px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
-                        st.markdown(f"<p style='margin: 4px 0 0 0; color: #666; font-size: 11px;'>Category: {item_info['category']}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='margin: 4px 0 0 0; color: #666; font-size: 11px;'>Category: {item_info['category']} | Stock: {item_info['stock']}</p>", unsafe_allow_html=True)
                         st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
@@ -659,7 +671,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
         ])
         
         if admin_action == "➕ Add New Menu Item":
-            st.subheader("*Add New Item to POS Menu*")
+            st.subheader("*Add New Item to POS & Live Webpage Menu*")
             
             with st.form("admin_menu_form"):
                 col_f1, col_f2 = st.columns(2)
@@ -670,32 +682,32 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 with col_f2:
                     initial_stock = st.number_input("Initial Stock Quantity", min_value=1, value=50)
                     new_item_icon = st.selectbox("Emoji Icon", ["🍔", "🍟", "☕", "🥤", "🥐", "🍦", "🍕", "🥪", "🍰", "🍵", "🍩", "🌮"])
-                    new_item_image = st.file_uploader("Optional Custom Photo (PNG, JPG)", type=["png", "jpg", "jpeg"])
                 
-                submit_btn = st.form_submit_button("➕ Add Item to POS Menu")
+                submit_btn = st.form_submit_button("➕ Add Item to Cloud Database")
                 
                 if submit_btn:
                     if new_item_name:
-                        img_to_store = Image.open(new_item_image) if new_item_image else None
-                        st.session_state.custom_menu[new_item_name] = {
+                        # Insert directly into Supabase menu_items table
+                        supabase.table("menu_items").insert({
+                            "name": new_item_name,
                             "category": new_item_cat,
-                            "price": new_item_price,
-                            "stock": initial_stock,
-                            "icon": new_item_icon,
-                            "image": img_to_store
-                        }
-                        st.success(f"Successfully added '{new_item_name}' to the live POS menu!")
+                            "price": float(new_item_price),
+                            "stock": int(initial_stock),
+                            "icon": new_item_icon
+                        }).execute()
+                        st.success(f"Successfully added '{new_item_name}' to Supabase! It will instantly appear on the live webpage.")
+                        st.rerun()
                     else:
                         st.error("Please enter a valid item name.")
 
         elif admin_action == "✏️ Edit or Remove Menu Items":
             st.subheader("*Edit or Remove Existing Menu Items*")
             
-            if not st.session_state.custom_menu:
+            if not current_menu:
                 st.info("No menu items available to edit.")
             else:
-                selected_edit_item = st.selectbox("Select Item to Modify", list(st.session_state.custom_menu.keys()))
-                current_data = st.session_state.custom_menu[selected_edit_item]
+                selected_edit_item = st.selectbox("Select Item to Modify", list(current_menu.keys()))
+                current_data = current_menu[selected_edit_item]
                 
                 with st.form("edit_menu_form"):
                     col_e1, col_e2 = st.columns(2)
@@ -710,35 +722,32 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                         icons_list = ["🍔", "🍟", "☕", "🥤", "🥐", "🍦", "🍕", "🥪", "🍰", "🍵", "🍩", "🌮"]
                         icon_index = icons_list.index(current_data["icon"]) if current_data.get("icon") in icons_list else 0
                         edited_icon = st.selectbox("Emoji Icon", icons_list, index=icon_index)
-                        edited_image = st.file_uploader("Update Custom Photo (PNG, JPG)", type=["png", "jpg", "jpeg"])
                     
                     col_btn1, col_btn2 = st.columns(2)
                     with col_btn1:
-                        save_changes = st.form_submit_button("💾 Save Changes")
+                        save_changes = st.form_submit_button("💾 Save Changes to Cloud")
                     with col_btn2:
                         delete_item = st.form_submit_button("🗑️ Delete Item")
                         
                     if save_changes:
                         if edited_name:
-                            if edited_name != selected_edit_item:
-                                del st.session_state.custom_menu[selected_edit_item]
-                            
-                            img_to_store = Image.open(edited_image) if edited_image else current_data.get("image")
-                            st.session_state.custom_menu[edited_name] = {
+                            # Update in Supabase menu_items table
+                            supabase.table("menu_items").update({
+                                "name": edited_name,
                                 "category": edited_cat,
-                                "price": edited_price,
-                                "stock": edited_stock,
-                                "icon": edited_icon,
-                                "image": img_to_store
-                            }
-                            st.success(f"Successfully updated '{edited_name}'!")
+                                "price": float(edited_price),
+                                "stock": int(edited_stock),
+                                "icon": edited_icon
+                            }).eq("name", selected_edit_item).execute()
+                            
+                            st.success(f"Successfully updated '{edited_name}' in the cloud database!")
                             st.rerun()
                         else:
                             st.error("Item name cannot be empty.")
                             
                     if delete_item:
-                        del st.session_state.custom_menu[selected_edit_item]
-                        st.success(f"Successfully removed '{selected_edit_item}' from the menu.")
+                        supabase.table("menu_items").delete().eq("name", selected_edit_item).execute()
+                        st.success(f"Successfully removed '{selected_edit_item}' from the cloud database.")
                         st.rerun()
 
         elif admin_action == "🛡️ Review Order Modification Requests":
