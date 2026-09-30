@@ -37,27 +37,46 @@ if 'target_mod_time' not in st.session_state:
 if 'active_portal' not in st.session_state:
     st.session_state.active_portal = "🛒 Counter Staff Billing"
 
-# --- LOAD LIVE MENU FROM SUPABASE ---
+# --- LOAD LIVE MENU FROM SUPABASE & AUTO-SEED IF EMPTY ---
 def fetch_live_menu():
     try:
         response = supabase.table("menu_items").select("*").execute()
         menu_dict = {}
-        if response.data:
+        if response.data and len(response.data) > 0:
             for row in response.data:
                 menu_dict[row['name']] = {
                     "category": row['category'],
                     "price": float(row['price']),
                     "stock": int(row['stock']),
-                    "icon": row.get('icon', '☕'),
-                    "image": None
+                    "icon": row.get('icon', '☕')
                 }
-        return menu_dict
+            return menu_dict
+        else:
+            # Seed default menu items if table is empty
+            default_items = [
+                {"name": "Special Burger", "category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
+                {"name": "Crispy Fries", "category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
+                {"name": "Cafe Latte", "category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕"},
+                {"name": "Chocolate Shake", "category": "Beverages", "price": 180.00, "stock": 30, "icon": "🥤"},
+                {"name": "Butter Croissant", "category": "Snacks", "price": 120.00, "stock": 20, "icon": "🥐"},
+                {"name": "Ice Cream Sundae", "category": "Desserts", "price": 140.00, "stock": 15, "icon": "🍦"}
+            ]
+            for item in default_items:
+                supabase.table("menu_items").insert(item).execute()
+            
+            return {
+                "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
+                "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
+                "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕"},
+                "Chocolate Shake": {"category": "Beverages", "price": 180.00, "stock": 30, "icon": "🥤"},
+                "Butter Croissant": {"category": "Snacks", "price": 120.00, "stock": 20, "icon": "🥐"},
+                "Ice Cream Sundae": {"category": "Desserts", "price": 140.00, "stock": 15, "icon": "🍦"}
+            }
     except Exception as e:
-        # Fallback dictionary if table is empty or offline
         return {
-            "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔", "image": None},
-            "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟", "image": None},
-            "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕", "image": None}
+            "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
+            "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
+            "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕"}
         }
 
 current_menu = fetch_live_menu()
@@ -96,7 +115,6 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id):
             "modification_reason": ""
         })
         
-        # Deduct stock directly in Supabase menu_items table
         item_name = item['Item']
         if item_name in current_menu:
             new_stock = max(0, current_menu[item_name]['stock'] - item['Qty'])
@@ -180,31 +198,31 @@ st.markdown(f"""
     
     h1, h2, h3, h4, h5, h6 {{
         color: #2b3a1a !important;
-        font-family: 'Inter', 'Segoe UI', sans-serif;
+        font-family: 'Cormorant Garamond', 'Inter', serif;
         font-style: italic !important;
         font-weight: bold !important;
     }}
     
     p, label, span {{
         color: #1a1a1a !important;
-        font-family: 'Inter', 'Segoe UI', sans-serif;
+        font-family: 'Jost', 'Inter', sans-serif;
     }}
     
     .pos-card {{
-        background-color: rgba(255, 255, 255, 0.88);
-        padding: 16px 10px;
+        background-color: rgba(242, 235, 219, 0.92);
+        padding: 18px 12px;
         border-radius: 12px;
         text-align: center;
-        border: 1px solid #d5ded0;
+        border: 1px solid rgba(43,40,34,0.16);
         box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         margin-bottom: 12px;
     }}
     
     .cart-box {{
-        background-color: rgba(255, 255, 255, 0.92) !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
         padding: 18px;
         border-radius: 16px;
-        border: 2px solid #556B2F;
+        border: 2px solid #45552E;
         box-shadow: 0 6px 18px rgba(0,0,0,0.08);
     }}
     .cart-box h1, .cart-box h2, .cart-box h3, .cart-box h4, .cart-box h5, .cart-box h6, .cart-box p, .cart-box span, .cart-box label {{
@@ -212,34 +230,34 @@ st.markdown(f"""
     }}
     
     .mod-container {{
-        background: linear-gradient(135deg, rgba(245, 247, 240, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+        background: linear-gradient(135deg, rgba(242, 235, 219, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
         padding: 25px;
         border-radius: 16px;
-        border: 2px solid #556B2F;
-        box-shadow: 0 6px 20px rgba(85, 107, 47, 0.12);
+        border: 2px solid #45552E;
+        box-shadow: 0 6px 20px rgba(69, 85, 46, 0.12);
         margin-bottom: 20px;
     }}
     
     div.stButton > button {{
-        background-color: #556B2F !important;
-        color: white !important;
-        border-radius: 8px;
-        font-weight: bold;
+        background-color: #45552E !important;
+        color: #FAF5EA !important;
+        border-radius: 20px;
+        font-weight: 500;
         padding: 0.5rem 1rem;
-        border: 2px solid #556B2F !important;
-        box-shadow: 0 4px 10px rgba(85, 107, 47, 0.2);
+        border: 1px solid #45552E !important;
+        box-shadow: 0 4px 10px rgba(69, 85, 46, 0.2);
         transition: all 0.2s ease-in-out;
     }}
     div.stButton > button:hover {{
-        background-color: #ffffff !important;
-        color: #556B2F !important;
-        border: 2px solid #556B2F !important;
+        background-color: #FAF5EA !important;
+        color: #45552E !important;
+        border: 1px solid #45552E !important;
     }}
     
     .receipt-box {{
         background-color: #ffffff;
         padding: 20px;
-        border: 2px dashed #556B2F;
+        border: 2px dashed #45552E;
         border-radius: 10px;
         font-family: 'Courier New', Courier, monospace;
         color: #1a1a1a !important;
@@ -257,7 +275,7 @@ st.markdown(f"""
     }}
     
     section[data-testid="stSidebar"] {{
-        background-color: rgba(238, 242, 235, 0.92) !important;
+        background-color: rgba(242, 235, 219, 0.95) !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -334,7 +352,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                 st.markdown(f"<div style='font-size: 32px; margin-bottom: 4px;'>{icon}</div>", unsafe_allow_html=True)
                                     
                                 st.markdown(f"<h4 style='margin: 2px 0; font-size: 13px; color: #000 !important;'>{item_name}</h4>", unsafe_allow_html=True)
-                                st.markdown(f"<p style='margin: 0 0 2px 0; color: #556B2F !important; font-weight: bold; font-size: 13px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='margin: 0 0 2px 0; color: #BD5B34 !important; font-weight: bold; font-size: 14px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
                                 st.markdown(f"<p style='margin: 0 0 6px 0; color: #666 !important; font-size: 11px;'>Stock: <b>{item_info['stock']}</b></p>", unsafe_allow_html=True)
                                 
                                 if item_info['stock'] > 0:
@@ -355,7 +373,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                             })
                                         st.rerun()
                                 else:
-                                    st.error("Out")
+                                    st.error("Sold Out")
                                     
                                 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -432,17 +450,17 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         
                         receipt_html = f"""
                         <div class="receipt-box">
-                            <h2 style="text-align: center; margin: 0; color: #556B2F !important;">GREEN FUSION</h2>
+                            <h2 style="text-align: center; margin: 0; color: #45552E !important;">GREEN FUSION</h2>
                             <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {counter_id} | Date: {order_time}</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Payment Mode: <b>{clean_payment_mode}</b></p>
-                            <hr style="border: 0.5px dashed #556B2F;">
+                            <hr style="border: 0.5px dashed #45552E;">
                         """
                         for item in current_cart_snapshot:
                             receipt_html += f"<p>{item['Qty']}x {item['Item']} - ₹{item['Total']:.2f}</p>"
                         
                         receipt_html += f"""
-                            <hr style="border: 0.5px dashed #556B2F;">
+                            <hr style="border: 0.5px dashed #45552E;">
                             <p>Subtotal - ₹{subtotal:.2f}</p>
                             <p>GST (5%) - ₹{tax:.2f}</p>
                             <h3 style="color: #1a1a1a !important;">Total: ₹{grand_total:.2f}</h3>
@@ -611,7 +629,7 @@ elif st.session_state.active_portal == "🍽️ Menu Display Screen":
                         icon = item_info.get("icon", "☕")
                         st.markdown(f"<div style='font-size: 40px; margin-bottom: 6px;'>{icon}</div>", unsafe_allow_html=True)
                         st.markdown(f"<h3 style='margin: 4px 0; color: #000 !important; font-size: 16px;'>{item_name}</h3>", unsafe_allow_html=True)
-                        st.markdown(f"<p style='margin: 0; color: #556B2F !important; font-weight: bold; font-size: 16px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p style='margin: 0; color: #BD5B34 !important; font-weight: bold; font-size: 17px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
                         st.markdown(f"<p style='margin: 4px 0 0 0; color: #666; font-size: 11px;'>Category: {item_info['category']} | Stock: {item_info['stock']}</p>", unsafe_allow_html=True)
                         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -687,7 +705,6 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 
                 if submit_btn:
                     if new_item_name:
-                        # Insert directly into Supabase menu_items table
                         supabase.table("menu_items").insert({
                             "name": new_item_name,
                             "category": new_item_cat,
@@ -731,7 +748,6 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                         
                     if save_changes:
                         if edited_name:
-                            # Update in Supabase menu_items table
                             supabase.table("menu_items").update({
                                 "name": edited_name,
                                 "category": edited_cat,
@@ -828,7 +844,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                         y='Total Quantity Sold', 
                         title=f"Units Sold Per Item on {selected_day}", 
                         text='Total Quantity Sold', 
-                        color_discrete_sequence=['#556B2F']
+                        color_discrete_sequence=['#45552E']
                     )
                     fig_daily_items.update_layout(xaxis_title="", yaxis_title="Units Sold", template="plotly_white")
                     st.plotly_chart(fig_daily_items, use_container_width=True)
@@ -854,10 +870,10 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 
                 if stat_view == "Daily":
                     data = df_sales_indexed.resample('D').sum().reset_index()
-                    fig = px.bar(data, x='Date', y='total', title="Daily Revenue Breakdown (₹)", text='total', color_discrete_sequence=['#556B2F'])
+                    fig = px.bar(data, x='Date', y='total', title="Daily Revenue Breakdown (₹)", text='total', color_discrete_sequence=['#45552E'])
                 elif stat_view == "Weekly":
                     data = df_sales_indexed.resample('W').sum().reset_index()
-                    fig = px.line(data, x='Date', y='total', title="Weekly Revenue Trends (₹)", markers=True, color_discrete_sequence=['#556B2F'])
+                    fig = px.line(data, x='Date', y='total', title="Weekly Revenue Trends (₹)", markers=True, color_discrete_sequence=['#45552E'])
                 elif stat_view == "Monthly":
                     data = df_sales_indexed.resample('M').sum().reset_index()
                     fig = px.bar(data, x='Date', y='total', title="Monthly Revenue Summary (₹)", color_discrete_sequence=['#6B8E23'])
