@@ -176,18 +176,23 @@ qr_image_file = st.sidebar.file_uploader("Upload QR Code Image", type=["png", "j
 if logo_base64:
     bg_watermark_css = f"""
     .stApp {{
-        background-image: linear-gradient(rgba(250, 245, 234, 0.92), rgba(250, 245, 234, 0.92)), url("data:image/jpeg;base64,{logo_base64}");
+        background-image: linear-gradient(rgba(250, 245, 234, 0.82), rgba(250, 245, 234, 0.82)), url("data:image/jpeg;base64,{logo_base64}");
         background-repeat: no-repeat;
         background-position: center center;
-        background-size: 35% auto;
+        background-size: 38% auto;
         background-attachment: fixed;
-        background-color: #FAF5EA;
+    }}
+    .main .block-container {{
+        background-color: transparent !important;
     }}
     """
 else:
     bg_watermark_css = """
     .stApp {
         background-color: #FAF5EA;
+    }
+    .main .block-container {
+        background-color: transparent !important;
     }
     """
 
@@ -310,7 +315,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 if st.button("🛠️ [ MODIFY / CANCEL THIS ORDER ]", key="btn_jump_mod_highlighted", use_container_width=True):
                     st.session_state.target_mod_time = st.session_state.last_receipt['order_time']
                     st.session_state.target_counter = counter_id
-                    st.session_state.active_portal = "🛠️ Order Modification & Cancellation"
+                    st.session_state.active_portal = "🛠️️ Order Modification & Cancellation"
                     st.rerun()
 
             with col_rc2:
