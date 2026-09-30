@@ -52,7 +52,6 @@ def fetch_live_menu():
                 }
             return menu_dict
         else:
-            # Seed default menu items if table is empty
             default_items = [
                 {"name": "Special Burger", "category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
                 {"name": "Crispy Fries", "category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
@@ -177,18 +176,18 @@ qr_image_file = st.sidebar.file_uploader("Upload QR Code Image", type=["png", "j
 if logo_base64:
     bg_watermark_css = f"""
     .stApp {{
-        background-image: linear-gradient(rgba(250, 249, 246, 0.90), rgba(250, 249, 246, 0.90)), url("data:image/jpeg;base64,{logo_base64}");
+        background-image: linear-gradient(rgba(250, 245, 234, 0.92), rgba(250, 245, 234, 0.92)), url("data:image/jpeg;base64,{logo_base64}");
         background-repeat: no-repeat;
         background-position: center center;
-        background-size: 45% auto;
+        background-size: 35% auto;
         background-attachment: fixed;
-        background-color: #faf9f6;
+        background-color: #FAF5EA;
     }}
     """
 else:
     bg_watermark_css = """
     .stApp {
-        background-color: #faf9f6;
+        background-color: #FAF5EA;
     }
     """
 
@@ -197,14 +196,14 @@ st.markdown(f"""
     {bg_watermark_css}
     
     h1, h2, h3, h4, h5, h6 {{
-        color: #2b3a1a !important;
+        color: #333F20 !important;
         font-family: 'Cormorant Garamond', 'Inter', serif;
         font-style: italic !important;
         font-weight: bold !important;
     }}
     
     p, label, span {{
-        color: #1a1a1a !important;
+        color: #2B2822 !important;
         font-family: 'Jost', 'Inter', sans-serif;
     }}
     
