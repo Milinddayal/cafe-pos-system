@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Green Fusion — Live Menu</title>
+<title>Green Fusion — Bite & Sip by Dayals</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Mrs+Saint+Delafield&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -11,66 +11,201 @@
 <style>
   :root {
     --cream: #FAF5EA;
-    --cream-card: #F4EEDC;
+    --cream-card: rgba(244, 238, 220, 0.85);
     --olive: #45552E;
     --olive-deep: #333F20;
     --terracotta: #BD5B34;
     --ink: #2B2822;
     --line: rgba(43,40,34,0.14);
   }
+  * { box-sizing: border-box; scroll-behavior: smooth; }
+  
   body {
     margin: 0; background-color: var(--cream); color: var(--ink);
     font-family: 'Jost', sans-serif; line-height: 1.6;
-    padding-bottom: 60px;
+    position: relative;
   }
+
+  /* Your Watermark Logo */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100vw; height: 100vh;
+    background-image: url('logo.jpeg');
+    background-size: 70%;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.06;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; font-weight: 500; color: var(--olive-deep); margin: 0; }
   
-  /* Header Section */
-  header {
-    text-align: center;
-    padding: 60px 24px 40px;
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 48px; border-bottom: 1px solid var(--line);
+    background: rgba(250, 245, 234, 0.95); position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(5px);
+  }
+  .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--olive-deep); display: flex; align-items: center; gap: 12px; }
+  .nav-logo img { width: 45px; height: 45px; object-fit: contain; mix-blend-mode: multiply; }
+  .nav-links { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; font-size: 14.5px; }
+  .nav-links a { text-decoration: none; color: var(--ink); opacity: 0.8; transition: opacity 0.2s; }
+  .nav-links a:hover { opacity: 1; color: var(--terracotta); }
+
+  .hero {
+    max-width: 1100px; margin: 0 auto; padding: 70px 24px 90px;
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 50px; align-items: center;
     border-bottom: 1px solid var(--line);
-    margin-bottom: 40px;
   }
-  .script-tag { font-family: 'Mrs Saint Delafield', cursive; color: var(--terracotta); font-size: 32px; display: block; margin-bottom: 8px; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(40px, 6vw, 56px); color: var(--olive-deep); margin: 0 0 10px 0; line-height: 1.1; }
-  .status-badge { font-size: 13px; color: var(--olive); font-weight: 500; background: var(--cream-card); padding: 6px 12px; border-radius: 20px; display: inline-block; margin-top: 15px; border: 1px solid var(--line); }
+  .hero-card {
+    background: #fff; padding: 30px; border: 1px solid var(--line); border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03); text-align: center;
+  }
+  .hero-card img { width: 100%; max-width: 320px; height: auto; margin: 0 auto; display: block; mix-blend-mode: multiply; }
   
-  /* Menu Layout */
-  .menu-container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
-  .menu-grid-categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
-  .category-box { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-  .category-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 26px; color: var(--olive-deep); margin: 0 0 4px 0; }
-  .category-subtitle { font-family: 'Mrs Saint Delafield', cursive; color: var(--terracotta); font-size: 22px; margin-bottom: 24px; display: block; }
-  
-  /* Menu Items */
-  .menu-item-row { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px dashed rgba(43,40,34,0.12); }
-  .menu-item-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .menu-item-name { font-weight: 500; font-size: 16px; }
-  .menu-item-price { font-family: 'Cormorant Garamond', serif; font-size: 19px; color: var(--terracotta); font-weight: 600; }
-  .sold-out-badge { font-size: 12px; color: #888; font-style: italic; margin-left: 8px; font-weight: 400; }
+  .script-tag { font-family: 'Mrs Saint Delafield', cursive; color: var(--terracotta); font-size: 26px; display: block; margin-bottom: 8px; }
+  .hero h1 { font-size: clamp(38px, 4.5vw, 56px); line-height: 1.15; margin-bottom: 20px; }
+  .hero p { font-size: 16px; opacity: 0.85; margin-bottom: 30px; }
+  .btn-group { display: flex; gap: 15px; }
+  .btn-primary { background: var(--olive); color: var(--cream); padding: 12px 26px; border-radius: 4px; text-decoration: none; font-weight: 500; font-size: 14px; transition: background 0.2s; }
+  .btn-primary:hover { background: var(--olive-deep); }
+  .btn-outline { background: transparent; color: var(--olive-deep); padding: 12px 26px; border-radius: 4px; text-decoration: none; font-weight: 500; font-size: 14px; border: 1px solid var(--olive-deep); transition: all 0.2s; }
+  .btn-outline:hover { background: var(--olive-deep); color: var(--cream); }
+
+  section { max-width: 1100px; margin: 0 auto; padding: 90px 24px; border-bottom: 1px solid var(--line); }
+  .section-header { text-align: center; margin-bottom: 60px; }
+  .section-header h2 { font-size: clamp(32px, 4vw, 44px); margin-top: 10px; }
+
+  .story-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 50px; align-items: center; }
+  .story-quote { background: var(--cream-card); padding: 40px; border-left: 3px solid var(--olive); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px; color: var(--olive-deep); line-height: 1.4; backdrop-filter: blur(4px); }
+
+  .menu-grid-categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+  .category-box { background: var(--cream-card); border: 1px solid var(--line); border-radius: 6px; padding: 28px; backdrop-filter: blur(4px); }
+  .category-box h3 { font-size: 22px; margin-bottom: 4px; }
+  .category-subtitle { font-family: 'Mrs Saint Delafield', cursive; color: var(--terracotta); font-size: 20px; margin-bottom: 20px; display: block; }
+  .menu-item-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed rgba(43,40,34,0.12); }
+  .menu-item-row:last-child { border-bottom: none; }
+  .menu-item-name { font-weight: 500; font-size: 15px; }
+  .menu-item-price { font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--terracotta); font-weight: 600; }
+  .sold-out-badge { font-size: 11px; color: #888; font-style: italic; margin-left: 6px; }
+
+  .corners-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .corner-card { background: var(--cream-card); height: 180px; border: 1px solid var(--line); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 18px; color: rgba(43,40,34,0.7); backdrop-filter: blur(4px); }
+
+  .visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; background: var(--olive); color: var(--cream); padding: 60px; border-radius: 8px; position: relative; z-index: 2; }
+  .visit-grid h2, .visit-grid h3 { color: var(--cream); }
+  .visit-info-table { margin-top: 25px; display: flex; flex-direction: column; gap: 16px; font-size: 14.5px; }
+  .visit-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 10px; }
+  .visit-row span:first-child { opacity: 0.75; }
+  .visit-row span:last-child { font-weight: 500; text-align: right; }
+
+  footer { text-align: center; padding: 40px; font-size: 13px; opacity: 0.6; }
 
   @media(max-width: 768px) {
-    .menu-grid-categories { grid-template-columns: 1fr; }
+    .hero, .story-grid, .visit-grid, .corners-grid { grid-template-columns: 1fr; }
+    nav { padding: 18px 24px; }
+    .nav-links { display: none; }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <span class="script-tag">Bite & Sip by Dayals</span>
-  <h1>Green Fusion</h1>
-  <p style="margin:0; opacity:0.8;">100% Pure Vegetarian Cafe • Katihar</p>
-  <div id="live-sync-status" class="status-badge">Connecting to live kitchen inventory...</div>
-</header>
-
-<div class="menu-container">
-  <div class="menu-grid-categories" id="dynamic-menu-container">
-    <!-- Menu items load here automatically -->
+<nav>
+  <div class="nav-logo">
+    <img src="logo.jpeg" alt="Green Fusion Logo"> Green Fusion
   </div>
-</div>
+  <ul class="nav-links">
+    <li><a href="#story">Our Story</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#visit">Visit</a></li>
+  </ul>
+</nav>
+
+<section class="hero" style="border-top: none;">
+  <div>
+    <span class="script-tag">good food, slow sips</span>
+    <h1>All-veg plates, honest mocktails, and coffee worth lingering over.</h1>
+    <p>Green Fusion — Bite &amp; Sip by Dayals is a neighbourhood cafe built around fresh vegetarian cooking, hand-shaken mocktails, and espresso pulled properly. No shortcuts, no frozen shortcuts either.</p>
+    <div class="btn-group">
+      <a href="#menu" class="btn-primary">See the menu</a>
+      <a href="#visit" class="btn-outline">Find us</a>
+    </div>
+  </div>
+  <div class="hero-card">
+    <img src="logo.jpeg" alt="Green Fusion Illustration">
+  </div>
+</section>
+
+<section id="story">
+  <div class="section-header">
+    <span class="script-tag">Our Story</span>
+    <h2>Started with one idea: vegetarian food shouldn't be an afterthought.</h2>
+  </div>
+  <div class="story-grid">
+    <div>
+      <p style="font-size: 16px; line-height: 1.8;">Green Fusion began as a family table — recipes passed down, refined, and finally opened up to the neighbourhood. Every plate is built vegetarian-first, not vegetarian-only, and every drink is made to order, from the espresso bar to the mocktail shaker. Milind runs it hands-on, because he believes a cafe shouldn't make you choose between great food and great coffee.</p>
+    </div>
+    <div class="story-quote">
+      "We wanted a place where a quick coffee and a full meal feel equally cared for."
+    </div>
+  </div>
+</section>
+
+<section id="menu">
+  <div class="section-header">
+    <span class="script-tag">What we're serving</span>
+    <h2>Everything on the menu, all vegetarian</h2>
+    <p id="live-sync-status" style="font-size: 13px; color: var(--terracotta); margin-top: 6px;">Connecting to live kitchen inventory...</p>
+  </div>
+  
+  <div class="menu-grid-categories" id="dynamic-menu-container"></div>
+</section>
+
+<section>
+  <div class="section-header">
+    <span class="script-tag">The place</span>
+    <h2>A few corners of Green Fusion</h2>
+  </div>
+  <div class="corners-grid">
+    <div class="corner-card">window seating</div>
+    <div class="corner-card">the espresso counter</div>
+    <div class="corner-card">mocktail bar</div>
+    <div class="corner-card">evening ambience</div>
+  </div>
+</section>
+
+<section id="visit" style="border-bottom: none;">
+  <div class="visit-grid">
+    <div>
+      <span class="script-tag" style="color: #f3c2a5;">come sit with us</span>
+      <h2>Visit Green Fusion</h2>
+      <div class="visit-info-table">
+        <div class="visit-row"><span>Hours</span><span>10:00 AM — 9:00 PM, all days</span></div>
+        <div class="visit-row"><span>Address</span><span>Power House Road, Binodpur, Katihar — 854105</span></div>
+        <div class="visit-row"><span>WhatsApp</span><span>+91 95462 25816</span></div>
+        <div class="visit-row"><span>Email</span><span>milinddayala6@gmail.com</span></div>
+      </div>
+    </div>
+    <div>
+      <span class="script-tag" style="color: #f3c2a5;">reservations</span>
+      <h2>Walk in, or message ahead for groups of 6+</h2>
+      <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 12px;">
+        <a href="https://wa.me/919546225816" target="_blank" class="btn-primary" style="text-align: center; background: var(--terracotta);">Message us on WhatsApp</a>
+        <a href="https://wa.me/919546225816" target="_blank" class="btn-outline" style="text-align: center; border-color: var(--cream); color: var(--cream);">Join our WhatsApp group</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  &copy; 2026 Green Fusion — Bite &amp; Sip by Dayals &nbsp;|&nbsp; Made with care, served fresh.
+</footer>
 
 <script>
-  // Connect to your Supabase POS Database
   const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
   const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -80,10 +215,10 @@
       const { data, error } = await sb.from('menu_items').select('*').order('category').order('name');
       if (error) throw error;
 
-      document.getElementById('live-sync-status').innerHTML = "🟢 Live inventory synchronized";
+      document.getElementById('live-sync-status').textContent = "● Live inventory synchronized with POS";
       renderWebsiteMenu(data || []);
     } catch (err) {
-      document.getElementById('live-sync-status').innerHTML = "⚠️ Offline mode";
+      document.getElementById('live-sync-status').textContent = "⚠️ Offline mode";
       console.error(err);
     }
   }
@@ -98,6 +233,14 @@
       grouped[item.category].push(item);
     });
 
+    const subtitles = {
+      "Burgers": "stacked & grilled",
+      "Sides": "crisp & golden",
+      "Snacks": "comfort food",
+      "Beverages": "pulled & shaken",
+      "Desserts": "sweet finishes"
+    };
+
     for (const [category, catItems] of Object.entries(grouped)) {
       const box = document.createElement('div');
       box.className = 'category-box';
@@ -107,7 +250,7 @@
         const isSoldOut = item.stock <= 0;
         rowsHTML += `
           <div class="menu-item-row" style="${isSoldOut ? 'opacity: 0.45;' : ''}">
-            <span class="menu-item-name">${escapeHtml(item.name)} ${isSoldOut ? '<span class="sold-out-badge">— Sold Out</span>' : ''}</span>
+            <span class="menu-item-name">${escapeHtml(item.name)} ${isSoldOut ? '<span class="sold-out-badge">— sold out</span>' : ''}</span>
             <span class="menu-item-price">₹${Number(item.price).toFixed(2)}</span>
           </div>
         `;
@@ -115,7 +258,7 @@
 
       box.innerHTML = `
         <h3>${escapeHtml(category)}</h3>
-        <span class="category-subtitle">fresh & handmade</span>
+        <span class="category-subtitle">${subtitles[category] || 'fresh & handmade'}</span>
         <div>${rowsHTML}</div>
       `;
       container.appendChild(box);
@@ -128,7 +271,6 @@
     return div.innerHTML;
   }
 
-  // Real-time listener: updates instantly when you change prices/stock in the POS
   sb.channel('website_menu_realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
       fetchLiveWebsiteMenu();
