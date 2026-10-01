@@ -20,13 +20,15 @@
   }
   .bg-logo {
     position: absolute;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 11vw;
-    font-weight: 700;
-    color: #333F20;
-    opacity: 0.06;
-    text-align: center;
-    letter-spacing: 4px;
+    width: 42vw;
+    height: 42vw;
+    max-width: 550px;
+    max-height: 550px;
+    background-image: url('logo.jpeg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.12;
     z-index: 0;
     user-select: none;
   }
@@ -66,7 +68,7 @@
 </head>
 <body>
   <div class="bg-animation">
-    <div class="bg-logo">GREEN FUSION</div>
+    <div class="bg-logo"></div>
     <div class="floating-item" style="left: 15%; animation-duration: 11s; animation-delay: 0s;">☕</div>
     <div class="floating-item" style="left: 45%; animation-duration: 14s; animation-delay: 2s;">🥪</div>
     <div class="floating-item" style="left: 75%; animation-duration: 10s; animation-delay: 1s;">🍟</div>
