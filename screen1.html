@@ -7,12 +7,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  body { background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; margin: 0; padding: 40px; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 54px; color: #333F20; text-align: center; margin-bottom: 40px; }
-  .menu-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .item-row { background: #fff; padding: 18px 24px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(43,40,34,0.1); font-size: 20px; }
-  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 24px; }
+  * { box-sizing: border-box; }
+  body { background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; margin: 0; padding: 20px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 42px; color: #333F20; text-align: center; margin: 0 0 20px 0; }
+  .menu-grid { flex: 1; max-width: 1400px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start; }
+  .item-row { background: #fff; padding: 12px 20px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(43,40,34,0.1); font-size: 18px; }
+  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; }
   .sold-out { opacity: 0.4; }
+  .cat-label { display: block; font-size: 11px; color: #666; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -30,7 +32,10 @@
     data.forEach(item => {
       container.innerHTML += `
         <div class="item-row ${item.stock <= 0 ? 'sold-out' : ''}">
-          <span><b>${item.name}</b> <small style="display:block; font-size:12px; color:#666;">${item.category}</small></span>
+          <div>
+            <span><b>${item.name}</b></span>
+            <small class="cat-label">${item.category}</small>
+          </div>
           <span class="item-price">₹${item.price}</span>
         </div>`;
     });
