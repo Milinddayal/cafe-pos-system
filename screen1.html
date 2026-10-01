@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Green Fusion — Ice Creams</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; margin: 0; padding: 40px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 54px; color: #333F20; text-align: center; margin-bottom: 40px; }
+  .menu-grid { max-width: 800px; margin: 0 auto; display: grid; gap: 20px; }
+  .item-row { background: #fff; padding: 20px 30px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(43,40,34,0.1); font-size: 24px; }
+  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 28px; }
+  .sold-out { opacity: 0.4; }
+</style>
+</head>
+<body>
+  <h1>🍨 Ice Creams &amp; Desserts</h1>
+  <div class="menu-grid" id="menu-list">Loading...</div>
+
+<script>
+  const sb = supabase.createClient("https://vdabufmcqzdilkhzrxim.supabase.co", "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6");
+  async function loadMenu() {
+    const { data } = await sb.from('menu_items').select('*').eq('category', '🍨 Ice Creams');
+    const container = document.getElementById('menu-list');
+    container.innerHTML = '';
+    data.forEach(item => {
+      container.innerHTML += `
+        <div class="item-row ${item.stock <= 0 ? 'sold-out' : ''}">
+          <span>${item.name} ${item.stock <= 0 ? '— (Sold Out)' : ''}</span>
+          <span class="item-price">₹${item.price}</span>
+        </div>`;
+    });
+  }
+  loadMenu();
+  sb.channel('screen1').on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, loadMenu).subscribe();
+</script>
+</body>
+</html>
