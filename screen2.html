@@ -9,76 +9,108 @@
 <style>
   * { box-sizing: border-box; }
   body { 
-    background: #FAF5EA; 
-    color: #2B2822; 
-    font-family: 'Jost', sans-serif; 
-    margin: 0; 
-    padding: 20px; 
-    height: 100vh; 
-    overflow: hidden; 
-    display: flex; 
-    flex-direction: column; 
-    position: relative;
+    background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; 
+    margin: 0; padding: 30px; height: 100vh; overflow: hidden; 
+    display: flex; flex-direction: column; position: relative;
   }
   .bg-animation {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: none;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    overflow: hidden; z-index: 0; pointer-events: none;
   }
   .floating-item {
-    position: absolute;
-    top: -10vh;
-    font-size: 4rem;
-    opacity: 0.35;
-    animation: fall linear infinite;
+    position: absolute; top: -10vh; font-size: 4rem; opacity: 0.35; animation: fall linear infinite;
   }
   @keyframes fall {
     0% { transform: translateY(-10vh) rotate(0deg); }
     100% { transform: translateY(110vh) rotate(360deg); }
   }
-  h1, .menu-grid { position: relative; z-index: 1; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 42px; color: #333F20; text-align: center; margin: 0 0 20px 0; }
-  .menu-grid { flex: 1; max-width: 1600px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-content: start; }
-  .item-row { background: rgba(255, 255, 255, 0.95); padding: 10px 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(43,40,34,0.1); font-size: 16px; backdrop-filter: blur(2px); }
-  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 20px; }
+  h1, .slide-container { position: relative; z-index: 1; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 48px; color: #333F20; text-align: center; margin: 0 0 30px 0; }
+  
+  .slide-container {
+    flex: 1; max-width: 1300px; width: 100%; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 1; transition: opacity 1s ease-in-out;
+  }
+  .fade-out { opacity: 0 !important; }
+
+  .category-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 38px; color: #BD5B34; 
+    margin-bottom: 25px; text-align: center; border-bottom: 2px solid rgba(189,91,52,0.3); padding-bottom: 10px; width: 100%;
+  }
+  .menu-grid {
+    width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+  }
+  .item-row { 
+    background: rgba(255, 255, 255, 0.95); padding: 18px 25px; border-radius: 8px; 
+    display: flex; justify-content: space-between; align-items: center; 
+    border: 1px solid rgba(43,40,34,0.1); font-size: 20px; backdrop-filter: blur(2px); 
+  }
+  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 26px; }
   .sold-out { opacity: 0.4; }
-  .cat-label { display: block; font-size: 11px; color: #666; margin-top: 2px; }
 </style>
 </head>
 <body>
   <div class="bg-animation">
-    <div class="floating-item" style="left: 10%; animation-duration: 11s; animation-delay: 0s;">☕</div>
-    <div class="floating-item" style="left: 30%; animation-duration: 14s; animation-delay: 2s;">🥪</div>
-    <div class="floating-item" style="left: 50%; animation-duration: 10s; animation-delay: 1s;">🍟</div>
-    <div class="floating-item" style="left: 70%; animation-duration: 13s; animation-delay: 3s;">☕</div>
-    <div class="floating-item" style="left: 90%; animation-duration: 12s; animation-delay: 4s;">🧀</div>
+    <div class="floating-item" style="left: 15%; animation-duration: 11s; animation-delay: 0s;">☕</div>
+    <div class="floating-item" style="left: 45%; animation-duration: 14s; animation-delay: 2s;">🥪</div>
+    <div class="floating-item" style="left: 75%; animation-duration: 10s; animation-delay: 1s;">🍟</div>
   </div>
 
-  <h1>☕ Coffee, Snacks &amp; Bites</h1>
-  <div class="menu-grid" id="menu-list">Loading...</div>
+  <h1>☕ Kitchen &amp; Cafe Bar 🥪</h1>
+  <div class="slide-container" id="slide-box">Loading Menu...</div>
 
 <script>
   const sb = supabase.createClient("https://vdabufmcqzdilkhzrxim.supabase.co", "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6");
   const targetCategories = ['☕ Coffee & Espresso', '🥪 Sandwiches', '🍟 French Fries', '🧀 Cheese Corner', '🍜 Quick Bites', '🍝 Pasta', '🥣 Soups', '🫖 Tea'];
-  async function loadMenu() {
+  let groupedData = {};
+  let categoryKeys = [];
+  let currentIndex = 0;
+  let slideInterval;
+
+  async function fetchMenu() {
     const { data } = await sb.from('menu_items').select('*').in('category', targetCategories);
-    const container = document.getElementById('menu-list');
-    container.innerHTML = '';
+    groupedData = {};
     data.forEach(item => {
-      container.innerHTML += `
-        <div class="item-row ${item.stock <= 0 ? 'sold-out' : ''}">
-          <div>
-            <span><b>${item.name}</b></span>
-            <small class="cat-label">${item.category}</small>
-          </div>
-          <span class="item-price">₹${item.price}</span>
-        </div>`;
+      if (!groupedData[item.category]) groupedData[item.category] = [];
+      groupedData[item.category].push(item);
     });
+    categoryKeys = Object.keys(groupedData);
+    if (categoryKeys.length > 0) {
+      showSlide();
+      if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
+    }
   }
-  loadMenu();
-  sb.channel('screen2').on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, loadMenu).subscribe();
+
+  function showSlide() {
+    const box = document.getElementById('slide-box');
+    const cat = categoryKeys[currentIndex];
+    const items = groupedData[cat];
+
+    box.classList.add('fade-out');
+    setTimeout(() => {
+      let itemsHtml = items.map(item => `
+        <div class="item-row ${item.stock <= 0 ? 'sold-out' : ''}">
+          <span><b>${item.name}</b> ${item.stock <= 0 ? '— (Sold Out)' : ''}</span>
+          <span class="item-price">₹${item.price}</span>
+        </div>
+      `).join('');
+
+      box.innerHTML = `
+        <div class="category-title">${cat}</div>
+        <div class="menu-grid">${itemsHtml}</div>
+      `;
+      box.classList.remove('fade-out');
+    }, 1000);
+  }
+
+  function nextSlide() {
+    currentIndex = (currentIndex + 1) % categoryKeys.length;
+    showSlide();
+  }
+
+  fetchMenu();
+  sb.channel('screen2').on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, fetchMenu).subscribe();
 </script>
 </body>
 </html>
