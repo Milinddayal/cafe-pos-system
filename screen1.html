@@ -20,27 +20,27 @@
   }
   .bg-logo {
     position: absolute;
-    width: 42vw;
-    height: 42vw;
-    max-width: 550px;
-    max-height: 550px;
+    width: 80vw;
+    height: 80vh;
+    max-width: 1000px;
+    max-height: 1000px;
     background-image: url('logo.jpeg');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    opacity: 0.12;
+    opacity: 0.28; /* Much brighter and more visible */
     z-index: 0;
     user-select: none;
   }
   .floating-item {
-    position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.3; animation: fall linear infinite;
+    position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.4; animation: fall linear infinite;
   }
   @keyframes fall {
     0% { transform: translateY(-10vh) rotate(0deg); }
     100% { transform: translateY(110vh) rotate(360deg); }
   }
   h1, .slide-container { position: relative; z-index: 1; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 25px 0; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 25px 0; text-shadow: 0 2px 4px rgba(250,245,234,0.8); }
   
   .slide-container {
     flex: 1; max-width: 1300px; width: 100%; margin: 0 auto;
@@ -50,17 +50,18 @@
   .fade-out { opacity: 0 !important; }
 
   .category-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 700; color: #BD5B34; 
-    margin-bottom: 25px; text-align: center; border-bottom: 3px solid rgba(189,91,52,0.3); padding-bottom: 8px; width: 100%;
+    font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 700; color: #BD5B34; 
+    margin-bottom: 25px; text-align: center; border-bottom: 3px solid rgba(189,91,52,0.4); padding-bottom: 8px; width: 100%;
+    text-shadow: 0 2px 4px rgba(250,245,234,0.9);
   }
   .menu-grid {
     width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px;
   }
   .item-row { 
-    background: rgba(255, 255, 255, 0.96); padding: 22px 28px; border-radius: 10px; 
+    background: rgba(255, 255, 255, 0.95); padding: 22px 28px; border-radius: 10px; 
     display: flex; justify-content: space-between; align-items: center; 
-    border: 1px solid rgba(43,40,34,0.15); font-size: 25px; font-weight: 600; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03); backdrop-filter: blur(4px); 
+    border: 2px solid rgba(51,63,32,0.2); font-size: 25px; font-weight: 700; 
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06); backdrop-filter: blur(6px); 
   }
   .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 32px; }
   .sold-out { opacity: 0.4; }
