@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Green Fusion — Kitchen & Cafe Bar</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; }
@@ -16,42 +16,57 @@
   .bg-animation {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 0; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bg-logo {
+    position: absolute;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11vw;
+    font-weight: 700;
+    color: #333F20;
+    opacity: 0.06;
+    text-align: center;
+    letter-spacing: 4px;
+    z-index: 0;
+    user-select: none;
   }
   .floating-item {
-    position: absolute; top: -10vh; font-size: 4rem; opacity: 0.35; animation: fall linear infinite;
+    position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.3; animation: fall linear infinite;
   }
   @keyframes fall {
     0% { transform: translateY(-10vh) rotate(0deg); }
     100% { transform: translateY(110vh) rotate(360deg); }
   }
   h1, .slide-container { position: relative; z-index: 1; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 48px; color: #333F20; text-align: center; margin: 0 0 30px 0; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 25px 0; }
   
   .slide-container {
-    flex: 1; max-width: 1300px; width: 100%; margin: 0 auto;
+    flex: 1; max-width: 1400px; width: 100%; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    opacity: 1; transition: opacity 1s ease-in-out;
+    opacity: 1; transition: opacity 0.8s ease-in-out;
   }
   .fade-out { opacity: 0 !important; }
 
   .category-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 38px; color: #BD5B34; 
-    margin-bottom: 25px; text-align: center; border-bottom: 2px solid rgba(189,91,52,0.3); padding-bottom: 10px; width: 100%;
+    font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 700; color: #BD5B34; 
+    margin-bottom: 25px; text-align: center; border-bottom: 3px solid rgba(189,91,52,0.3); padding-bottom: 8px; width: 100%;
   }
   .menu-grid {
     width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
   }
   .item-row { 
-    background: rgba(255, 255, 255, 0.95); padding: 18px 25px; border-radius: 8px; 
+    background: rgba(255, 255, 255, 0.96); padding: 20px 25px; border-radius: 10px; 
     display: flex; justify-content: space-between; align-items: center; 
-    border: 1px solid rgba(43,40,34,0.1); font-size: 20px; backdrop-filter: blur(2px); 
+    border: 1px solid rgba(43,40,34,0.15); font-size: 22px; font-weight: 600; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03); backdrop-filter: blur(4px); 
   }
-  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 26px; }
+  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 28px; }
   .sold-out { opacity: 0.4; }
 </style>
 </head>
 <body>
   <div class="bg-animation">
+    <div class="bg-logo">GREEN FUSION</div>
     <div class="floating-item" style="left: 15%; animation-duration: 11s; animation-delay: 0s;">☕</div>
     <div class="floating-item" style="left: 45%; animation-duration: 14s; animation-delay: 2s;">🥪</div>
     <div class="floating-item" style="left: 75%; animation-duration: 10s; animation-delay: 1s;">🍟</div>
@@ -63,10 +78,7 @@
 <script>
   const sb = supabase.createClient("https://vdabufmcqzdilkhzrxim.supabase.co", "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6");
   const targetCategories = ['☕ Coffee & Espresso', '🥪 Sandwiches', '🍟 French Fries', '🧀 Cheese Corner', '🍜 Quick Bites', '🍝 Pasta', '🥣 Soups', '🫖 Tea'];
-  let groupedData = {};
-  let categoryKeys = [];
-  let currentIndex = 0;
-  let slideInterval;
+  let groupedData = {}, categoryKeys = [], currentIndex = 0, slideInterval;
 
   async function fetchMenu() {
     const { data } = await sb.from('menu_items').select('*').in('category', targetCategories);
@@ -91,7 +103,7 @@
     setTimeout(() => {
       let itemsHtml = items.map(item => `
         <div class="item-row ${item.stock <= 0 ? 'sold-out' : ''}">
-          <span><b>${item.name}</b> ${item.stock <= 0 ? '— (Sold Out)' : ''}</span>
+          <span>${item.name} ${item.stock <= 0 ? '— (Sold Out)' : ''}</span>
           <span class="item-price">₹${item.price}</span>
         </div>
       `).join('');
@@ -101,7 +113,7 @@
         <div class="menu-grid">${itemsHtml}</div>
       `;
       box.classList.remove('fade-out');
-    }, 1000);
+    }, 800);
   }
 
   function nextSlide() {
