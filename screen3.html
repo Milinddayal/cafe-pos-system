@@ -16,12 +16,12 @@
 </style>
 </head>
 <body>
-  <h1>🍊 Juices, Mocktails &amp; Shakes</h1>
+  <h1>🍊 Juices &amp; Mocktails 🍹</h1>
   <div class="menu-grid" id="menu-list">Loading...</div>
 
 <script>
   const sb = supabase.createClient("https://vdabufmcqzdilkhzrxim.supabase.co", "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6");
-  const targetCategories = ['🍊 Seasonal Fruit Juices', '🍹 Mocktails', '🥤 Shakes', '💧 Water'];
+  const targetCategories = ['🍊 Seasonal Fruit Juices', '🍹 Mocktails', '💧 Water'];
   
   async function loadMenu() {
     const { data } = await sb.from('menu_items').select('*').in('category', targetCategories);
