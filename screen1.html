@@ -9,67 +9,122 @@
   * { box-sizing: border-box; }
   body { 
     background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; 
-    margin: 0; padding: 30px; height: 100vh; overflow: hidden; 
+    margin: 0; padding: 25px; height: 100vh; overflow: hidden; 
     display: flex; flex-direction: column; position: relative;
     cursor: pointer;
   }
+  
+  /* Cinematic Intro Screen */
+  #intro-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #FAF5EA; z-index: 999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 1.2s ease-in-out;
+  }
+  .intro-logo {
+    width: 28vw; height: 28vw; max-width: 380px; max-height: 380px;
+    background-image: url('logo.jpeg'); background-size: contain; background-repeat: no-repeat; background-position: center;
+    margin-bottom: 25px;
+    animation: pulseLogo 2s infinite alternate;
+  }
+  .intro-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 4rem; font-weight: 700; color: #333F20;
+    letter-spacing: 3px; margin: 0;
+  }
+  .intro-sub {
+    font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #BD5B34; font-style: italic; margin-top: 10px;
+  }
+  @keyframes pulseLogo {
+    0% { transform: scale(0.95); opacity: 0.9; }
+    100% { transform: scale(1.05); opacity: 1; }
+  }
+  .hide-intro { opacity: 0; pointer-events: none; }
+
   .bg-animation {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 0; pointer-events: none;
     display: flex; align-items: center; justify-content: center;
   }
   .bg-logo {
-    position: absolute; width: 80vw; height: 80vh; max-width: 1000px; max-height: 1000px;
+    position: absolute; width: 70vw; height: 70vh; max-width: 800px; max-height: 800px;
     background-image: url('logo.jpeg'); background-size: contain; background-repeat: no-repeat; background-position: center;
-    opacity: 0.28; z-index: 0; user-select: none;
+    opacity: 0.25; z-index: 0; user-select: none;
   }
   .floating-item {
-    position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.4; animation: fall linear infinite;
+    position: absolute; top: -10vh; font-size: 4rem; opacity: 0.4; animation: fall linear infinite;
   }
   @keyframes fall {
     0% { transform: translateY(-10vh) rotate(0deg); }
     100% { transform: translateY(110vh) rotate(360deg); }
   }
-  h1, .slide-container, .fs-hint { position: relative; z-index: 1; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 10px 0; }
-  .fs-hint { text-align: center; font-size: 14px; color: #666; margin-bottom: 15px; letter-spacing: 1px; }
+  h1, .slide-container, .fs-hint { position: relative; z-index: 1; flex-shrink: 0; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 46px; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 5px 0; }
+  .fs-hint { text-align: center; font-size: 13px; color: #666; margin-bottom: 10px; letter-spacing: 1px; }
+  
   .slide-container {
     flex: 1; max-width: 1300px; width: 100%; margin: 0 auto;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     opacity: 1; transition: opacity 0.8s ease-in-out;
+    overflow: hidden;
   }
   .fade-out { opacity: 0 !important; }
+  
   .category-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 700; color: #BD5B34; 
-    margin-bottom: 25px; text-align: center; border-bottom: 3px solid rgba(189,91,52,0.4); padding-bottom: 8px; width: 100%;
+    font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; color: #BD5B34; 
+    margin-bottom: 20px; text-align: center; border-bottom: 3px solid rgba(189,91,52,0.4); padding-bottom: 6px; width: 100%;
   }
-  .menu-grid { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .menu-grid { 
+    width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; 
+    align-content: start;
+  }
   .item-row { 
-    background: rgba(255, 255, 255, 0.95); padding: 20px 25px; border-radius: 10px; 
+    background: rgba(255, 255, 255, 0.96); padding: 16px 22px; border-radius: 10px; 
     display: flex; justify-content: space-between; align-items: center; 
-    border: 2px solid rgba(51,63,32,0.2); font-size: 22px; font-weight: 700; 
+    border: 2px solid rgba(51,63,32,0.2); font-size: 20px; font-weight: 700; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
   }
-  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 28px; }
+  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 26px; white-space: nowrap; }
   .sold-out { opacity: 0.4; }
 </style>
 </head>
 <body>
+  <!-- Cinematic Brand Intro Overlay -->
+  <div id="intro-overlay">
+    <div class="intro-logo"></div>
+    <div class="intro-title">GREEN FUSION</div>
+    <div class="intro-sub">— Bite &amp; Sip —</div>
+  </div>
+
   <div class="bg-animation">
     <div class="bg-logo"></div>
     <div class="floating-item" style="left: 15%; animation-duration: 11s;">🍨</div>
     <div class="floating-item" style="left: 60%; animation-duration: 14s; animation-delay: 2s;">🥤</div>
   </div>
   <h1>🍨 Ice Creams &amp; Shakes 🥤</h1>
-  <div class="fs-hint" id="fs-notice">(Click anywhere on the screen to enable Full Screen)</div>
+  <div class="fs-hint" id="fs-notice">(Click anywhere on the screen to enable Full Screen &amp; Audio Intro)</div>
   <div class="slide-container" id="slide-box">Connecting to database...</div>
 
 <script>
+  let introPlayed = false;
+
+  function playBassVoice() {
+    if ('speechSynthesis' in window && !introPlayed) {
+      introPlayed = true;
+      const utterance = new SpeechSynthesisUtterance("Green Fusion");
+      utterance.pitch = 0.3; // Deep bass voice
+      utterance.rate = 0.9;  // Slow, cinematic delivery
+      utterance.volume = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
   document.body.addEventListener('click', function () {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => console.log(err));
       const notice = document.getElementById('fs-notice');
       if (notice) notice.style.display = 'none';
     }
+    playBassVoice();
   });
 
   const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
@@ -94,8 +149,14 @@
       });
       categoryKeys = Object.keys(groupedData);
       if (categoryKeys.length > 0) {
-        showSlide();
-        if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
+        // Hide intro overlay after 3.5 seconds and trigger voice
+        setTimeout(() => {
+          const intro = document.getElementById('intro-overlay');
+          if (intro) intro.classList.add('hide-intro');
+          playBassVoice();
+          showSlide();
+          if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
+        }, 3500);
       } else {
         document.getElementById('slide-box').innerHTML = "<div style='font-size:24px; color:#333;'>No items found.</div>";
       }
