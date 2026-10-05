@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Green Fusion — Kitchen & Cafe Bar</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; }
   body { 
@@ -20,17 +19,10 @@
   }
   .bg-logo {
     position: absolute;
-    width: 80vw;
-    height: 80vh;
-    max-width: 1000px;
-    max-height: 1000px;
+    width: 80vw; height: 80vh; max-width: 1000px; max-height: 1000px;
     background-image: url('logo.jpeg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    opacity: 0.28;
-    z-index: 0;
-    user-select: none;
+    background-size: contain; background-repeat: no-repeat; background-position: center;
+    opacity: 0.28; z-index: 0; user-select: none;
   }
   .floating-item {
     position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.4; animation: fall linear infinite;
@@ -79,21 +71,39 @@
   <div class="slide-container" id="slide-box">Loading Menu...</div>
 
 <script>
-  const sb = supabase.createClient("https://vdabufmcqzdilkhzrxim.supabase.co", "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6");
+  const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
   const targetCategories = ['☕ Coffee & Espresso', '🥪 Sandwiches', '🍟 French Fries', '🧀 Cheese Corner', '🍜 Quick Bites', '🍝 Pasta', '🥣 Soups', '🫖 Tea'];
+  
   let groupedData = {}, categoryKeys = [], currentIndex = 0, slideInterval;
 
   async function fetchMenu() {
-    const { data } = await sb.from('menu_items').select('*').in('category', targetCategories);
-    groupedData = {};
-    data.forEach(item => {
-      if (!groupedData[item.category]) groupedData[item.category] = [];
-      groupedData[item.category].push(item);
-    });
-    categoryKeys = Object.keys(groupedData);
-    if (categoryKeys.length > 0) {
-      showSlide();
-      if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?select=*`, {
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const data = await response.json();
+      
+      groupedData = {};
+      data.forEach(item => {
+        if (targetCategories.includes(item.category)) {
+          if (!groupedData[item.category]) groupedData[item.category] = [];
+          groupedData[item.category].push(item);
+        }
+      });
+      
+      categoryKeys = Object.keys(groupedData);
+      if (categoryKeys.length > 0) {
+        showSlide();
+        if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
+      } else {
+        document.getElementById('slide-box').innerHTML = "<div style='font-size:24px; color:#333;'>No items found in categories.</div>";
+      }
+    } catch (err) {
+      document.getElementById('slide-box').innerHTML = "<div style='font-size:24px; color:red;'>Failed to load menu. Check connection.</div>";
     }
   }
 
@@ -125,7 +135,8 @@
   }
 
   fetchMenu();
-  sb.channel('screen2').on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, fetchMenu).subscribe();
+  // Refresh data every 30 seconds automatically
+  setInterval(fetchMenu, 30000);
 </script>
 </body>
 </html>
