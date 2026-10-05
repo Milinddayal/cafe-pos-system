@@ -24,15 +24,8 @@
     background-size: contain; background-repeat: no-repeat; background-position: center;
     opacity: 0.28; z-index: 0; user-select: none;
   }
-  .floating-item {
-    position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.4; animation: fall linear infinite;
-  }
-  @keyframes fall {
-    0% { transform: translateY(-10vh) rotate(0deg); }
-    100% { transform: translateY(110vh) rotate(360deg); }
-  }
   h1, .slide-container { position: relative; z-index: 1; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 25px 0; text-shadow: 0 2px 4px rgba(250,245,234,0.8); }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 25px 0; }
   
   .slide-container {
     flex: 1; max-width: 1400px; width: 100%; margin: 0 auto;
@@ -44,7 +37,6 @@
   .category-title {
     font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 700; color: #BD5B34; 
     margin-bottom: 25px; text-align: center; border-bottom: 3px solid rgba(189,91,52,0.4); padding-bottom: 8px; width: 100%;
-    text-shadow: 0 2px 4px rgba(250,245,234,0.9);
   }
   .menu-grid {
     width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
@@ -53,22 +45,17 @@
     background: rgba(255, 255, 255, 0.95); padding: 20px 25px; border-radius: 10px; 
     display: flex; justify-content: space-between; align-items: center; 
     border: 2px solid rgba(51,63,32,0.2); font-size: 22px; font-weight: 700; 
-    box-shadow: 0 6px 16px rgba(0,0,0,0.06); backdrop-filter: blur(6px); 
   }
   .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 28px; }
-  .sold-out { opacity: 0.4; }
 </style>
 </head>
 <body>
   <div class="bg-animation">
     <div class="bg-logo"></div>
-    <div class="floating-item" style="left: 15%; animation-duration: 11s; animation-delay: 0s;">☕</div>
-    <div class="floating-item" style="left: 45%; animation-duration: 14s; animation-delay: 2s;">🥪</div>
-    <div class="floating-item" style="left: 75%; animation-duration: 10s; animation-delay: 1s;">🍟</div>
   </div>
 
   <h1>☕ Kitchen &amp; Cafe Bar 🥪</h1>
-  <div class="slide-container" id="slide-box">Loading Menu...</div>
+  <div class="slide-container" id="slide-box">Connecting to database...</div>
 
 <script>
   const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
@@ -85,6 +72,11 @@
           "Authorization": `Bearer ${SUPABASE_KEY}`
         }
       });
+      
+      if (!response.ok) {
+        throw new Error("HTTP error! status: " + response.status);
+      }
+      
       const data = await response.json();
       
       groupedData = {};
@@ -100,10 +92,10 @@
         showSlide();
         if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
       } else {
-        document.getElementById('slide-box').innerHTML = "<div style='font-size:24px; color:#333;'>No items found in categories.</div>";
+        document.getElementById('slide-box').innerHTML = "<div style='font-size:24px; color:#333;'>No items found for these categories.</div>";
       }
     } catch (err) {
-      document.getElementById('slide-box').innerHTML = "<div style='font-size:24px; color:red;'>Failed to load menu. Check connection.</div>";
+      document.getElementById('slide-box').innerHTML = `<div style='font-size:22px; color:red; background:white; padding:20px; border-radius:10px;'>Error: ${err.message}</div>`;
     }
   }
 
@@ -115,8 +107,8 @@
     box.classList.add('fade-out');
     setTimeout(() => {
       let itemsHtml = items.map(item => `
-        <div class="item-row ${item.stock <= 0 ? 'sold-out' : ''}">
-          <span>${item.name} ${item.stock <= 0 ? '— (Sold Out)' : ''}</span>
+        <div class="item-row">
+          <span>${item.name}</span>
           <span class="item-price">₹${item.price}</span>
         </div>
       `).join('');
@@ -135,8 +127,6 @@
   }
 
   fetchMenu();
-  // Refresh data every 30 seconds automatically
-  setInterval(fetchMenu, 30000);
 </script>
 </body>
 </html>
