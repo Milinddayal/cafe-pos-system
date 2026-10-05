@@ -18,7 +18,7 @@
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: #FAF5EA; z-index: 999;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: opacity 1.2s ease-in-out;
+    opacity: 1; transition: opacity 1.2s ease-in-out;
   }
   .intro-logo {
     width: 28vw; height: 28vw; max-width: 380px; max-height: 380px;
@@ -37,7 +37,7 @@
     0% { transform: scale(0.95); opacity: 0.9; }
     100% { transform: scale(1.05); opacity: 1; }
   }
-  .hide-intro { opacity: 0; pointer-events: none; }
+  .hide-intro { opacity: 0 !important; pointer-events: none; }
 
   .bg-animation {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -99,15 +99,13 @@
     <div class="floating-item" style="left: 60%; animation-duration: 14s; animation-delay: 2s;">🍹</div>
   </div>
   <h1>🍊 Juices &amp; Mocktails 🍹</h1>
-  <div class="fs-hint" id="fs-notice">(Click anywhere on the screen to enable Full Screen &amp; Audio Intro)</div>
+  <div class="fs-hint" id="fs-notice">(Click anywhere on the screen to enable Full Screen &amp; Audio)</div>
   <div class="slide-container" id="slide-box">Connecting to database...</div>
 
 <script>
-  let introPlayed = false;
-
   function playBassVoice() {
-    if ('speechSynthesis' in window && !introPlayed) {
-      introPlayed = true;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance("Green Fusion");
       utterance.pitch = 0.3;
       utterance.rate = 0.9;
@@ -147,19 +145,24 @@
       });
       categoryKeys = Object.keys(groupedData);
       if (categoryKeys.length > 0) {
-        setTimeout(() => {
-          const intro = document.getElementById('intro-overlay');
-          if (intro) intro.classList.add('hide-intro');
-          playBassVoice();
-          showSlide();
-          if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
-        }, 3500);
+        setTimeout(() => { triggerLogoIntro(); }, 500);
+        if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
       } else {
         document.getElementById('slide-box').innerHTML = "<div style='font-size:24px; color:#333;'>No items found.</div>";
       }
     } catch (err) {
       document.getElementById('slide-box').innerHTML = `<div style='font-size:20px; color:red; background:white; padding:20px; border-radius:10px;'>Error: ${err.message}</div>`;
     }
+  }
+
+  function triggerLogoIntro() {
+    const intro = document.getElementById('intro-overlay');
+    intro.classList.remove('hide-intro');
+    playBassVoice();
+    setTimeout(() => {
+      intro.classList.add('hide-intro');
+      showSlide();
+    }, 3500);
   }
 
   function showSlide() {
@@ -181,7 +184,11 @@
 
   function nextSlide() {
     currentIndex = (currentIndex + 1) % categoryKeys.length;
-    showSlide();
+    if (currentIndex === 0) {
+      triggerLogoIntro();
+    } else {
+      showSlide();
+    }
   }
 
   fetchMenu();
