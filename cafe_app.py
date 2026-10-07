@@ -1,4 +1,5 @@
 import streamlit as st
+import requests
 import pandas as pd
 import plotly.express as px
 import base64
@@ -18,6 +19,7 @@ st_autorefresh(interval=5000, key="greenfusion_live_sync")
 # --- INITIALIZE SUPABASE CONNECTION ---
 @st.cache_resource
 def init_supabase():
+    # Securely pulling from .streamlit/secrets.toml
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
@@ -176,14 +178,18 @@ qr_image_file = st.sidebar.file_uploader("Upload QR Code Image", type=["png", "j
 if logo_base64:
     bg_watermark_css = f"""
     .stApp {{
-        background-image: linear-gradient(rgba(250, 245, 234, 0.82), rgba(250, 245, 234, 0.82)), url("data:image/jpeg;base64,{logo_base64}");
+        background-color: #FAF5EA;
+        background-image: url("data:image/jpeg;base64,{logo_base64}");
         background-repeat: no-repeat;
         background-position: center center;
-        background-size: 38% auto;
-        background-attachment: fixed;
+        background-size: 400px;
+        opacity: 0.95;
     }}
-    .main .block-container {{
-        background-color: transparent !important;
+    .block-container {{
+        background-color: rgba(250, 245, 234, 0.85) !important;
+        border-radius: 20px;
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
     }}
     """
 else:
@@ -191,20 +197,22 @@ else:
     .stApp {
         background-color: #FAF5EA;
     }
-    .main .block-container {
-        background-color: transparent !important;
-    }
     """
 
 st.markdown(f"""
     <style>
     {bg_watermark_css}
     
+    /* Typography Fixes */
     h1, h2, h3, h4, h5, h6 {{
         color: #333F20 !important;
         font-family: 'Cormorant Garamond', 'Inter', serif;
-        font-style: italic !important;
-        font-weight: bold !important;
+        font-weight: 700 !important;
+    }}
+    
+    h1 {{
+        font-size: 2.2rem !important;
+        margin-bottom: 0px !important;
     }}
     
     p, label, span {{
@@ -212,25 +220,30 @@ st.markdown(f"""
         font-family: 'Jost', 'Inter', sans-serif;
     }}
     
+    /* Clean up the POS Menu Cards */
     .pos-card {{
-        background-color: rgba(242, 235, 219, 0.92);
-        padding: 18px 12px;
-        border-radius: 12px;
+        background-color: #FFFFFF;
+        padding: 15px 10px;
+        border-radius: 16px;
         text-align: center;
-        border: 1px solid rgba(43,40,34,0.16);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        margin-bottom: 12px;
+        border: 1px solid rgba(69, 85, 46, 0.15);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        margin-bottom: 15px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }}
+    .pos-card:hover {{
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(69, 85, 46, 0.1);
+        border: 1px solid #45552E;
     }}
     
+    /* Clean up the Cart Box */
     .cart-box {{
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        padding: 18px;
+        background-color: #FFFFFF !important;
+        padding: 20px;
         border-radius: 16px;
         border: 2px solid #45552E;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    }}
-    .cart-box h1, .cart-box h2, .cart-box h3, .cart-box h4, .cart-box h5, .cart-box h6, .cart-box p, .cart-box span, .cart-box label {{
-        color: #000000 !important;
+        box-shadow: 0 6px 18px rgba(69, 85, 46, 0.08);
     }}
     
     .mod-container {{
@@ -242,20 +255,21 @@ st.markdown(f"""
         margin-bottom: 20px;
     }}
     
+    /* Button Styling */
     div.stButton > button {{
         background-color: #45552E !important;
         color: #FAF5EA !important;
-        border-radius: 20px;
-        font-weight: 500;
+        border-radius: 12px;
+        font-weight: 600;
         padding: 0.5rem 1rem;
-        border: 1px solid #45552E !important;
+        border: none !important;
         box-shadow: 0 4px 10px rgba(69, 85, 46, 0.2);
         transition: all 0.2s ease-in-out;
     }}
     div.stButton > button:hover {{
-        background-color: #FAF5EA !important;
-        color: #45552E !important;
-        border: 1px solid #45552E !important;
+        background-color: #5a6e3c !important;
+        box-shadow: 0 6px 15px rgba(69, 85, 46, 0.3);
+        transform: translateY(-1px);
     }}
     
     .receipt-box {{
@@ -278,8 +292,10 @@ st.markdown(f"""
         color: #000 !important;
     }}
     
+    /* Fix Sidebar Styling */
     section[data-testid="stSidebar"] {{
-        background-color: rgba(242, 235, 219, 0.95) !important;
+        background-color: #F2EBDB !important;
+        border-right: 1px solid #d5ded0;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -288,8 +304,8 @@ st.markdown(f"""
 # GATEWAY 1: COUNTER STAFF BILLING
 # ==========================================
 if st.session_state.active_portal == "🛒 Counter Staff Billing":
-    st.title("☕ *Green Fusion - Counter Staff Portal*")
-    st.markdown("*Bite & Sip by Dayals*")
+    st.title("☕ Green Fusion POS")
+    st.markdown("**Counter Staff Portal** | *Bite & Sip by Dayals*")
     
     col_login1, col_login2 = st.columns(2)
     with col_login1:
@@ -315,7 +331,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 if st.button("🛠️ [ MODIFY / CANCEL THIS ORDER ]", key="btn_jump_mod_highlighted", use_container_width=True):
                     st.session_state.target_mod_time = st.session_state.last_receipt['order_time']
                     st.session_state.target_counter = counter_id
-                    st.session_state.active_portal = "🛠️️ Order Modification & Cancellation"
+                    st.session_state.active_portal = "🛠️ Order Modification & Cancellation"
                     st.rerun()
 
             with col_rc2:
@@ -378,7 +394,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                         st.rerun()
                                 else:
                                     st.error("Sold Out")
-                                    
+                                
                                 st.markdown('</div>', unsafe_allow_html=True)
 
         with col_cart:
@@ -873,16 +889,16 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 stat_view = st.selectbox("Select Timeframe Revenue Report", ["Daily", "Weekly", "Monthly", "Yearly"])
                 
                 if stat_view == "Daily":
-                    data = df_sales_indexed.resample('D').sum().reset_index()
+                    data = df_sales_indexed.resample('D').sum(numeric_only=True).reset_index()
                     fig = px.bar(data, x='Date', y='total', title="Daily Revenue Breakdown (₹)", text='total', color_discrete_sequence=['#45552E'])
                 elif stat_view == "Weekly":
-                    data = df_sales_indexed.resample('W').sum().reset_index()
+                    data = df_sales_indexed.resample('W').sum(numeric_only=True).reset_index()
                     fig = px.line(data, x='Date', y='total', title="Weekly Revenue Trends (₹)", markers=True, color_discrete_sequence=['#45552E'])
                 elif stat_view == "Monthly":
-                    data = df_sales_indexed.resample('M').sum().reset_index()
+                    data = df_sales_indexed.resample('ME').sum(numeric_only=True).reset_index()
                     fig = px.bar(data, x='Date', y='total', title="Monthly Revenue Summary (₹)", color_discrete_sequence=['#6B8E23'])
                 elif stat_view == "Yearly":
-                    data = df_sales_indexed.resample('Y').sum().reset_index()
+                    data = df_sales_indexed.resample('YE').sum(numeric_only=True).reset_index()
                     data['Date'] = data['Date'].dt.year
                     fig = px.bar(data, x='Date', y='total', title="Yearly Revenue Performance (₹)", color_discrete_sequence=['#3b4e1e'])
                 
@@ -893,7 +909,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 st.subheader("*⚡ Quick Performance Metrics*")
                 m1, m2, m3 = st.columns(3)
                 m1.metric("Total Lifetime Revenue", f"₹{overall_total:,.2f}")
-                m2.metric("Average Daily Sales", f"₹{df_sales_indexed.resample('D').sum()['total'].mean():,.2f}")
+                m2.metric("Average Daily Sales", f"₹{df_sales_indexed.resample('D').sum(numeric_only=True)['total'].mean():,.2f}")
                 m3.metric("Highest Single Bill", f"₹{df_sales['total'].max():,.2f}")
     else:
         if admin_password != "":
