@@ -182,7 +182,8 @@ if logo_base64:
         background-image: url("data:image/jpeg;base64,{logo_base64}");
         background-repeat: no-repeat;
         background-position: center center;
-        background-size: 400px;
+        background-size: cover;
+        background-attachment: fixed;
         opacity: 0.95;
     }}
     .block-container {{
