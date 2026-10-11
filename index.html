@@ -83,6 +83,13 @@
   .story-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 50px; align-items: center; }
   .story-quote { background: var(--cream-card); padding: 40px; border-left: 3px solid var(--olive); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px; color: var(--olive-deep); line-height: 1.4; backdrop-filter: blur(4px); }
 
+  .owner-grid { display: grid; grid-template-columns: 0.9fr 1.3fr; gap: 40px; align-items: center; }
+  .owner-photo-wrap { background: var(--cream-card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; padding: 18px; }
+  .owner-photo-wrap img { width: 100%; height: 420px; object-fit: cover; display: block; border-radius: 8px; }
+  .owner-copy { background: rgba(255,255,255,0.22); border: 1px solid var(--line); border-radius: 12px; padding: 32px 28px; }
+  .owner-copy h3 { font-size: clamp(28px, 3vw, 40px); margin-bottom: 12px; }
+  .owner-role { font-family: 'Mrs Saint Delafield', cursive; color: var(--terracotta); font-size: 30px; display: block; margin-bottom: 12px; }
+
   .menu-grid-categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
   .category-box { background: var(--cream-card); border: 1px solid var(--line); border-radius: 6px; padding: 28px; backdrop-filter: blur(4px); }
   .category-box h3 { font-size: 22px; margin-bottom: 4px; }
@@ -158,6 +165,23 @@
     </div>
     <div class="story-quote">
       "We wanted a place where a quick coffee and a full meal feel equally cared for."
+    </div>
+  </div>
+</section>
+
+<section id="owner">
+  <div class="section-header">
+    <span class="script-tag">Meet the owner</span>
+    <h2>The heart behind Green Fusion</h2>
+  </div>
+  <div class="owner-grid">
+    <div class="owner-photo-wrap">
+      <img src="https://raw.githubusercontent.com/Milinddayal/cafe-pos-system/main/GreenFusionWeb/IMG_5052.jpg" alt="Owner portrait at Green Fusion">
+    </div>
+    <div class="owner-copy">
+      <span class="owner-role">Milind Dayal</span>
+      <h3>Creating a cafe that feels like home.</h3>
+      <p style="font-size: 16px; line-height: 1.8; margin: 0;">Milind started Green Fusion with a simple idea: good vegetarian food, properly brewed coffee, and a warm space where people can slow down and stay a little longer. From the menu to the mood of the cafe, every detail is shaped with care, heart, and a deep love for serving the community.</p>
     </div>
   </div>
 </section>
