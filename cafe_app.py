@@ -19,7 +19,6 @@ st_autorefresh(interval=5000, key="greenfusion_live_sync")
 # --- INITIALIZE SUPABASE CONNECTION ---
 @st.cache_resource
 def init_supabase():
-    # Securely pulling from .streamlit/secrets.toml
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
     return create_client(url, key)
@@ -39,6 +38,36 @@ if 'target_mod_time' not in st.session_state:
 if 'active_portal' not in st.session_state:
     st.session_state.active_portal = "🛒 Counter Staff Billing"
 
+# --- DIRECT LINK / URL ROUTING ---
+# Allows direct access via ?view=menu or ?view=kds
+if "view" in st.query_params:
+    requested_view = st.query_params.get("view", "").lower()
+    if requested_view == "menu":
+        st.session_state.active_portal = "🍽️ Menu Display Screen"
+    elif requested_view == "kds":
+        st.session_state.active_portal = "👨‍🍳 Kitchen Display (KDS)"
+
+# --- SMART ICON GENERATOR ---
+def get_smart_icon(item_name):
+    """Automatically assigns a relevant emoji based on the item name."""
+    name = item_name.lower()
+    if "fries" in name: return "🍟"
+    if "water" in name: return "💧"
+    if "maggi" in name or "noodle" in name: return "🍜"
+    if "cheese ball" in name: return "🧀"
+    if "burger" in name: return "🍔"
+    if "shake" in name or "beverage" in name: return "🥤"
+    if "coffee" in name or "latte" in name or "brew" in name: return "☕"
+    if "tea" in name or "chai" in name: return "🍵"
+    if "croissant" in name: return "🥐"
+    if "ice cream" in name or "sundae" in name: return "🍦"
+    if "pizza" in name: return "🍕"
+    if "sandwich" in name: return "🥪"
+    if "cake" in name or "pastry" in name: return "🍰"
+    if "donut" in name: return "🍩"
+    if "wrap" in name or "roll" in name: return "🌯"
+    return "🍽️" # Default plate icon for anything else
+
 # --- LOAD LIVE MENU FROM SUPABASE & AUTO-SEED IF EMPTY ---
 def fetch_live_menu():
     try:
@@ -50,7 +79,7 @@ def fetch_live_menu():
                     "category": row['category'],
                     "price": float(row['price']),
                     "stock": int(row['stock']),
-                    "icon": row.get('icon', '☕')
+                    "icon": get_smart_icon(row['name'])
                 }
             return menu_dict
         else:
@@ -312,11 +341,13 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
     with col_login1:
         counter_id = st.text_input("Enter Counter Number / Staff ID", "Counter 1")
     with col_login2:
-        counter_pin = st.text_input("Counter Passcode (Optional)", type="password")
+        counter_pin = st.text_input("Counter Passcode", type="password")
         
     st.divider()
     
-    if counter_id:
+    actual_counter_pin = st.secrets.get("COUNTER_PIN", "6666")
+    
+    if counter_pin == actual_counter_pin:
         st.success(f"Logged in successfully as **{counter_id}**. Ready for billing operations.")
 
         if st.session_state.get('last_receipt'):
@@ -347,56 +378,87 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
         col_menu, col_cart = st.columns([1.6, 1], gap="large")
         
         with col_menu:
-            categories = ["All Items", "Burgers", "Sides", "Snacks", "Beverages", "Desserts"]
-            selected_cat = st.selectbox("Filter Category", categories)
+            st.markdown("### 📋 Menu Categories")
             
-            st.write("")
-            
-            filtered_menu = {}
+            # --- SMART UI CATEGORIZER ---
+            def get_ui_category(item_name, default_cat):
+                """Automatically sorts items into specific granular tabs for the POS UI."""
+                name = item_name.lower()
+                if "coffee" in name or "latte" in name or "brew" in name or "espresso" in name or "americano" in name or "cappuccino" in name: return "☕ Coffee"
+                if "maggi" in name or "noodle" in name: return "🍜 Maggi"
+                if "fries" in name: return "🍟 Fries"
+                if "burger" in name: return "🍔 Burgers"
+                if "shake" in name or "frappe" in name: return "🥤 Shakes"
+                if "pizza" in name: return "🍕 Pizza"
+                if "sandwich" in name: return "🥪 Sandwiches"
+                if "water" in name or "mojito" in name or "drink" in name or "coke" in name: return "🍹 Other Beverages"
+                if "ice cream" in name or "sundae" in name: return "🍦 Ice Creams"
+                if "cake" in name or "pastry" in name or "croissant" in name or "donut" in name: return "🍰 Bakery & Desserts"
+                if "cheese ball" in name or "nugget" in name: return "🧀 Snacks"
+                return default_cat # Fallback to database category if no keywords match
+
+            # Group all items dynamically into the new smart categories
+            ui_menu_groups = {}
             for item_name, data in current_menu.items():
-                if selected_cat == "All Items" or data["category"] == selected_cat:
-                    filtered_menu[item_name] = data
-                    
-            if not filtered_menu:
-                st.info("No items found in this category.")
+                ui_cat = get_ui_category(item_name, data["category"])
+                if ui_cat not in ui_menu_groups:
+                    ui_menu_groups[ui_cat] = []
+                ui_menu_groups[ui_cat].append((item_name, data))
+                
+            # Sort the categories alphabetically so the tabs are organized
+            active_categories = sorted(list(ui_menu_groups.keys()))
+            
+            if not active_categories:
+                st.info("No menu items available.")
             else:
-                menu_items_list = list(filtered_menu.items())
-                for i in range(0, len(menu_items_list), 3):
-                    cols = st.columns(3)
-                    for j in range(3):
-                        if i + j < len(menu_items_list):
-                            item_name, item_info = menu_items_list[i + j]
-                            with cols[j]:
-                                st.markdown('<div class="pos-card">', unsafe_allow_html=True)
-                                
-                                icon = item_info.get("icon", "☕")
-                                st.markdown(f"<div style='font-size: 32px; margin-bottom: 4px;'>{icon}</div>", unsafe_allow_html=True)
-                                    
-                                st.markdown(f"<h4 style='margin: 2px 0; font-size: 13px; color: #000 !important;'>{item_name}</h4>", unsafe_allow_html=True)
-                                st.markdown(f"<p style='margin: 0 0 2px 0; color: #BD5B34 !important; font-weight: bold; font-size: 14px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
-                                st.markdown(f"<p style='margin: 0 0 6px 0; color: #666 !important; font-size: 11px;'>Stock: <b>{item_info['stock']}</b></p>", unsafe_allow_html=True)
-                                
-                                if item_info['stock'] > 0:
-                                    if st.button("Add", key=f"counter_add_{item_name}", use_container_width=True):
-                                        found = False
-                                        for cart_item in st.session_state.cart:
-                                            if cart_item["Item"] == item_name:
-                                                cart_item["Qty"] += 1
-                                                cart_item["Total"] = cart_item["Qty"] * cart_item["Price"]
-                                                found = True
-                                                break
-                                        if not found:
-                                            st.session_state.cart.append({
-                                                "Item": item_name, 
-                                                "Qty": 1, 
-                                                "Price": item_info['price'], 
-                                                "Total": item_info['price']
-                                            })
-                                        st.rerun()
-                                else:
-                                    st.error("Sold Out")
-                                
-                                st.markdown('</div>', unsafe_allow_html=True)
+                # Create horizontal clickable tabs for each specific category
+                tabs = st.tabs(active_categories)
+                
+                for index, cat in enumerate(active_categories):
+                    with tabs[index]:
+                        st.write("") # Adds a little padding
+                        
+                        # Get the specific items for this tab
+                        menu_items_list = ui_menu_groups[cat]
+                        
+                        # Build the 3-column grid
+                        for i in range(0, len(menu_items_list), 3):
+                            cols = st.columns(3)
+                            for j in range(3):
+                                if i + j < len(menu_items_list):
+                                    item_name, item_info = menu_items_list[i + j]
+                                    with cols[j]:
+                                        st.markdown('<div class="pos-card">', unsafe_allow_html=True)
+                                        
+                                        icon = item_info.get("icon", "☕")
+                                        st.markdown(f"<div style='font-size: 32px; margin-bottom: 4px;'>{icon}</div>", unsafe_allow_html=True)
+                                            
+                                        st.markdown(f"<h4 style='margin: 2px 0; font-size: 13px; color: #000 !important;'>{item_name}</h4>", unsafe_allow_html=True)
+                                        st.markdown(f"<p style='margin: 0 0 2px 0; color: #BD5B34 !important; font-weight: bold; font-size: 14px;'>₹{item_info['price']:.2f}</p>", unsafe_allow_html=True)
+                                        st.markdown(f"<p style='margin: 0 0 6px 0; color: #666 !important; font-size: 11px;'>Stock: <b>{item_info['stock']}</b></p>", unsafe_allow_html=True)
+                                        
+                                        if item_info['stock'] > 0:
+                                            # Using a unique key based on item name prevents Streamlit button errors
+                                            if st.button("Add", key=f"add_tab_{item_name}", use_container_width=True):
+                                                found = False
+                                                for cart_item in st.session_state.cart:
+                                                    if cart_item["Item"] == item_name:
+                                                        cart_item["Qty"] += 1
+                                                        cart_item["Total"] = cart_item["Qty"] * cart_item["Price"]
+                                                        found = True
+                                                        break
+                                                if not found:
+                                                    st.session_state.cart.append({
+                                                        "Item": item_name, 
+                                                        "Qty": 1, 
+                                                        "Price": item_info['price'], 
+                                                        "Total": item_info['price']
+                                                    })
+                                                st.rerun()
+                                        else:
+                                            st.error("Sold Out")
+                                        
+                                        st.markdown('</div>', unsafe_allow_html=True)
 
         with col_cart:
             st.subheader("🛒 *Checkout*")
@@ -521,6 +583,11 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         st.rerun()
                         
             st.markdown('</div>', unsafe_allow_html=True)
+            
+    elif counter_pin != "":
+        st.error("❌ Incorrect Counter Passcode.")
+    else:
+        st.info("🔒 Please enter the Counter Passcode to access billing.")
 
 # ==========================================
 # GATEWAY 2: ORDER MODIFICATION & CANCELLATION
@@ -616,6 +683,10 @@ elif st.session_state.active_portal == "🛠️ Order Modification & Cancellatio
 # GATEWAY 3: MENU DISPLAY SCREEN (INTERNAL APP VIEW)
 # ==========================================
 elif st.session_state.active_portal == "🍽️ Menu Display Screen":
+    # Hide sidebar for public menu displays
+    if st.query_params.get("view") == "menu":
+        st.markdown("<style>[data-testid='stSidebar'] {display: none;}</style>", unsafe_allow_html=True)
+
     if logo_img_obj is not None:
         col_m_logo, col_m_title = st.columns([1, 4])
         with col_m_logo:
@@ -757,7 +828,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                         edited_price = st.number_input("Price (₹)", min_value=1.0, value=float(current_data["price"]))
                     with col_e2:
                         edited_stock = st.number_input("Stock Quantity", min_value=0, value=int(current_data["stock"]))
-                        icons_list = ["🍔", "🍟", "☕", "🥤", "🥐", "🍦", "🍕", "🥪", "🍰", "🍵", "🍩", "🌮"]
+                        icons_list = ["🍔", "🍟", "☕", "🥤", "🥐", "🍦", "🍕", "🥪", "🍰", "🍵", "🍩", "🌮", "💧", "🧀", "🍜", "🍽️"]
                         icon_index = icons_list.index(current_data["icon"]) if current_data.get("icon") in icons_list else 0
                         edited_icon = st.selectbox("Emoji Icon", icons_list, index=icon_index)
                     
