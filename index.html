@@ -96,6 +96,11 @@
   .corners-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .corner-card { background: var(--cream-card); height: 180px; border: 1px solid var(--line); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 18px; color: rgba(43,40,34,0.7); backdrop-filter: blur(4px); }
 
+  .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  .gallery-card { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.04); }
+  .gallery-card img { width: 100%; height: 240px; object-fit: cover; display: block; }
+  .gallery-card .caption { padding: 14px 16px 18px; font-size: 14px; color: var(--olive-deep); }
+
   .visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; background: var(--olive); color: var(--cream); padding: 60px; border-radius: 8px; position: relative; z-index: 2; }
   .visit-grid h2, .visit-grid h3 { color: var(--cream); }
   .visit-info-table { margin-top: 25px; display: flex; flex-direction: column; gap: 16px; font-size: 14.5px; }
@@ -178,6 +183,39 @@
   </div>
 </section>
 
+<section>
+  <div class="section-header">
+    <span class="script-tag">Our vibe</span>
+    <h2>A look inside the cafe</h2>
+  </div>
+  <div class="gallery-grid">
+    <div class="gallery-card">
+      <img src="../GreenFusionWeb/IMG_5052.jpg" alt="Green Fusion cafe ambience photo 1">
+      <div class="caption">Warm lighting and easy café energy.</div>
+    </div>
+    <div class="gallery-card">
+      <img src="../GreenFusionWeb/IMG_5056.jpg" alt="Green Fusion cafe ambience photo 2">
+      <div class="caption">Comfortable corners for coffee and conversation.</div>
+    </div>
+    <div class="gallery-card">
+      <img src="../GreenFusionWeb/IMG_5057.jpg" alt="Green Fusion cafe ambience photo 3">
+      <div class="caption">Fresh flavour, warm interiors, and slow moments.</div>
+    </div>
+    <div class="gallery-card">
+      <img src="../GreenFusionWeb/IMG_5058.jpg" alt="Green Fusion cafe ambience photo 4">
+      <div class="caption">A relaxed setting built for lingering.</div>
+    </div>
+    <div class="gallery-card">
+      <img src="../GreenFusionWeb/IMG_5060.jpg" alt="Green Fusion cafe ambience photo 5">
+      <div class="caption">A little corner of Green Fusion, everyday.</div>
+    </div>
+    <div class="gallery-card">
+      <img src="../GreenFusionWeb/image.jpg.jpg" alt="Green Fusion cafe ambience photo 6">
+      <div class="caption">A welcoming place to sit, sip, and slow down.</div>
+    </div>
+  </div>
+</section>
+
 <section id="visit" style="border-bottom: none;">
   <div class="visit-grid">
     <div>
@@ -186,7 +224,7 @@
       <div class="visit-info-table">
         <div class="visit-row"><span>Hours</span><span>10:00 AM — 9:00 PM, all days</span></div>
         <div class="visit-row"><span>Address</span><span>Power House Road, Binodpur, Katihar — 854105</span></div>
-        <div class="visit-row"><span>WhatsApp</span><span>+91 95462 25816</span></div>
+        <div class="visit-row"><span>WhatsApp</span><span>+91 92049 66371</span></div>
         <div class="visit-row"><span>Email</span><span>milinddayala6@gmail.com</span></div>
       </div>
     </div>
@@ -194,8 +232,8 @@
       <span class="script-tag" style="color: #f3c2a5;">reservations</span>
       <h2>Walk in, or message ahead for groups of 6+</h2>
       <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 12px;">
-        <a href="https://wa.me/919546225816" target="_blank" class="btn-primary" style="text-align: center; background: var(--terracotta);">Message us on WhatsApp</a>
-        <a href="https://wa.me/919546225816" target="_blank" class="btn-outline" style="text-align: center; border-color: var(--cream); color: var(--cream);">Join our WhatsApp group</a>
+        <a href="https://wa.me/919204966371" target="_blank" class="btn-primary" style="text-align: center; background: var(--terracotta);">Message us on WhatsApp</a>
+        <a href="https://wa.me/919204966371" target="_blank" class="btn-outline" style="text-align: center; border-color: var(--cream); color: var(--cream);">Join our WhatsApp group</a>
       </div>
     </div>
   </div>
