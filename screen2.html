@@ -3,36 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Green Fusion — Kitchen & Cafe Bar</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@500;700&display=swap" rel="stylesheet">
+<title>Green Fusion — Snacks & Bites</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800&family=Jost:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
-  body { background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; margin: 0; padding: 25px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; position: relative; cursor: pointer; }
-  #intro-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #FAF5EA; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transition: opacity 1.2s ease-in-out; }
-  .intro-logo { width: 28vw; height: 28vw; max-width: 380px; max-height: 380px; background-image: url('logo.jpeg'); background-size: contain; background-repeat: no-repeat; background-position: center; margin-bottom: 25px; animation: pulseLogo 2s infinite alternate; }
-  .intro-title { font-family: 'Cormorant Garamond', serif; font-size: 4rem; font-weight: 700; color: #333F20; letter-spacing: 3px; margin: 0; }
+  body { 
+    background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; 
+    margin: 0; padding: 25px; height: 100vh; overflow: hidden; 
+    display: flex; flex-direction: column; position: relative;
+    cursor: pointer;
+  }
+  
+  #intro-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #FAF5EA; z-index: 999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 1; transition: opacity 1.2s ease-in-out;
+  }
+  .intro-logo {
+    width: 28vw; height: 28vw; max-width: 380px; max-height: 380px;
+    background-image: url('logo.jpeg'); background-size: contain; background-repeat: no-repeat; background-position: center;
+    margin-bottom: 25px;
+    animation: pulseLogo 2s infinite alternate;
+  }
+  .intro-title { font-family: 'Cormorant Garamond', serif; font-size: 4rem; font-weight: 800; color: #333F20; letter-spacing: 3px; margin: 0; }
   .intro-sub { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #BD5B34; font-style: italic; margin-top: 10px; }
   @keyframes pulseLogo { 0% { transform: scale(0.95); opacity: 0.9; } 100% { transform: scale(1.05); opacity: 1; } }
   .hide-intro { opacity: 0 !important; pointer-events: none; }
+
   .bg-animation { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
-  .bg-logo { position: absolute; width: 70vw; height: 70vh; max-width: 800px; max-height: 800px; background-image: url('logo.jpeg'); background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.25; z-index: 0; user-select: none; }
-  .floating-item { position: absolute; top: -10vh; font-size: 4rem; opacity: 0.4; animation: fall linear infinite; }
+  .bg-logo { position: absolute; width: 70vw; height: 70vh; max-width: 800px; max-height: 800px; background-image: url('logo.jpeg'); background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.15; z-index: 0; user-select: none; }
+  .floating-item { position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.4; animation: fall linear infinite; }
   @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); } 100% { transform: translateY(110vh) rotate(360deg); } }
   
-  /* --- GIGANTIC TV SCALING FONTS --- */
-  h1, .slide-container, .fs-hint { position: relative; z-index: 1; flex-shrink: 0; }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 5.5vw; font-weight: 700; color: #333F20; text-align: center; margin: 0 0 1vh 0; }
-  .fs-hint { text-align: center; font-size: 1.2vw; color: #666; margin-bottom: 2vh; letter-spacing: 1px; }
+  h1 { position: relative; z-index: 1; font-family: 'Cormorant Garamond', serif; font-size: 5vw; font-weight: 800 !important; color: #333F20; text-align: center; margin: 0 0 1vh 0; }
+  .fs-hint { position: relative; z-index: 1; text-align: center; font-size: 1.2vw; color: #666; margin-bottom: 2vh; letter-spacing: 1px; }
   
-  .slide-container { flex: 1; max-width: 96vw; width: 100%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; opacity: 1; transition: opacity 0.8s ease-in-out; overflow: hidden; }
+  /* --- GIGANTIC FADING SLIDESHOW STYLES --- */
+  #slide-box {
+    position: relative; z-index: 1; flex: 1; width: 85vw; margin: 0 auto;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    opacity: 1; transition: opacity 0.8s ease-in-out;
+  }
   .fade-out { opacity: 0 !important; }
   
-  .category-title { font-family: 'Cormorant Garamond', serif; font-size: 4.5vw; font-weight: 700; color: #BD5B34; margin-bottom: 3vh; text-align: center; border-bottom: 0.3vw solid rgba(189,91,52,0.4); padding-bottom: 1vh; width: 100%; }
+  .category-title { 
+    font-family: 'Cormorant Garamond', serif; font-size: 5.5vw; font-weight: 800 !important; 
+    color: #BD5B34; margin-bottom: 3vh; text-align: center; 
+    border-bottom: 0.4vw solid rgba(189,91,52,0.4); padding-bottom: 1vh; width: 100%; text-transform: uppercase;
+  }
   
-  .menu-grid { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2vw; align-content: start; }
-  .item-row { background: rgba(255, 255, 255, 0.96); padding: 2vh 3vw; border-radius: 1vw; display: flex; justify-content: space-between; align-items: center; border: 2px solid rgba(51,63,32,0.2); font-size: 2.8vw; font-weight: 700; box-shadow: 0 6px 15px rgba(0,0,0,0.08); }
-  .item-price { color: #BD5B34; font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 3.5vw; white-space: nowrap; }
-  .sold-out { opacity: 0.4; }
+  .items-container { width: 100%; display: flex; flex-direction: column; gap: 3vh; }
+  .item-row { 
+    display: flex; justify-content: space-between; align-items: flex-end; 
+    border-bottom: 0.2vw dashed rgba(51,63,32,0.2); padding-bottom: 1vh; width: 100%;
+  }
+  .item-name { font-size: 3.5vw; font-weight: 800 !important; color: #2B2822; }
+  .item-price { font-size: 4vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
 </style>
 </head>
 <body>
@@ -43,31 +70,29 @@
   </div>
   <div class="bg-animation">
     <div class="bg-logo"></div>
-    <div class="floating-item" style="left: 15%; animation-duration: 11s;">☕</div>
-    <div class="floating-item" style="left: 60%; animation-duration: 14s; animation-delay: 2s;">🥪</div>
+    <div class="floating-item" style="left: 15%; animation-duration: 11s;">🥪</div>
+    <div class="floating-item" style="left: 75%; animation-duration: 14s; animation-delay: 2s;">🍟</div>
   </div>
-  <h1>☕ Kitchen &amp; Cafe Bar 🥪</h1>
-  <div class="fs-hint" id="fs-notice">(Click anywhere to enable Full Screen &amp; Audio)</div>
-  <div class="slide-container" id="slide-box">Connecting to database...</div>
+  
+  <h1>🥪 Snacks & Bites 🍟</h1>
+  <div class="fs-hint" id="fs-notice">(Click anywhere to enable Full Screen)</div>
+  
+  <div id="slide-box">
+      <!-- Content loads here dynamically -->
+  </div>
 
 <script>
   let audioUnlocked = false;
-
   function playBassVoice() {
     try {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.resume(); window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance("Green Fusion");
         utterance.pitch = 0.3; utterance.rate = 0.9; utterance.volume = 1.0;
-        const voices = window.speechSynthesis.getVoices();
-        const englishVoice = voices.find(v => v.lang.includes('en'));
-        if (englishVoice) utterance.voice = englishVoice;
         window.speechSynthesis.speak(utterance);
       }
     } catch (e) {}
   }
-
-  if ('speechSynthesis' in window) { window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); }; }
 
   document.body.addEventListener('click', function () {
     audioUnlocked = true;
@@ -79,60 +104,108 @@
     playBassVoice();
   });
 
-  const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
-  const MY_SCREEN_ID = 2; 
-  const targetCategories = ['☕ Coffee & Espresso', '🥪 Sandwiches', '🍟 French Fries', '🧀 Cheese Corner', '🍜 Quick Bites', '🍝 Pasta', '🥣 Soups', '🫖 Tea'];
-  let groupedData = {}, categoryKeys = [], currentIndex = 0, slideInterval, lastTimestamp = null;
+  /* HARDCODED MENU DATA */
+  const menuData = [
+    {
+      category: "Sandwiches",
+      items: [
+        { name: "Veg Sandwich", price: "₹99" },
+        { name: "Paneer Sandwich", price: "₹119" },
+        { name: "Cheese Sandwich", price: "₹129" }
+      ]
+    },
+    {
+      category: "French Fries",
+      items: [
+        { name: "Salted Fries", price: "₹99" },
+        { name: "Peri Peri Fries", price: "₹119" },
+        { name: "Cheese Burst Fries", price: "₹129" }
+      ]
+    },
+    {
+      category: "Pasta & Soup",
+      items: [
+        { name: "Alfredo Pasta", price: "₹119" },
+        { name: "Marinara Pasta", price: "₹109" },
+        { name: "Veg Soup", price: "₹99" },
+        { name: "Manchurian Soup", price: "₹119" }
+      ]
+    },
+    {
+      category: "Local Bites",
+      items: [
+        { name: "Dry Maggie", price: "₹79" },
+        { name: "Soupy Maggie", price: "₹69" },
+        { name: "Indori Poha", price: "₹79" },
+        { name: "Bas Poha", price: "₹69" },
+        { name: "Bombay Ki Shan (Vada Paw)", price: "₹79" }
+      ]
+    },
+    {
+      category: "Premium Tea",
+      items: [
+        { name: "Green Tea", price: "₹59" },
+        { name: "Masala Tea", price: "₹49" },
+        { name: "Ginger Tea", price: "₹49" },
+        { name: "Black Tea", price: "₹49" }
+      ]
+    }
+  ];
 
-  async function fetchMenu() {
-    try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/menu_items?select=*`, { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` } });
-      const data = await response.json();
-      groupedData = {};
-      data.forEach(item => {
-        if (targetCategories.includes(item.category)) {
-          if (!groupedData[item.category]) groupedData[item.category] = [];
-          groupedData[item.category].push(item);
-        }
+  /* SMART SPLITTING LOGIC (Max 5 items per slide) */
+  let slides = [];
+  menuData.forEach(cat => {
+    const chunkSize = 5;
+    for (let i = 0; i < cat.items.length; i += chunkSize) {
+      slides.push({
+        category: cat.category,
+        items: cat.items.slice(i, i + chunkSize),
+        part: cat.items.length > chunkSize ? ` (Part ${Math.floor(i/chunkSize) + 1})` : ''
       });
-      categoryKeys = Object.keys(groupedData);
-      if (categoryKeys.length > 0) {
-        setTimeout(() => { triggerLogoIntro(); }, 500);
-        if (!slideInterval) slideInterval = setInterval(nextSlide, 7000);
-      } else {
-        document.getElementById('slide-box').innerHTML = "<div style='font-size:24px;'>No items found.</div>";
-      }
-    } catch (err) {}
-  }
+    }
+  });
 
-  function triggerLogoIntro() {
-    const intro = document.getElementById('intro-overlay');
-    intro.classList.remove('hide-intro');
-    if(audioUnlocked) playBassVoice();
-    setTimeout(() => { intro.classList.add('hide-intro'); showSlide(); }, 3500);
-  }
+  let currentSlide = 0;
+  const slideBox = document.getElementById('slide-box');
 
   function showSlide() {
-    const box = document.getElementById('slide-box');
-    const cat = categoryKeys[currentIndex];
-    const items = groupedData[cat];
-    box.classList.add('fade-out');
+    const slide = slides[currentSlide];
+    slideBox.classList.add('fade-out');
+    
     setTimeout(() => {
-      let itemsHtml = items.map(item => `
-        <div class="item-row ${item.stock <= 0 ? 'sold-out' : ''}">
-          <span>${item.name} ${item.stock <= 0 ? '— (Sold Out)' : ''}</span>
-          <span class="item-price">₹${item.price}</span>
+      let itemsHtml = slide.items.map(item => `
+        <div class="item-row">
+          <span class="item-name">${item.name}</span>
+          <span class="item-price">${item.price}</span>
         </div>`).join('');
-      box.innerHTML = `<div class="category-title">${cat}</div><div class="menu-grid">${itemsHtml}</div>`;
-      box.classList.remove('fade-out');
+      
+      slideBox.innerHTML = `
+        <div class="category-title">${slide.category}${slide.part}</div>
+        <div class="items-container">${itemsHtml}</div>
+      `;
+      slideBox.classList.remove('fade-out');
     }, 800);
   }
 
   function nextSlide() {
-    currentIndex = (currentIndex + 1) % categoryKeys.length;
-    if (currentIndex === 0) { triggerLogoIntro(); } else { showSlide(); }
+    currentSlide = (currentSlide + 1) % slides.length;
+    showSlide();
   }
+
+  /* START SLIDESHOW ON LOAD */
+  window.onload = () => {
+    setTimeout(() => { 
+        document.getElementById('intro-overlay').classList.add('hide-intro'); 
+        showSlide();
+        setInterval(nextSlide, 7000); // Changes slide every 7 seconds
+    }, 3000);
+  };
+
+  /* SUPABASE TV RELOAD COMMANDS */
+  const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
+  const MY_SCREEN_ID = 2; 
+  let lastTimestamp = null;
 
   async function listenForCommands() {
     try {
@@ -144,16 +217,17 @@
         const tvData = data[0];
         if (lastTimestamp && lastTimestamp !== tvData.timestamp) {
             if (tvData.command === "reload") { window.location.reload(true); } 
-            else if (tvData.command === "play_intro") { triggerLogoIntro(); }
+            else if (tvData.command === "play_intro") { 
+                document.getElementById('intro-overlay').classList.remove('hide-intro');
+                if(audioUnlocked) playBassVoice();
+                setTimeout(() => { document.getElementById('intro-overlay').classList.add('hide-intro'); }, 3500);
+            }
         }
         lastTimestamp = tvData.timestamp;
       }
     } catch (err) {}
   }
-
-  fetchMenu();
-  setInterval(fetchMenu, 30000);
-  setInterval(listenForCommands, 3000);
+  setInterval(listenForCommands, 3000); 
 </script>
 </body>
 </html>
