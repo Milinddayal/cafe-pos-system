@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Green Fusion — Snacks & Bites</title>
+<title>Green Fusion — Ice Creams & Shakes</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800&family=Jost:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
@@ -49,9 +49,11 @@
   
   .category-title { 
     font-family: 'Cormorant Garamond', serif; font-size: 5.5vw; font-weight: 800 !important; 
-    color: #BD5B34; margin-bottom: 3vh; text-align: center; 
+    color: #BD5B34; margin-bottom: 2vh; text-align: center; 
     border-bottom: 0.4vw solid rgba(189,91,52,0.4); padding-bottom: 1vh; width: 100%; text-transform: uppercase;
   }
+  
+  .scoop-legend { font-family: 'Cormorant Garamond', serif; font-size: 2.2vw; color: #666; font-style: italic; margin-top: -1vh; margin-bottom: 3vh; text-align: center; font-weight: 700; }
   
   .items-container { width: 100%; display: flex; flex-direction: column; gap: 3vh; }
   .item-row { 
@@ -60,6 +62,7 @@
   }
   .item-name { font-size: 3.5vw; font-weight: 800 !important; color: #2B2822; }
   .item-price { font-size: 4vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
+  .price-divider { color: rgba(43,40,34,0.4); margin: 0 1vw; font-weight: 400; font-family: 'Jost', sans-serif; font-size: 3vw;}
 </style>
 </head>
 <body>
@@ -70,11 +73,11 @@
   </div>
   <div class="bg-animation">
     <div class="bg-logo"></div>
-    <div class="floating-item" style="left: 15%; animation-duration: 11s;">🥪</div>
-    <div class="floating-item" style="left: 75%; animation-duration: 14s; animation-delay: 2s;">🍟</div>
+    <div class="floating-item" style="left: 15%; animation-duration: 11s;">🍨</div>
+    <div class="floating-item" style="left: 75%; animation-duration: 14s; animation-delay: 2s;">🥤</div>
   </div>
   
-  <h1>🥪 Snacks & Bites 🍟</h1>
+  <h1>🍨 Ice Creams & Shakes 🥤</h1>
   <div class="fs-hint" id="fs-notice">(Click anywhere to enable Full Screen)</div>
   
   <div id="slide-box">
@@ -107,48 +110,28 @@
   /* HARDCODED MENU DATA */
   const menuData = [
     {
-      category: "Sandwiches",
+      category: "Gelato Amor",
+      legend: "( Single | Double )",
       items: [
-        { name: "Veg Sandwich", price: "₹99" },
-        { name: "Paneer Sandwich", price: "₹119" },
-        { name: "Cheese Sandwich", price: "₹129" }
+        { name: "Chocolate", price: "79 <span class='price-divider'>|</span> 119" },
+        { name: "Vanilla", price: "79 <span class='price-divider'>|</span> 119" },
+        { name: "Strawberry", price: "79 <span class='price-divider'>|</span> 119" },
+        { name: "Mango", price: "79 <span class='price-divider'>|</span> 119" },
+        { name: "Coffee", price: "79 <span class='price-divider'>|</span> 119" },
+        { name: "Choco Chips", price: "79 <span class='price-divider'>|</span> 119" },
+        { name: "Black Currant", price: "79 <span class='price-divider'>|</span> 119" }
       ]
     },
     {
-      category: "French Fries",
+      category: "Premium Shakes",
+      legend: "",
       items: [
-        { name: "Salted Fries", price: "₹99" },
-        { name: "Peri Peri Fries", price: "₹119" },
-        { name: "Cheese Burst Fries", price: "₹129" }
-      ]
-    },
-    {
-      category: "Pasta & Soup",
-      items: [
-        { name: "Alfredo Pasta", price: "₹119" },
-        { name: "Marinara Pasta", price: "₹109" },
-        { name: "Veg Soup", price: "₹99" },
-        { name: "Manchurian Soup", price: "₹119" }
-      ]
-    },
-    {
-      category: "Local Bites",
-      items: [
-        { name: "Dry Maggie", price: "₹79" },
-        { name: "Soupy Maggie", price: "₹69" },
-        { name: "Indori Poha", price: "₹79" },
-        { name: "Bas Poha", price: "₹69" },
-        { name: "Bombay Ki Shan (Vada Paw)", price: "₹79" }
-      ]
-    },
-    {
-      category: "Premium Tea",
-      items: [
-        { name: "Green Tea", price: "₹59" },
-        { name: "Masala Tea", price: "₹49" },
-        { name: "Ginger Tea", price: "₹49" },
-        { name: "Black Tea", price: "₹49" },
-        { name: "Ice Tea", price: "₹79" }
+        { name: "Protein Shake", price: "₹119" },
+        { name: "Banana Shake", price: "₹89" },
+        { name: "Strawberry Shake", price: "₹99" },
+        { name: "Chocolate Shake", price: "₹99" },
+        { name: "Badam Shake", price: "₹99" },
+        { name: "Sweet Lassi", price: "₹89" }
       ]
     }
   ];
@@ -160,6 +143,7 @@
     for (let i = 0; i < cat.items.length; i += chunkSize) {
       slides.push({
         category: cat.category,
+        legend: cat.legend,
         items: cat.items.slice(i, i + chunkSize),
         part: cat.items.length > chunkSize ? ` (Part ${Math.floor(i/chunkSize) + 1})` : ''
       });
@@ -180,8 +164,11 @@
           <span class="item-price">${item.price}</span>
         </div>`).join('');
       
+      let legendHtml = slide.legend ? `<div class="scoop-legend">${slide.legend}</div>` : '';
+      
       slideBox.innerHTML = `
         <div class="category-title">${slide.category}${slide.part}</div>
+        ${legendHtml}
         <div class="items-container">${itemsHtml}</div>
       `;
       slideBox.classList.remove('fade-out');
@@ -205,7 +192,7 @@
   /* SUPABASE TV RELOAD COMMANDS */
   const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
   const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
-  const MY_SCREEN_ID = 2; 
+  const MY_SCREEN_ID = 1; 
   let lastTimestamp = null;
 
   async function listenForCommands() {

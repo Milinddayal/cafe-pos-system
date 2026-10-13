@@ -67,8 +67,7 @@ def get_smart_icon(item_name):
     if "donut" in name: return "🍩"
     if "wrap" in name or "roll" in name: return "🌯"
     return "🍽️" # Default plate icon for anything else
-
-# --- LOAD LIVE MENU FROM SUPABASE & AUTO-SEED IF EMPTY ---
+# --- LOAD LIVE MENU FROM SUPABASE ---
 def fetch_live_menu():
     try:
         response = supabase.table("menu_items").select("*").execute()
@@ -81,33 +80,10 @@ def fetch_live_menu():
                     "stock": int(row['stock']),
                     "icon": get_smart_icon(row['name'])
                 }
-            return menu_dict
-        else:
-            default_items = [
-                {"name": "Special Burger", "category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
-                {"name": "Crispy Fries", "category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
-                {"name": "Cafe Latte", "category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕"},
-                {"name": "Chocolate Shake", "category": "Beverages", "price": 180.00, "stock": 30, "icon": "🥤"},
-                {"name": "Butter Croissant", "category": "Snacks", "price": 120.00, "stock": 20, "icon": "🥐"},
-                {"name": "Ice Cream Sundae", "category": "Desserts", "price": 140.00, "stock": 15, "icon": "🍦"}
-            ]
-            for item in default_items:
-                supabase.table("menu_items").insert(item).execute()
-            
-            return {
-                "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
-                "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
-                "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕"},
-                "Chocolate Shake": {"category": "Beverages", "price": 180.00, "stock": 30, "icon": "🥤"},
-                "Butter Croissant": {"category": "Snacks", "price": 120.00, "stock": 20, "icon": "🥐"},
-                "Ice Cream Sundae": {"category": "Desserts", "price": 140.00, "stock": 15, "icon": "🍦"}
-            }
+        return menu_dict
     except Exception as e:
-        return {
-            "Special Burger": {"category": "Burgers", "price": 199.00, "stock": 25, "icon": "🍔"},
-            "Crispy Fries": {"category": "Sides", "price": 99.00, "stock": 50, "icon": "🍟"},
-            "Cafe Latte": {"category": "Beverages", "price": 150.00, "stock": 40, "icon": "☕"}
-        }
+        print(f"Error fetching from Supabase: {e}")
+        return {} # Returns an empty menu if it fails, instead of fake items
 
 current_menu = fetch_live_menu()
 
