@@ -516,7 +516,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             <hr style="border: 0.5px dashed #45552E;">
                         """
                         for item in current_cart_snapshot:
-                            receipt_html += f"<p>{item['Qty']}x {item['Item']} - ₹{item['Total']:.2f}</p>"
+                            receipt_html += f"<p>{item['Qty']}x {item['Item']} ₹{item['Total']:.2f}</p>"
                         
                         receipt_html += f"""
                             <hr style="border: 0.5px dashed #45552E;">
