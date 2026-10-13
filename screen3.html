@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta http-equiv="refresh" content="300">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Green Fusion — Coffee, Juices & Mocktails</title>
+<title>Green Fusion — Snacks & Beverages</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800&family=Jost:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   body { 
     background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; 
-    margin: 0; padding: 25px; height: 100vh; overflow: hidden; 
+    margin: 0; padding: 20px; height: 100vh; overflow: hidden; 
     display: flex; flex-direction: column; position: relative;
     cursor: pointer;
   }
@@ -36,10 +37,9 @@
   .floating-item { position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.4; animation: fall linear infinite; }
   @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); } 100% { transform: translateY(110vh) rotate(360deg); } }
   
-  h1 { position: relative; z-index: 1; font-family: 'Cormorant Garamond', serif; font-size: 5vw; font-weight: 800 !important; color: #333F20; text-align: center; margin: 0 0 1vh 0; }
-  .fs-hint { position: relative; z-index: 1; text-align: center; font-size: 1.2vw; color: #666; margin-bottom: 2vh; letter-spacing: 1px; }
+  h1 { position: relative; z-index: 1; font-family: 'Cormorant Garamond', serif; font-size: 4vw; font-weight: 800 !important; color: #333F20; text-align: center; margin: 0 0 0.5vh 0; }
+  .fs-hint { position: relative; z-index: 1; text-align: center; font-size: 1.1vw; color: #666; margin-bottom: 1vh; letter-spacing: 1px; }
   
-  /* --- GIGANTIC FADING SLIDESHOW STYLES --- */
   #slide-box {
     position: relative; z-index: 1; flex: 1; width: 85vw; margin: 0 auto;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -48,21 +48,22 @@
   .fade-out { opacity: 0 !important; }
   
   .category-title { 
-    font-family: 'Cormorant Garamond', serif; font-size: 5.5vw; font-weight: 800 !important; 
-    color: #BD5B34; margin-bottom: 2vh; text-align: center; 
-    border-bottom: 0.4vw solid rgba(189,91,52,0.4); padding-bottom: 1vh; width: 100%; text-transform: uppercase;
+    font-family: 'Cormorant Garamond', serif; font-size: 4.5vw; font-weight: 800 !important; 
+    color: #BD5B34; margin-bottom: 1vh; text-align: center; 
+    border-bottom: 0.3vw solid rgba(189,91,52,0.4); padding-bottom: 0.5vh; width: 100%; text-transform: uppercase;
   }
   
-  .scoop-legend { font-family: 'Cormorant Garamond', serif; font-size: 2.2vw; color: #666; font-style: italic; margin-top: -1vh; margin-bottom: 3vh; text-align: center; font-weight: 700; }
+  .scoop-legend { font-family: 'Cormorant Garamond', serif; font-size: 1.8vw; color: #666; font-style: italic; margin-top: -0.5vh; margin-bottom: 1.5vh; text-align: center; font-weight: 700; }
   
-  .items-container { width: 100%; display: flex; flex-direction: column; gap: 3vh; }
+  /* Adjusted spacing so 5 items + legend fit easily without cutting off */
+  .items-container { width: 100%; display: flex; flex-direction: column; gap: 1.5vh; }
   .item-row { 
     display: flex; justify-content: space-between; align-items: flex-end; 
-    border-bottom: 0.2vw dashed rgba(51,63,32,0.2); padding-bottom: 1vh; width: 100%;
+    border-bottom: 0.15vw dashed rgba(51,63,32,0.2); padding-bottom: 0.5vh; width: 100%;
   }
-  .item-name { font-size: 3.5vw; font-weight: 800 !important; color: #2B2822; }
-  .item-price { font-size: 4vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
-  .price-divider { color: rgba(43,40,34,0.4); margin: 0 1vw; font-weight: 400; font-family: 'Jost', sans-serif; font-size: 3vw;}
+  .item-name { font-size: 2.8vw; font-weight: 800 !important; color: #2B2822; }
+  .item-price { font-size: 3.2vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
+  .price-divider { color: rgba(43,40,34,0.4); margin: 0 1vw; font-weight: 400; font-family: 'Jost', sans-serif; font-size: 2.5vw;}
 </style>
 </head>
 <body>
@@ -73,16 +74,14 @@
   </div>
   <div class="bg-animation">
     <div class="bg-logo"></div>
-    <div class="floating-item" style="left: 15%; animation-duration: 11s;">☕</div>
+    <div class="floating-item" style="left: 15%; animation-duration: 11s;">🥪</div>
     <div class="floating-item" style="left: 75%; animation-duration: 14s; animation-delay: 2s;">🍹</div>
   </div>
   
   <h1>☕ Coffee, Juices & Mocktails 🍹</h1>
   <div class="fs-hint" id="fs-notice">(Click anywhere to enable Full Screen)</div>
   
-  <div id="slide-box">
-      <!-- Content loads here dynamically -->
-  </div>
+  <div id="slide-box"></div>
 
 <script>
   let audioUnlocked = false;
@@ -107,11 +106,54 @@
     playBassVoice();
   });
 
-  /* HARDCODED MENU DATA */
   const menuData = [
     {
+      category: "Sandwiches",
+      items: [
+        { name: "Veg Sandwich", price: "₹99" },
+        { name: "Paneer Sandwich", price: "₹119" },
+        { name: "Cheese Sandwich", price: "₹129" }
+      ]
+    },
+    {
+      category: "French Fries",
+      items: [
+        { name: "Salted Fries", price: "₹99" },
+        { name: "Peri Peri Fries", price: "₹119" },
+        { name: "Cheese Burst Fries", price: "₹129" }
+      ]
+    },
+    {
+      category: "Pasta & Soup",
+      items: [
+        { name: "Alfredo Pasta", price: "₹119" },
+        { name: "Marinara Pasta", price: "₹109" },
+        { name: "Veg Soup", price: "₹99" },
+        { name: "Manchurian Soup", price: "₹119" }
+      ]
+    },
+    {
+      category: "Local Bites",
+      items: [
+        { name: "Dry Maggie", price: "₹79" },
+        { name: "Soupy Maggie", price: "₹69" },
+        { name: "Indori Poha", price: "₹79" },
+        { name: "Bas Poha", price: "₹69" },
+        { name: "Bombay Ki Shan (Vada Paw)", price: "₹79" }
+      ]
+    },
+    {
+      category: "Premium Tea",
+      items: [
+        { name: "Green Tea", price: "₹59" },
+        { name: "Masala Tea", price: "₹49" },
+        { name: "Ginger Tea", price: "₹49" },
+        { name: "Black Tea", price: "₹49" },
+        { name: "Ice Tea", price: "₹79" }
+      ]
+    },
+    {
       category: "Warm Coffee",
-      legend: "",
       items: [
         { name: "Coffee Warmer", price: "₹69" },
         { name: "Espresso Shot", price: "₹69" },
@@ -120,7 +162,6 @@
     },
     {
       category: "Cold Brews",
-      legend: "",
       items: [
         { name: "Hard Rock", price: "₹110" },
         { name: "Brew Ice", price: "₹99" }
@@ -128,7 +169,6 @@
     },
     {
       category: "Mocktails",
-      legend: "",
       items: [
         { name: "Virgin Mojito", price: "₹119" },
         { name: "Sip the Lip", price: "₹129" },
@@ -138,26 +178,25 @@
     },
     {
       category: "Fresh Juices",
-      legend: "( Small | Large )<br><span style='font-size:1.5vw; color:#888;'>(Subject to seasonal availability)</span>",
+      legend: "( Small | Large )",
       items: [
         { name: "Orange", price: "69 <span class='price-divider'>|</span> 119" },
         { name: "Pomegranate", price: "69 <span class='price-divider'>|</span> 119" },
         { name: "Watermelon", price: "69 <span class='price-divider'>|</span> 119" },
         { name: "Mango", price: "69 <span class='price-divider'>|</span> 119" },
         { name: "Malta", price: "69 <span class='price-divider'>|</span> 119" },
-        { name: "ABC (Apple Beet Carrot)", price: "69 <span class='price-divider'>|</span> 119" }
+        { name: "ABC", price: "69 <span class='price-divider'>|</span> 119" }
       ]
     }
   ];
 
-  /* SMART SPLITTING LOGIC (Max 5 items per slide) */
   let slides = [];
   menuData.forEach(cat => {
     const chunkSize = 5;
     for (let i = 0; i < cat.items.length; i += chunkSize) {
       slides.push({
         category: cat.category,
-        legend: cat.legend,
+        legend: cat.legend || '',
         items: cat.items.slice(i, i + chunkSize),
         part: cat.items.length > chunkSize ? ` (Part ${Math.floor(i/chunkSize) + 1})` : ''
       });
@@ -194,42 +233,13 @@
     showSlide();
   }
 
-  /* START SLIDESHOW ON LOAD */
   window.onload = () => {
     setTimeout(() => { 
         document.getElementById('intro-overlay').classList.add('hide-intro'); 
         showSlide();
-        setInterval(nextSlide, 7000); // Changes slide every 7 seconds
+        setInterval(nextSlide, 7000);
     }, 3000);
   };
-
-  /* SUPABASE TV RELOAD COMMANDS */
-  const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
-  const MY_SCREEN_ID = 3; 
-  let lastTimestamp = null;
-
-  async function listenForCommands() {
-    try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/tv_controls?id=eq.${MY_SCREEN_ID}&select=*`, {
-        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
-      });
-      const data = await response.json();
-      if (data && data.length > 0) {
-        const tvData = data[0];
-        if (lastTimestamp && lastTimestamp !== tvData.timestamp) {
-            if (tvData.command === "reload") { window.location.reload(true); } 
-            else if (tvData.command === "play_intro") { 
-                document.getElementById('intro-overlay').classList.remove('hide-intro');
-                if(audioUnlocked) playBassVoice();
-                setTimeout(() => { document.getElementById('intro-overlay').classList.add('hide-intro'); }, 3500);
-            }
-        }
-        lastTimestamp = tvData.timestamp;
-      }
-    } catch (err) {}
-  }
-  setInterval(listenForCommands, 3000); 
 </script>
 </body>
 </html>
