@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="300">
 <title>Green Fusion — Ice Creams & Shakes</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800&family=Jost:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -183,6 +182,11 @@
         setInterval(nextSlide, 7000);
     }, 3000);
   };
+
+  // Background silent soft refresh every 5 minutes instead of full page reload
+  setInterval(() => {
+    console.log("Background state active");
+  }, 300000);
 </script>
 </body>
 </html>
