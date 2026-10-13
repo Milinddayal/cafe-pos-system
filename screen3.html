@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta http-equiv="refresh" content="300">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Green Fusion — Snacks & Beverages</title>
+<meta http-equiv="refresh" content="300">
+<title>Green Fusion — Coffee, Juices & Mocktails</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800&family=Jost:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
@@ -55,7 +55,6 @@
   
   .scoop-legend { font-family: 'Cormorant Garamond', serif; font-size: 1.8vw; color: #666; font-style: italic; margin-top: -0.5vh; margin-bottom: 1.5vh; text-align: center; font-weight: 700; }
   
-  /* Adjusted spacing so 5 items + legend fit easily without cutting off */
   .items-container { width: 100%; display: flex; flex-direction: column; gap: 1.5vh; }
   .item-row { 
     display: flex; justify-content: space-between; align-items: flex-end; 
@@ -74,7 +73,7 @@
   </div>
   <div class="bg-animation">
     <div class="bg-logo"></div>
-    <div class="floating-item" style="left: 15%; animation-duration: 11s;">🥪</div>
+    <div class="floating-item" style="left: 15%; animation-duration: 11s;">☕</div>
     <div class="floating-item" style="left: 75%; animation-duration: 14s; animation-delay: 2s;">🍹</div>
   </div>
   
@@ -107,41 +106,6 @@
   });
 
   const menuData = [
-    {
-      category: "Sandwiches",
-      items: [
-        { name: "Veg Sandwich", price: "₹99" },
-        { name: "Paneer Sandwich", price: "₹119" },
-        { name: "Cheese Sandwich", price: "₹129" }
-      ]
-    },
-    {
-      category: "French Fries",
-      items: [
-        { name: "Salted Fries", price: "₹99" },
-        { name: "Peri Peri Fries", price: "₹119" },
-        { name: "Cheese Burst Fries", price: "₹129" }
-      ]
-    },
-    {
-      category: "Pasta & Soup",
-      items: [
-        { name: "Alfredo Pasta", price: "₹119" },
-        { name: "Marinara Pasta", price: "₹109" },
-        { name: "Veg Soup", price: "₹99" },
-        { name: "Manchurian Soup", price: "₹119" }
-      ]
-    },
-    {
-      category: "Local Bites",
-      items: [
-        { name: "Dry Maggie", price: "₹79" },
-        { name: "Soupy Maggie", price: "₹69" },
-        { name: "Indori Poha", price: "₹79" },
-        { name: "Bas Poha", price: "₹69" },
-        { name: "Bombay Ki Shan (Vada Paw)", price: "₹79" }
-      ]
-    },
     {
       category: "Premium Tea",
       items: [

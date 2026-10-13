@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="300">
 <title>Green Fusion — Ice Creams & Shakes</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800&family=Jost:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
   body { 
     background: #FAF5EA; color: #2B2822; font-family: 'Jost', sans-serif; 
-    margin: 0; padding: 25px; height: 100vh; overflow: hidden; 
+    margin: 0; padding: 20px; height: 100vh; overflow: hidden; 
     display: flex; flex-direction: column; position: relative;
     cursor: pointer;
   }
@@ -36,10 +37,9 @@
   .floating-item { position: absolute; top: -10vh; font-size: 4.5rem; opacity: 0.4; animation: fall linear infinite; }
   @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); } 100% { transform: translateY(110vh) rotate(360deg); } }
   
-  h1 { position: relative; z-index: 1; font-family: 'Cormorant Garamond', serif; font-size: 5vw; font-weight: 800 !important; color: #333F20; text-align: center; margin: 0 0 1vh 0; }
-  .fs-hint { position: relative; z-index: 1; text-align: center; font-size: 1.2vw; color: #666; margin-bottom: 2vh; letter-spacing: 1px; }
+  h1 { position: relative; z-index: 1; font-family: 'Cormorant Garamond', serif; font-size: 4vw; font-weight: 800 !important; color: #333F20; text-align: center; margin: 0 0 0.5vh 0; }
+  .fs-hint { position: relative; z-index: 1; text-align: center; font-size: 1.1vw; color: #666; margin-bottom: 1vh; letter-spacing: 1px; }
   
-  /* --- GIGANTIC FADING SLIDESHOW STYLES --- */
   #slide-box {
     position: relative; z-index: 1; flex: 1; width: 85vw; margin: 0 auto;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -48,21 +48,21 @@
   .fade-out { opacity: 0 !important; }
   
   .category-title { 
-    font-family: 'Cormorant Garamond', serif; font-size: 5.5vw; font-weight: 800 !important; 
-    color: #BD5B34; margin-bottom: 2vh; text-align: center; 
-    border-bottom: 0.4vw solid rgba(189,91,52,0.4); padding-bottom: 1vh; width: 100%; text-transform: uppercase;
+    font-family: 'Cormorant Garamond', serif; font-size: 4.5vw; font-weight: 800 !important; 
+    color: #BD5B34; margin-bottom: 1vh; text-align: center; 
+    border-bottom: 0.3vw solid rgba(189,91,52,0.4); padding-bottom: 0.5vh; width: 100%; text-transform: uppercase;
   }
   
-  .scoop-legend { font-family: 'Cormorant Garamond', serif; font-size: 2.2vw; color: #666; font-style: italic; margin-top: -1vh; margin-bottom: 3vh; text-align: center; font-weight: 700; }
+  .scoop-legend { font-family: 'Cormorant Garamond', serif; font-size: 1.8vw; color: #666; font-style: italic; margin-top: -0.5vh; margin-bottom: 1.5vh; text-align: center; font-weight: 700; }
   
-  .items-container { width: 100%; display: flex; flex-direction: column; gap: 3vh; }
+  .items-container { width: 100%; display: flex; flex-direction: column; gap: 1.5vh; }
   .item-row { 
     display: flex; justify-content: space-between; align-items: flex-end; 
-    border-bottom: 0.2vw dashed rgba(51,63,32,0.2); padding-bottom: 1vh; width: 100%;
+    border-bottom: 0.15vw dashed rgba(51,63,32,0.2); padding-bottom: 0.5vh; width: 100%;
   }
-  .item-name { font-size: 3.5vw; font-weight: 800 !important; color: #2B2822; }
-  .item-price { font-size: 4vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
-  .price-divider { color: rgba(43,40,34,0.4); margin: 0 1vw; font-weight: 400; font-family: 'Jost', sans-serif; font-size: 3vw;}
+  .item-name { font-size: 2.8vw; font-weight: 800 !important; color: #2B2822; }
+  .item-price { font-size: 3.2vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
+  .price-divider { color: rgba(43,40,34,0.4); margin: 0 1vw; font-weight: 400; font-family: 'Jost', sans-serif; font-size: 2.5vw;}
 </style>
 </head>
 <body>
@@ -80,9 +80,7 @@
   <h1>🍨 Ice Creams & Shakes 🥤</h1>
   <div class="fs-hint" id="fs-notice">(Click anywhere to enable Full Screen)</div>
   
-  <div id="slide-box">
-      <!-- Content loads here dynamically -->
-  </div>
+  <div id="slide-box"></div>
 
 <script>
   let audioUnlocked = false;
@@ -107,7 +105,6 @@
     playBassVoice();
   });
 
-  /* HARDCODED MENU DATA */
   const menuData = [
     {
       category: "Gelato Amor",
@@ -130,12 +127,12 @@
         { name: "Banana Shake", price: "₹89" },
         { name: "Strawberry Shake", price: "₹99" },
         { name: "Chocolate Shake", price: "₹99" },
-        { name: "Badam Shake", price: "₹99" }
+        { name: "Badam Shake", price: "₹99" },
+        { name: "Sweet Lassi", price: "₹89" }
       ]
     }
   ];
 
-  /* SMART SPLITTING LOGIC (Max 5 items per slide) */
   let slides = [];
   menuData.forEach(cat => {
     const chunkSize = 5;
@@ -179,42 +176,13 @@
     showSlide();
   }
 
-  /* START SLIDESHOW ON LOAD */
   window.onload = () => {
     setTimeout(() => { 
         document.getElementById('intro-overlay').classList.add('hide-intro'); 
         showSlide();
-        setInterval(nextSlide, 7000); // Changes slide every 7 seconds
+        setInterval(nextSlide, 7000);
     }, 3000);
   };
-
-  /* SUPABASE TV RELOAD COMMANDS (Untouched) */
-  const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
-  const MY_SCREEN_ID = 1; 
-  let lastTimestamp = null;
-
-  async function listenForCommands() {
-    try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/tv_controls?id=eq.${MY_SCREEN_ID}&select=*`, {
-        headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` }
-      });
-      const data = await response.json();
-      if (data && data.length > 0) {
-        const tvData = data[0];
-        if (lastTimestamp && lastTimestamp !== tvData.timestamp) {
-            if (tvData.command === "reload") { window.location.reload(true); } 
-            else if (tvData.command === "play_intro") { 
-                document.getElementById('intro-overlay').classList.remove('hide-intro');
-                if(audioUnlocked) playBassVoice();
-                setTimeout(() => { document.getElementById('intro-overlay').classList.add('hide-intro'); }, 3500);
-            }
-        }
-        lastTimestamp = tvData.timestamp;
-      }
-    } catch (err) {}
-  }
-  setInterval(listenForCommands, 3000); 
 </script>
 </body>
 </html>
