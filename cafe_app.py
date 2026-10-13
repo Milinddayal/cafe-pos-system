@@ -47,43 +47,43 @@ if "view" in st.query_params:
     elif requested_view == "kds":
         st.session_state.active_portal = "👨‍🍳 Kitchen Display (KDS)"
 
-# --- SMART ICON GENERATOR ---
-def get_smart_icon(item_name):
-    """Automatically assigns a relevant emoji based on the item name."""
-    name = item_name.lower()
-    if "fries" in name: return "🍟"
-    if "water" in name: return "💧"
-    if "maggi" in name or "noodle" in name: return "🍜"
-    if "cheese ball" in name: return "🧀"
-    if "burger" in name: return "🍔"
-    if "shake" in name or "beverage" in name: return "🥤"
-    if "coffee" in name or "latte" in name or "brew" in name: return "☕"
-    if "tea" in name or "chai" in name: return "🍵"
-    if "croissant" in name: return "🥐"
-    if "ice cream" in name or "sundae" in name: return "🍦"
-    if "pizza" in name: return "🍕"
-    if "sandwich" in name: return "🥪"
-    if "cake" in name or "pastry" in name: return "🍰"
-    if "donut" in name: return "🍩"
-    if "wrap" in name or "roll" in name: return "🌯"
-    return "🍽️" # Default plate icon for anything else
+# --- SMART ICON GENERATOR (Category Based) ---
+def get_smart_icon(category_name):
+    icons = {
+        "Gelato Amor": "🍨",
+        "Premium Shakes": "🥤",
+        "Sandwiches": "🥪",
+        "French Fries": "🍟",
+        "Pasta & Soup": "🍝",
+        "Local Bites": "🍛",
+        "Premium Tea": "🍵",
+        "Warm Coffee": "☕",
+        "Cold Brews": "🧊",
+        "Mocktails": "🍹",
+        "Fresh Juices": "🧃"
+    }
+    # Returns a default plate icon if the category isn't found, preventing crashes!
+    return icons.get(category_name, "🍽️")
+
 # --- LOAD LIVE MENU FROM SUPABASE ---
 def fetch_live_menu():
     try:
         response = supabase.table("menu_items").select("*").execute()
         menu_dict = {}
+        
         if response.data and len(response.data) > 0:
             for row in response.data:
                 menu_dict[row['name']] = {
                     "category": row['category'],
                     "price": float(row['price']),
                     "stock": int(row['stock']),
-                    "icon": get_smart_icon(row['name'])
+                    "icon": get_smart_icon(row['category']) # Now uses category!
                 }
         return menu_dict
     except Exception as e:
-        print(f"Error fetching from Supabase: {e}")
-        return {} # Returns an empty menu if it fails, instead of fake items
+        # This will instantly print any database errors right on your screen so we can see them
+        st.error(f"🚨 Database Connection Error: {e}") 
+        return {}
 
 current_menu = fetch_live_menu()
 
