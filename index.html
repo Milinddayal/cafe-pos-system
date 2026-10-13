@@ -105,11 +105,6 @@
   .corner-card.image-card { overflow: hidden; padding: 0; }
   .corner-card.image-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-  .gallery-card { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.04); }
-  .gallery-card img { width: 100%; height: 240px; object-fit: cover; display: block; }
-  .gallery-card .caption { padding: 14px 16px 18px; font-size: 14px; color: var(--olive-deep); }
-
   .visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; background: var(--olive); color: var(--cream); padding: 60px; border-radius: 8px; position: relative; z-index: 2; }
   .visit-grid h2, .visit-grid h3 { color: var(--cream); }
   .visit-info-table { margin-top: 25px; display: flex; flex-direction: column; gap: 16px; font-size: 14.5px; }
@@ -274,11 +269,17 @@
     });
 
     const subtitles = {
-      "Burgers": "stacked & grilled",
-      "Sides": "crisp & golden",
-      "Snacks": "comfort food",
-      "Beverages": "pulled & shaken",
-      "Desserts": "sweet finishes"
+      "Gelato Amor": "scooped & sweet",
+      "Premium Shakes": "thick & creamy",
+      "Sandwiches": "toasted & layered",
+      "French Fries": "crisp & golden",
+      "Pasta & Soup": "warm & comforting",
+      "Local Bites": "street style favourites",
+      "Premium Tea": "brewed to perfection",
+      "Warm Coffee": "rich & aromatic",
+      "Cold Brews": "iced & refreshing",
+      "Mocktails": "hand-shaken & fizzy",
+      "Fresh Juices": "squeezed to order"
     };
 
     for (const [category, catItems] of Object.entries(grouped)) {
