@@ -65,7 +65,8 @@ def get_smart_icon(category_name):
     # Returns a default plate icon if the category isn't found, preventing crashes!
     return icons.get(category_name, "🍽️")
 
-# --- LOAD LIVE MENU FROM SUPABASE ---
+# --- LOAD LIVE MENU FROM SUPABASE (CACHED FOR SPEED) ---
+@st.cache_data(ttl=30)
 def fetch_live_menu():
     try:
         response = supabase.table("menu_items").select("*").execute()
@@ -77,16 +78,13 @@ def fetch_live_menu():
                     "category": row['category'],
                     "price": float(row['price']),
                     "stock": int(row['stock']),
-                    "icon": get_smart_icon(row['category']) # Now uses category!
+                    "icon": get_smart_icon(row['category']) if 'get_smart_icon' in globals() else "🍽️"
                 }
         return menu_dict
     except Exception as e:
-        # This will instantly print any database errors right on your screen so we can see them
-        st.error(f"🚨 Database Connection Error: {e}") 
         return {}
-@st.cache_data(ttl=60)
-current_menu = fetch_live_menu()
 
+current_menu = fetch_live_menu()
 # --- LOAD BRAND LOGO AUTOMATICALLY ---
 LOGO_PATH = "logo.jpeg"
 logo_base64 = ""
@@ -325,51 +323,6 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
     
     if counter_pin == actual_counter_pin:
         st.success(f"Logged in successfully as **{counter_id}**. Ready for billing operations.")
-
-        # --- MASTER QUICK-BILL SIDEBAR SEARCH ---
-        with st.sidebar:
-            st.divider()
-            st.subheader("⚡ Quick-Add All Items")
-            quick_search = st.text_input("🔍 Search any menu item...", placeholder="Type item name...")
-            
-            if current_menu:
-                # Filter items based on search input
-                filtered_sidebar_items = {
-                    name: info for name, info in sorted(current_menu.items())
-                    if not quick_search or quick_search.lower() in name.lower()
-                }
-                
-                if filtered_sidebar_items:
-                    # Scrollable container for quick-add buttons
-                    with st.container(height=350):
-                        for item_name, item_info in filtered_sidebar_items.items():
-                            col_sb1, col_sb2 = st.columns([3, 1])
-                            with col_sb1:
-                                st.markdown(f"<p style='font-size: 13px; margin: 0; font-weight: bold;'>{item_info['icon']} {item_name}</p>", unsafe_allow_html=True)
-                                st.markdown(f"<p style='font-size: 11px; margin: 0; color: #BD5B34;'>₹{item_info['price']:.0f} | Stock: {item_info['stock']}</p>", unsafe_allow_html=True)
-                            with col_sb2:
-                                if item_info['stock'] > 0:
-                                    if st.button("➕", key=f"quick_add_{item_name}"):
-                                        found = False
-                                        for cart_item in st.session_state.cart:
-                                            if cart_item["Item"] == item_name:
-                                                cart_item["Qty"] += 1
-                                                cart_item["Total"] = cart_item["Qty"] * cart_item["Price"]
-                                                found = True
-                                                break
-                                        if not found:
-                                            st.session_state.cart.append({
-                                                "Item": item_name, 
-                                                "Qty": 1, 
-                                                "Price": item_info['price'], 
-                                                "Total": item_info['price']
-                                            })
-                                        st.rerun()
-                                else:
-                                    st.caption("Out")
-                            st.divider()
-                else:
-                    st.info("No matching items found.")
 
         if st.session_state.get('last_receipt'):
             st.markdown("---")
