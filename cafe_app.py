@@ -47,6 +47,26 @@ if "view" in st.query_params:
     elif requested_view == "kds":
         st.session_state.active_portal = "👨‍🍳 Kitchen Display (KDS)"
 
+# --- FULL SCREEN / CLEAN APP VIEW MODE ---
+# If you open your app with ?view=kiosk in the URL, it hides all Streamlit headers and toolbars automatically
+is_kiosk = st.query_params.get("view") == "kiosk"
+
+if is_kiosk:
+    st.markdown("""
+        <style>
+            /* Hide Streamlit header, menu hamburger, and footer */
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            [data-testid="stSidebar"] {display: none;}
+            .block-container {
+                padding-top: 1rem !important;
+                padding-bottom: 1rem !important;
+                max-width: 100% !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
 # --- SMART ICON GENERATOR (Category Based) ---
 def get_smart_icon(category_name):
     icons = {
