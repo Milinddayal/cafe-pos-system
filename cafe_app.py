@@ -84,7 +84,7 @@ def fetch_live_menu():
         # This will instantly print any database errors right on your screen so we can see them
         st.error(f"🚨 Database Connection Error: {e}") 
         return {}
-
+@st.cache_data(ttl=60)
 current_menu = fetch_live_menu()
 
 # --- LOAD BRAND LOGO AUTOMATICALLY ---
