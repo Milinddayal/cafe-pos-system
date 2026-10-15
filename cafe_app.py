@@ -366,7 +366,20 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
             with col_rc1:
                 receipt_heading = "🧾 Customer Bill Receipt" if has_separate_token else "🧾 Receipt & Kitchen Ticket"
                 st.markdown(f"### *{receipt_heading}*")
-                st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
+                if has_separate_token:
+                    st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
+                else:
+                    receipt_html = st.session_state.last_receipt['receipt_html']
+                    if st.session_state.last_receipt.get('auto_print', False):
+                        st.session_state.last_receipt['auto_print'] = False
+                        receipt_html += """
+                        <script>
+                            window.onload = function() {
+                                window.print();
+                            };
+                        </script>
+                        """
+                    st.components.v1.html(receipt_html, height=700, scrolling=True)
                 
                 st.markdown("---")
                 if st.button("🛠️ [ MODIFY / CANCEL THIS ORDER ]", key="btn_jump_mod_highlighted", use_container_width=True):
@@ -626,6 +639,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         st.session_state.last_receipt = {
                             "receipt_html": combined_print_html,
                             "token_html": "",
+                            "auto_print": True,
                             "order_time": order_time
                         }
                         st.session_state.cart = []
