@@ -364,7 +364,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
             st.success("🎉 Order Completed Successfully! Click the button below to print.")
             components.html(
                 st.session_state.last_receipt['receipt_html'],
-                height=st.session_state.last_receipt['receipt_height'],
+                height=st.session_state.last_receipt.get('receipt_height', 450),
                 scrolling=False
             )
 
