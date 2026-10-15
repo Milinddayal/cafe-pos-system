@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 import pandas as pd
 import plotly.express as px
@@ -361,7 +362,11 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
         if st.session_state.get('last_receipt'):
             st.markdown("---")
             st.success("🎉 Order Completed Successfully! Click the button below to print.")
-            st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
+            components.html(
+                st.session_state.last_receipt['receipt_html'],
+                height=st.session_state.last_receipt['receipt_height'],
+                scrolling=False
+            )
 
             if st.button("✖ Close Receipt & Start New Order"):
                 st.session_state.last_receipt = None
@@ -563,26 +568,36 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                         </div>
                         <div style="text-align: center; margin-top: 15px;">
-                            <button onclick="printReceipt()" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                            <button id="isolated-print-btn" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
                                 🖨️ Print Bill &amp; KOT Directly
                             </button>
                         </div>
-                        <style>
-                            @media print {{
-                                body * {{ visibility: hidden; }}
-                                #thermal-receipt-section, #thermal-receipt-section * {{ visibility: visible; }}
-                                #thermal-receipt-section {{ position: absolute; left: 0; top: 0; width: 78mm; }}
-                            }}
-                        </style>
                         <script>
-                            function printReceipt() {{
-                                window.print();
-                            }}
+                            document.getElementById('isolated-print-btn').addEventListener('click', function() {{
+                                var content = document.getElementById('thermal-receipt-section').innerHTML;
+                                var printWindow = window.open('', '_blank', 'height=600,width=400');
+                                if (!printWindow) {{
+                                    window.alert('Please allow pop-ups to print the receipt.');
+                                    return;
+                                }}
+                                printWindow.document.write('<html><head><title>Print Receipt</title>');
+                                printWindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }}</style>');
+                                printWindow.document.write('</head><body>');
+                                printWindow.document.write(content);
+                                printWindow.document.write('</body></html>');
+                                printWindow.document.close();
+                                printWindow.focus();
+                                setTimeout(function() {{
+                                    printWindow.print();
+                                    printWindow.close();
+                                }}, 250);
+                            }});
                         </script>
                         """
 
                         st.session_state.last_receipt = {
                             "receipt_html": direct_print_html,
+                            "receipt_height": 470 + len(current_cart_snapshot) * 48,
                             "token_html": "",
                             "order_time": order_time
                         }
