@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 import pandas as pd
 import plotly.express as px
@@ -361,7 +362,11 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
         if st.session_state.get('last_receipt'):
             st.markdown("---")
             st.success("🎉 Order Completed Successfully! Click the button below to print.")
-            st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
+            components.html(
+                st.session_state.last_receipt['receipt_html'],
+                height=st.session_state.last_receipt['receipt_height'],
+                scrolling=False
+            )
 
             if st.button("✖ Close Receipt & Start New Order"):
                 st.session_state.last_receipt = None
@@ -526,6 +531,10 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         
                         direct_print_html = f"""
                         <style>
+                            body {{
+                                margin: 0;
+                                background: #fff;
+                            }}
                             .direct-receipt-box {{
                                 width: 78mm;
                                 max-width: 80mm;
@@ -590,14 +599,20 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             </div>
                         </div>
                         <div style="text-align: center; margin-top: 15px;" class="no-print">
-                            <button onclick="window.print();" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                            <button id="print-trigger-btn" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
                                 🖨️ Print Receipt &amp; KOT Now
                             </button>
                         </div>
+                        <script>
+                            document.getElementById('print-trigger-btn').addEventListener('click', function() {{
+                                window.print();
+                            }});
+                        </script>
                         """
 
                         st.session_state.last_receipt = {
                             "receipt_html": direct_print_html,
+                            "receipt_height": 470 + len(current_cart_snapshot) * 48,
                             "token_html": "",
                             "order_time": order_time
                         }
