@@ -91,7 +91,6 @@ def fetch_live_menu():
     try:
         response = supabase.table("menu_items").select("*").execute()
         menu_dict = {}
-        
         if response.data and len(response.data) > 0:
             for row in response.data:
                 menu_dict[row['name']] = {
@@ -258,7 +257,21 @@ st.markdown(f"""
     .pos-card:hover {{
         transform: translateY(-3px);
         box-shadow: 0 8px 20px rgba(69, 85, 46, 0.1);
-        border: 1px solid #45552E;
+        border: 1px solid #d5ded0;
+    }}
+    
+    /* FORCE WHITE ADD BUTTONS INSIDE MENU CARDS */
+    .pos-card div.stButton > button {{
+        background-color: #FFFFFF !important;
+        color: #2B2822 !important;
+        border: 1px solid rgba(43,40,34,0.2) !important;
+        box-shadow: none !important;
+    }}
+    .pos-card div.stButton > button:hover {{
+        background-color: #FAF5EA !important;
+        color: #BD5B34 !important;
+        border-color: #BD5B34 !important;
+        transform: none !important;
     }}
     
     /* Clean up the Cart Box */
@@ -279,7 +292,7 @@ st.markdown(f"""
         margin-bottom: 20px;
     }}
     
-    /* Button Styling */
+    /* General Button Styling (Olive Green for Checkouts/Actions) */
     div.stButton > button {{
         background-color: #45552E !important;
         color: #FAF5EA !important;
@@ -526,26 +539,48 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
                         
                         receipt_html = f"""
+                        <style>
+                            .receipt-box {{
+                                width: 78mm;
+                                max-width: 80mm;
+                                margin: 0 auto;
+                                font-family: 'Courier New', Courier, monospace;
+                                font-size: 12px;
+                                line-height: 1.2;
+                                color: #000;
+                                background: #fff;
+                                padding: 5px;
+                            }}
+                            .receipt-box h2, .receipt-box h3 {{
+                                margin: 4px 0;
+                                text-align: center;
+                            }}
+                            @media print {{
+                                body * {{ visibility: hidden; }}
+                                .receipt-box, .receipt-box * {{ visibility: visible; }}
+                                .receipt-box {{ position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }}
+                            }}
+                        </style>
                         <div class="receipt-box">
-                            <h2 style="text-align: center; margin: 0; color: #45552E !important;">GREEN FUSION</h2>
+                            <h2>GREEN FUSION</h2>
                             <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {counter_id} | Date: {order_time}</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Payment Mode: <b>{clean_payment_mode}</b></p>
-                            <hr style="border: 0.5px dashed #45552E;">
+                            <hr style="border: 0.5px dashed #000;">
                         """
                         for item in current_cart_snapshot:
-                            receipt_html += f"<p>{item['Qty']}x {item['Item']} ₹{item['Total']:.2f}</p>"
-                        
+                            receipt_html += f"<p>{item['Qty']}x {item['Item']} — ₹{item['Total']:.2f}</p>"
+
                         receipt_html += f"""
-                            <hr style="border: 0.5px dashed #45552E;">
-                            <p>Subtotal - ₹{subtotal:.2f}</p>
-                            <p>GST (5%) - ₹{tax:.2f}</p>
-                            <h3 style="color: #1a1a1a !important;">Total: ₹{grand_total:.2f}</h3>
+                            <hr style="border: 0.5px dashed #000;">
+                            <p>Subtotal: ₹{subtotal:.2f}</p>
+                            <p>GST (5%): ₹{tax:.2f}</p>
+                            <h3 style="color: #000 !important;">Grand Total: ₹{grand_total:.2f}</h3>
                         """
                         if clean_payment_mode == "Cash":
                             receipt_html += f"""
-                            <p>Cash Given - ₹{cash_given:.2f}</p>
-                            <p>Change Returned - ₹{cash_given - grand_total:.2f}</p>
+                            <p>Cash Given: ₹{cash_given:.2f}</p>
+                            <p>Change Due: ₹{cash_given - grand_total:.2f}</p>
                             """
                         receipt_html += f"""
                             <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
