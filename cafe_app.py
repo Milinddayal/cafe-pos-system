@@ -568,31 +568,10 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                         </div>
                         <div style="text-align: center; margin-top: 15px;">
-                            <button id="isolated-print-btn" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
-                                🖨️ Print Bill &amp; KOT Directly
-                            </button>
+                            <a href="javascript:window.print();" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block;">
+                                🖨️ Print Bill &amp; KOT Now
+                            </a>
                         </div>
-                        <script>
-                            document.getElementById('isolated-print-btn').addEventListener('click', function() {{
-                                var content = document.getElementById('thermal-receipt-section').innerHTML;
-                                var printWindow = window.open('', '_blank', 'height=600,width=400');
-                                if (!printWindow) {{
-                                    window.alert('Please allow pop-ups to print the receipt.');
-                                    return;
-                                }}
-                                printWindow.document.write('<html><head><title>Print Receipt</title>');
-                                printWindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }}</style>');
-                                printWindow.document.write('</head><body>');
-                                printWindow.document.write(content);
-                                printWindow.document.write('</body></html>');
-                                printWindow.document.close();
-                                printWindow.focus();
-                                setTimeout(function() {{
-                                    printWindow.print();
-                                    printWindow.close();
-                                }}, 250);
-                            }});
-                        </script>
                         """
 
                         st.session_state.last_receipt = {
