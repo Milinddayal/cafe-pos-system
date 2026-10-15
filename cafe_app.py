@@ -361,9 +361,11 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
             st.markdown("---")
             st.success("🎉 Order Completed Successfully! Below is your live printable receipt and kitchen token.")
             
-            col_rc1, col_rc2 = st.columns(2)
+            has_separate_token = bool(st.session_state.last_receipt.get('token_html'))
+            col_rc1, *remaining_receipt_columns = st.columns(2) if has_separate_token else st.columns(1)
             with col_rc1:
-                st.markdown("### *🧾 Customer Bill Receipt*")
+                receipt_heading = "🧾 Customer Bill Receipt" if has_separate_token else "🧾 Receipt & Kitchen Ticket"
+                st.markdown(f"### *{receipt_heading}*")
                 st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
                 
                 st.markdown("---")
@@ -373,9 +375,10 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                     st.session_state.active_portal = "🛠️ Order Modification & Cancellation"
                     st.rerun()
 
-            with col_rc2:
-                st.markdown("### *👨‍🍳 Chef Kitchen Ticket (KOT)*")
-                st.markdown(st.session_state.last_receipt['token_html'], unsafe_allow_html=True)
+            if has_separate_token:
+                with remaining_receipt_columns[0]:
+                    st.markdown("### *👨‍🍳 Chef Kitchen Ticket (KOT)*")
+                    st.markdown(st.session_state.last_receipt['token_html'], unsafe_allow_html=True)
             
             if st.button("✖ Close Receipt & Start New Order"):
                 st.session_state.last_receipt = None
@@ -538,9 +541,9 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         current_cart_snapshot = list(st.session_state.cart)
                         order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
                         
-                        receipt_html = f"""
+                        combined_print_html = f"""
                         <style>
-                            .receipt-box {{
+                            .receipt-page {{
                                 width: 78mm;
                                 max-width: 80mm;
                                 margin: 0 auto;
@@ -550,18 +553,35 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                 color: #000;
                                 background: #fff;
                                 padding: 5px;
+                                page-break-after: always;
                             }}
-                            .receipt-box h2, .receipt-box h3 {{
+                            .receipt-page h2, .receipt-page h3 {{
                                 margin: 4px 0;
                                 text-align: center;
                             }}
+                            .kitchen-page {{
+                                width: 78mm;
+                                max-width: 80mm;
+                                margin: 0 auto;
+                                font-family: 'Courier New', Courier, monospace;
+                                font-size: 13px;
+                                line-height: 1.3;
+                                color: #000;
+                                background: #fff;
+                                padding: 5px;
+                            }}
+                            .kitchen-page h3 {{
+                                text-align: center;
+                                margin: 4px 0;
+                            }}
                             @media print {{
                                 body * {{ visibility: hidden; }}
-                                .receipt-box, .receipt-box * {{ visibility: visible; }}
-                                .receipt-box {{ position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }}
+                                .print-container, .print-container * {{ visibility: visible; }}
+                                .print-container {{ position: absolute; left: 0; top: 0; width: 100%; }}
                             }}
                         </style>
-                        <div class="receipt-box">
+                        <div class="print-container">
+                            <div class="receipt-page">
                             <h2>GREEN FUSION</h2>
                             <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {counter_id} | Date: {order_time}</p>
@@ -569,43 +589,43 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             <hr style="border: 0.5px dashed #000;">
                         """
                         for item in current_cart_snapshot:
-                            receipt_html += f"<p>{item['Qty']}x {item['Item']} — ₹{item['Total']:.2f}</p>"
+                            combined_print_html += f"<p>{item['Qty']}x {item['Item']} — ₹{item['Total']:.2f}</p>"
 
-                        receipt_html += f"""
+                        combined_print_html += f"""
                             <hr style="border: 0.5px dashed #000;">
                             <p>Subtotal: ₹{subtotal:.2f}</p>
                             <p>GST (5%): ₹{tax:.2f}</p>
                             <h3 style="color: #000 !important;">Grand Total: ₹{grand_total:.2f}</h3>
                         """
                         if clean_payment_mode == "Cash":
-                            receipt_html += f"""
+                            combined_print_html += f"""
                             <p>Cash Given: ₹{cash_given:.2f}</p>
                             <p>Change Due: ₹{cash_given - grand_total:.2f}</p>
                             """
-                        receipt_html += f"""
+                        combined_print_html += f"""
                             <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
-                        </div>
-                        """
+                            </div>
 
-                        token_html = f"""
-                        <div class="chef-token">
-                            <h3 style="text-align: center; margin: 0; color: #000 !important;">KITCHEN ORDER TICKET</h3>
-                            <p style="text-align: center; font-size: 12px; margin: 5px 0;">Terminal: {counter_id} | Time: {order_time}</p>
-                            <hr style="border: 1px solid #333;">
-                            <ul style="list-style-type: none; padding: 0;">
+                            <div class="kitchen-page">
+                                <h3>KITCHEN ORDER TICKET</h3>
+                                <p style="text-align: center; font-size: 11px; margin: 3px 0;">Terminal: {counter_id} | Time: {order_time}</p>
+                                <hr style="border: 1px solid #000;">
+                                <ul style="list-style-type: none; padding: 0; margin: 5px 0;">
                         """
                         for item in current_cart_snapshot:
-                            token_html += f"<li style='font-size: 15px; font-weight: bold; margin-bottom: 4px;'>▪ {item['Qty']}x {item['Item']}</li>"
-                        token_html += """
+                            combined_print_html += f"<li style='font-size: 15px; font-weight: bold; margin-bottom: 5px;'>▪ {item['Qty']}x {item['Item']}</li>"
+
+                        combined_print_html += f"""
                             </ul>
-                            <hr style="border: 1px solid #333;">
-                            <p style="text-align: center; font-size: 11px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
-                        </div>
+                            <hr style="border: 1px solid #000;">
+                            <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
+                            </div>
                         """
+                        combined_print_html += "</div>"
 
                         st.session_state.last_receipt = {
-                            "receipt_html": receipt_html,
-                            "token_html": token_html,
+                            "receipt_html": combined_print_html,
+                            "token_html": "",
                             "order_time": order_time
                         }
                         st.session_state.cart = []
