@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import requests
 import pandas as pd
 import plotly.express as px
@@ -361,30 +360,9 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
 
         if st.session_state.get('last_receipt'):
             st.markdown("---")
-            st.success("🎉 Order Completed Successfully! Below is your live printable receipt and kitchen token.")
-            
-            has_separate_token = bool(st.session_state.last_receipt.get('token_html'))
-            col_rc1, *remaining_receipt_columns = st.columns(2) if has_separate_token else st.columns(1)
-            with col_rc1:
-                receipt_heading = "🧾 Customer Bill Receipt" if has_separate_token else "🧾 Receipt & Kitchen Ticket"
-                st.markdown(f"### *{receipt_heading}*")
-                if has_separate_token:
-                    st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
-                else:
-                    components.html(st.session_state.last_receipt['receipt_html'], height=450, scrolling=True)
-                
-                st.markdown("---")
-                if st.button("🛠️ [ MODIFY / CANCEL THIS ORDER ]", key="btn_jump_mod_highlighted", use_container_width=True):
-                    st.session_state.target_mod_time = st.session_state.last_receipt['order_time']
-                    st.session_state.target_counter = counter_id
-                    st.session_state.active_portal = "🛠️ Order Modification & Cancellation"
-                    st.rerun()
+            st.success("🎉 Order Completed Successfully! Click the button below to print.")
+            st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
 
-            if has_separate_token:
-                with remaining_receipt_columns[0]:
-                    st.markdown("### *👨‍🍳 Chef Kitchen Ticket (KOT)*")
-                    st.markdown(st.session_state.last_receipt['token_html'], unsafe_allow_html=True)
-            
             if st.button("✖ Close Receipt & Start New Order"):
                 st.session_state.last_receipt = None
                 st.rerun()
@@ -546,67 +524,34 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         current_cart_snapshot = list(st.session_state.cart)
                         order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
                         
-                        isolated_print_html = f"""
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
+                        direct_print_html = f"""
                         <style>
-                            body {{
-                                background: #fff;
-                                color: #000;
-                                font-family: 'Courier New', Courier, monospace;
-                                margin: 0;
-                                padding: 10px;
-                            }}
-                            .receipt-page {{
+                            .direct-receipt-box {{
                                 width: 78mm;
                                 max-width: 80mm;
                                 margin: 0 auto;
+                                font-family: 'Courier New', Courier, monospace;
                                 font-size: 12px;
                                 line-height: 1.2;
-                                page-break-after: always;
-                            }}
-                            .receipt-page h2, .receipt-page h3 {{
-                                margin: 4px 0;
-                                text-align: center;
-                            }}
-                            .kitchen-page {{
-                                width: 78mm;
-                                max-width: 80mm;
-                                margin: 0 auto;
-                                font-size: 13px;
-                                line-height: 1.3;
                                 color: #000;
                                 background: #fff;
-                                padding: 5px;
-                            }}
-                            .kitchen-page h3 {{
-                                text-align: center;
-                                margin: 4px 0;
-                            }}
-                            .print-btn-container {{
-                                text-align: center;
-                                margin-top: 20px;
-                                padding-bottom: 30px;
-                            }}
-                            .print-btn {{
-                                background-color: #45552E;
-                                color: #FAF5EA;
-                                padding: 12px 24px;
-                                font-size: 15px;
-                                font-weight: bold;
-                                border: none;
+                                padding: 10px;
+                                border: 1px solid #ddd;
                                 border-radius: 8px;
-                                cursor: pointer;
-                                font-family: sans-serif;
+                            }}
+                            .direct-receipt-box h2, .direct-receipt-box h3 {{
+                                margin: 4px 0;
+                                text-align: center;
                             }}
                             @media print {{
-                                .print-btn-container {{ display: none; }}
+                                body * {{ visibility: hidden; }}
+                                .direct-print-wrapper, .direct-print-wrapper * {{ visibility: visible; }}
+                                .direct-print-wrapper {{ position: absolute; left: 0; top: 0; width: 100%; }}
+                                .no-print {{ display: none; }}
                             }}
                         </style>
-                        </head>
-                        <body>
-                            <div class="receipt-page">
+                        <div class="direct-print-wrapper">
+                            <div class="direct-receipt-box">
                                 <h2>GREEN FUSION</h2>
                                 <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
                                 <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
@@ -614,47 +559,45 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                 <hr style="border: 0.5px dashed #000;">
                         """
                         for item in current_cart_snapshot:
-                            isolated_print_html += f"<p>{item['Qty']}x {escape(str(item['Item']))} — ₹{item['Total']:.2f}</p>"
+                            direct_print_html += f"<p>{item['Qty']}x {escape(str(item['Item']))} — ₹{item['Total']:.2f}</p>"
 
-                        isolated_print_html += f"""
+                        direct_print_html += f"""
                                 <hr style="border: 0.5px dashed #000;">
                                 <p>Subtotal: ₹{subtotal:.2f}</p>
                                 <p>GST (5%): ₹{tax:.2f}</p>
                                 <h3 style="color: #000 !important;">Grand Total: ₹{grand_total:.2f}</h3>
                         """
                         if clean_payment_mode == "Cash":
-                            isolated_print_html += f"""
+                            direct_print_html += f"""
                                 <p>Cash Given: ₹{cash_given:.2f}</p>
                                 <p>Change Due: ₹{cash_given - grand_total:.2f}</p>
                             """
-                        isolated_print_html += f"""
+                        direct_print_html += f"""
                                 <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
-                            </div>
-
-                            <div class="kitchen-page">
+                                <hr style="border: 1px solid #000; margin: 15px 0;">
                                 <h3>KITCHEN ORDER TICKET</h3>
                                 <p style="text-align: center; font-size: 11px; margin: 3px 0;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
-                                <hr style="border: 1px solid #000;">
+                                <hr style="border: 0.5px solid #000;">
                                 <ul style="list-style-type: none; padding: 0; margin: 5px 0;">
                         """
                         for item in current_cart_snapshot:
-                            isolated_print_html += f"<li style='font-size: 15px; font-weight: bold; margin-bottom: 5px;'>▪ {item['Qty']}x {escape(str(item['Item']))}</li>"
+                            direct_print_html += f"<li style='font-size: 14px; font-weight: bold; margin-bottom: 4px;'>▪ {item['Qty']}x {escape(str(item['Item']))}</li>"
 
-                        isolated_print_html += f"""
+                        direct_print_html += f"""
                                 </ul>
-                                <hr style="border: 1px solid #000;">
+                                <hr style="border: 0.5px solid #000;">
                                 <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                             </div>
-                            
-                            <div class="print-btn-container">
-                                <button class="print-btn" onclick="window.print();">🖨️ Print Bill &amp; Kitchen Ticket</button>
-                            </div>
-                        </body>
-                        </html>
+                        </div>
+                        <div style="text-align: center; margin-top: 15px;" class="no-print">
+                            <button onclick="window.print();" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                                🖨️ Print Receipt &amp; KOT Now
+                            </button>
+                        </div>
                         """
 
                         st.session_state.last_receipt = {
-                            "receipt_html": isolated_print_html,
+                            "receipt_html": direct_print_html,
                             "token_html": "",
                             "order_time": order_time
                         }
