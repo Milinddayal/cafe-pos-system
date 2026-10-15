@@ -529,8 +529,8 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         current_cart_snapshot = list(st.session_state.cart)
                         order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
                         
-                        direct_print_html = f"""
-                        <div id="thermal-receipt-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: #000; background: #fff; padding: 10px;">
+                        bill_only_html = f"""
+                        <div id="bill-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: #000; background: #fff; padding: 10px;">
                             <h2>GREEN FUSION</h2>
                             <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
@@ -538,41 +538,84 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             <hr style="border: 0.5px dashed #000;">
                         """
                         for item in current_cart_snapshot:
-                            direct_print_html += f"<p>{item['Qty']}x {escape(str(item['Item']))} — ₹{item['Total']:.2f}</p>"
+                            bill_only_html += f"<p>{item['Qty']}x {escape(str(item['Item']))} — ₹{item['Total']:.2f}</p>"
 
-                        direct_print_html += f"""
+                        bill_only_html += f"""
                             <hr style="border: 0.5px dashed #000;">
                             <p>Subtotal: ₹{subtotal:.2f}</p>
                             <p>GST (5%): ₹{tax:.2f}</p>
                             <h3 style="color: #000 !important;">Grand Total: ₹{grand_total:.2f}</h3>
                         """
                         if clean_payment_mode == "Cash":
-                            direct_print_html += f"""
+                            bill_only_html += f"""
                             <p>Cash Given: ₹{cash_given:.2f}</p>
                             <p>Change Due: ₹{cash_given - grand_total:.2f}</p>
                             """
-                        direct_print_html += f"""
+                        bill_only_html += f"""
                             <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
-                            <div style="page-break-before: always; break-before: page; padding-top: 10px;"></div>
-                            <hr style="border: 1px solid #000; margin: 15px 0;">
+                        </div>
+                        """
+
+                        kot_html = f"""
+                        <div id="kot-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: #000; background: #fff; padding: 10px;">
                             <h3 style="text-align: center; margin: 0;">KITCHEN ORDER TICKET</h3>
                             <p style="text-align: center; font-size: 11px; margin: 3px 0;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
                             <hr style="border: 0.5px solid #000;">
                             <ul style="list-style-type: none; padding: 0; margin: 5px 0;">
                         """
                         for item in current_cart_snapshot:
-                            direct_print_html += f"<li style='font-size: 14px; font-weight: bold; margin-bottom: 4px;'>▪ {item['Qty']}x {escape(str(item['Item']))}</li>"
+                            kot_html += f"<li style='font-size: 14px; font-weight: bold; margin-bottom: 4px;'>▪ {item['Qty']}x {escape(str(item['Item']))}</li>"
 
-                        direct_print_html += f"""
+                        kot_html += f"""
                             </ul>
                             <hr style="border: 0.5px solid #000;">
                             <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                         </div>
-                        <div style="text-align: center; margin-top: 15px;">
-                            <a href="javascript:window.print();" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block;">
-                                🖨️ Print Bill &amp; KOT Now
-                            </a>
+                        """
+
+                        direct_print_html = f"""
+                        {bill_only_html}
+                        <div style="display: none;">{kot_html}</div>
+                        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+                            <button id="print-bill-btn" style="background-color: #45552E; color: #FAF5EA; padding: 10px 18px; font-size: 14px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
+                                🖨️ Print Bill Only
+                            </button>
+                            <button id="print-bill-kot-btn" style="background-color: #8C6D46; color: #FAF5EA; padding: 10px 18px; font-size: 14px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
+                                🖨️ Print Bill + KOT
+                            </button>
                         </div>
+                        <script>
+                            function printReceipt(includeKot) {{
+                                var billElement = document.getElementById('bill-only-section');
+                                var kotElement = document.getElementById('kot-only-section');
+                                var content = billElement.outerHTML;
+                                if (includeKot) {{
+                                    content += '<div style="page-break-before: always; break-before: page; padding-top: 10px;"></div>' + kotElement.outerHTML;
+                                }}
+                                var printWindow = window.open('', '_blank', 'height=600,width=400');
+                                if (!printWindow) {{
+                                    window.alert('Please allow pop-ups to print the receipt.');
+                                    return;
+                                }}
+                                printWindow.document.write('<html><head><title>Print Receipt</title>');
+                                printWindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }} h2, h3 {{ text-align: center; }}</style>');
+                                printWindow.document.write('</head><body>');
+                                printWindow.document.write(content);
+                                printWindow.document.write('</body></html>');
+                                printWindow.document.close();
+                                printWindow.focus();
+                                setTimeout(function() {{
+                                    printWindow.print();
+                                    printWindow.close();
+                                }}, 250);
+                            }}
+                            document.getElementById('print-bill-btn').addEventListener('click', function() {{
+                                printReceipt(false);
+                            }});
+                            document.getElementById('print-bill-kot-btn').addEventListener('click', function() {{
+                                printReceipt(true);
+                            }});
+                        </script>
                         """
 
                         st.session_state.last_receipt = {
