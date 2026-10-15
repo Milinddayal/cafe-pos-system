@@ -370,15 +370,6 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                     st.markdown(st.session_state.last_receipt['receipt_html'], unsafe_allow_html=True)
                 else:
                     receipt_html = st.session_state.last_receipt['receipt_html']
-                    if st.session_state.last_receipt.get('auto_print', False):
-                        st.session_state.last_receipt['auto_print'] = False
-                        receipt_html += """
-                        <script>
-                            window.onload = function() {
-                                window.print();
-                            };
-                        </script>
-                        """
                     st.components.v1.html(receipt_html, height=700, scrolling=True)
                 
                 st.markdown("---")
@@ -591,6 +582,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                 body * {{ visibility: hidden; }}
                                 .print-container, .print-container * {{ visibility: visible; }}
                                 .print-container {{ position: absolute; left: 0; top: 0; width: 100%; }}
+                                .no-print {{ display: none; }}
                             }}
                         </style>
                         <div class="print-container">
@@ -635,11 +627,17 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             </div>
                         """
                         combined_print_html += "</div>"
+                        combined_print_html += """
+                        <div style="text-align: center; margin-top: 15px;" class="no-print">
+                            <button onclick="window.print();" style="background-color: #45552E; color: #FAF5EA; padding: 10px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                                🖨️ Print Receipt &amp; Kitchen Ticket Now
+                            </button>
+                        </div>
+                        """
 
                         st.session_state.last_receipt = {
                             "receipt_html": combined_print_html,
                             "token_html": "",
-                            "auto_print": True,
                             "order_time": order_time
                         }
                         st.session_state.cart = []
