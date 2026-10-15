@@ -525,83 +525,59 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
                         
                         direct_print_html = f"""
-                        <style>
-                            body {{
-                                margin: 0;
-                                background: #fff;
-                            }}
-                            .direct-receipt-box {{
-                                width: 78mm;
-                                max-width: 80mm;
-                                margin: 0 auto;
-                                font-family: 'Courier New', Courier, monospace;
-                                font-size: 12px;
-                                line-height: 1.2;
-                                color: #000;
-                                background: #fff;
-                                padding: 10px;
-                                border: 1px solid #ddd;
-                                border-radius: 8px;
-                            }}
-                            .direct-receipt-box h2, .direct-receipt-box h3 {{
-                                margin: 4px 0;
-                                text-align: center;
-                            }}
-                            @media print {{
-                                body * {{ visibility: hidden; }}
-                                .direct-print-wrapper, .direct-print-wrapper * {{ visibility: visible; }}
-                                .direct-print-wrapper {{ position: absolute; left: 0; top: 0; width: 100%; }}
-                                .no-print {{ display: none; }}
-                            }}
-                        </style>
-                        <div class="direct-print-wrapper">
-                            <div class="direct-receipt-box">
-                                <h2>GREEN FUSION</h2>
-                                <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
-                                <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
-                                <p style="text-align: center; font-size: 11px; color: #555;">Payment Mode: <b>{escape(str(clean_payment_mode))}</b></p>
-                                <hr style="border: 0.5px dashed #000;">
+                        <div id="thermal-receipt-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: #000; background: #fff; padding: 10px;">
+                            <h2>GREEN FUSION</h2>
+                            <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
+                            <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
+                            <p style="text-align: center; font-size: 11px; color: #555;">Payment Mode: <b>{escape(str(clean_payment_mode))}</b></p>
+                            <hr style="border: 0.5px dashed #000;">
                         """
                         for item in current_cart_snapshot:
                             direct_print_html += f"<p>{item['Qty']}x {escape(str(item['Item']))} — ₹{item['Total']:.2f}</p>"
 
                         direct_print_html += f"""
-                                <hr style="border: 0.5px dashed #000;">
-                                <p>Subtotal: ₹{subtotal:.2f}</p>
-                                <p>GST (5%): ₹{tax:.2f}</p>
-                                <h3 style="color: #000 !important;">Grand Total: ₹{grand_total:.2f}</h3>
+                            <hr style="border: 0.5px dashed #000;">
+                            <p>Subtotal: ₹{subtotal:.2f}</p>
+                            <p>GST (5%): ₹{tax:.2f}</p>
+                            <h3 style="color: #000 !important;">Grand Total: ₹{grand_total:.2f}</h3>
                         """
                         if clean_payment_mode == "Cash":
                             direct_print_html += f"""
-                                <p>Cash Given: ₹{cash_given:.2f}</p>
-                                <p>Change Due: ₹{cash_given - grand_total:.2f}</p>
+                            <p>Cash Given: ₹{cash_given:.2f}</p>
+                            <p>Change Due: ₹{cash_given - grand_total:.2f}</p>
                             """
                         direct_print_html += f"""
-                                <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
-                                <hr style="border: 1px solid #000; margin: 15px 0;">
-                                <h3>KITCHEN ORDER TICKET</h3>
-                                <p style="text-align: center; font-size: 11px; margin: 3px 0;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
-                                <hr style="border: 0.5px solid #000;">
-                                <ul style="list-style-type: none; padding: 0; margin: 5px 0;">
+                            <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
+                            <hr style="border: 1px solid #000; margin: 15px 0;">
+                            <h3 style="text-align: center; margin: 0;">KITCHEN ORDER TICKET</h3>
+                            <p style="text-align: center; font-size: 11px; margin: 3px 0;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
+                            <hr style="border: 0.5px solid #000;">
+                            <ul style="list-style-type: none; padding: 0; margin: 5px 0;">
                         """
                         for item in current_cart_snapshot:
                             direct_print_html += f"<li style='font-size: 14px; font-weight: bold; margin-bottom: 4px;'>▪ {item['Qty']}x {escape(str(item['Item']))}</li>"
 
                         direct_print_html += f"""
-                                </ul>
-                                <hr style="border: 0.5px solid #000;">
-                                <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
-                            </div>
+                            </ul>
+                            <hr style="border: 0.5px solid #000;">
+                            <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                         </div>
-                        <div style="text-align: center; margin-top: 15px;" class="no-print">
-                            <button id="print-trigger-btn" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
-                                🖨️ Print Receipt &amp; KOT Now
+                        <div style="text-align: center; margin-top: 15px;">
+                            <button onclick="printReceipt()" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                                🖨️ Print Bill &amp; KOT Directly
                             </button>
                         </div>
+                        <style>
+                            @media print {{
+                                body * {{ visibility: hidden; }}
+                                #thermal-receipt-section, #thermal-receipt-section * {{ visibility: visible; }}
+                                #thermal-receipt-section {{ position: absolute; left: 0; top: 0; width: 78mm; }}
+                            }}
+                        </style>
                         <script>
-                            document.getElementById('print-trigger-btn').addEventListener('click', function() {{
+                            function printReceipt() {{
                                 window.print();
-                            }});
+                            }}
                         </script>
                         """
 
