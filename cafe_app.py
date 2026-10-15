@@ -553,6 +553,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             """
                         direct_print_html += f"""
                             <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
+                            <div style="page-break-before: always; break-before: page; padding-top: 10px;"></div>
                             <hr style="border: 1px solid #000; margin: 15px 0;">
                             <h3 style="text-align: center; margin: 0;">KITCHEN ORDER TICKET</h3>
                             <p style="text-align: center; font-size: 11px; margin: 3px 0;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
