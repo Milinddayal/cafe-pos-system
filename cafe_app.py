@@ -530,7 +530,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
                         
                         direct_print_html = f"""
-                        <div id="thermal-receipt-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: #000; background: #fff; padding: 10px;">
+                        <div id="bill-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: #000; background: #fff; padding: 10px;">
                             <h2>GREEN FUSION</h2>
                             <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
                             <p style="text-align: center; font-size: 11px; color: #555;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
@@ -553,6 +553,8 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             """
                         direct_print_html += f"""
                             <p style="text-align: center; margin-top: 15px; font-size: 11px;">*** THANK YOU! VISIT AGAIN ***</p>
+                        </div>
+                        <div id="kot-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.2; color: #000; background: #fff; padding: 10px;">
                             <div style="page-break-before: always; break-before: page; padding-top: 10px;"></div>
                             <h3 style="text-align: center; margin: 0;">KITCHEN ORDER TICKET</h3>
                             <p style="text-align: center; font-size: 11px; margin: 3px 0;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
@@ -567,21 +569,29 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             <hr style="border: 0.5px solid #000;">
                             <p style="text-align: center; font-size: 10px; font-weight: bold; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                         </div>
-                        <div style="text-align: center; margin-top: 15px;">
-                            <button onclick="triggerPrint()" style="background-color: #45552E; color: #FAF5EA; padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
-                                🖨️ Print Bill &amp; KOT Now
+                        <div style="text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                            <button onclick="triggerPrint(false)" style="background-color: #45552E; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                                🖨️ Print Bill Only
+                            </button>
+                            <button onclick="triggerPrint(true)" style="background-color: #8C6D46; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+                                🖨️ Print Bill + KOT
                             </button>
                         </div>
                         <script>
-                            function triggerPrint() {{
-                                var content = document.getElementById('thermal-receipt-section').innerHTML;
+                            function triggerPrint(includeKot) {{
+                                var bill = document.getElementById('bill-only-section').outerHTML;
+                                var kot = document.getElementById('kot-only-section').outerHTML;
+                                var content = bill;
+                                if (includeKot) {{
+                                    content += kot;
+                                }}
                                 var mywindow = window.open('', '_blank', 'height=600,width=400');
                                 if (!mywindow) {{
                                     window.alert('Please allow pop-ups to print the receipt.');
                                     return;
                                 }}
                                 mywindow.document.write('<html><head><title>Print Receipt</title>');
-                                mywindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }}</style>');
+                                mywindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }} #kot-only-section {{ page-break-before: always; break-before: page; }}</style>');
                                 mywindow.document.write('</head><body>');
                                 mywindow.document.write(content);
                                 mywindow.document.write('</body></html>');
@@ -597,7 +607,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
 
                         st.session_state.last_receipt = {
                             "receipt_html": direct_print_html,
-                            "receipt_height": 470 + len(current_cart_snapshot) * 48,
+                            "receipt_height": 650 + len(current_cart_snapshot) * 60,
                             "token_html": "",
                             "order_time": order_time
                         }
