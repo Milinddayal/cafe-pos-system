@@ -22,7 +22,11 @@ new_menu_items = [
     {"name": "Maggi", "category": "🍜 Quick Bites", "price": 60, "stock": 50},
     {"name": "Masala Maggi", "category": "🍜 Quick Bites", "price": 80, "stock": 50},
     {"name": "Cheese Maggi", "category": "🍜 Quick Bites", "price": 100, "stock": 50},
-    {"name": "Poha", "category": "🍜 Quick Bites", "price": 70, "stock": 50},
+
+    # 🍛 Local Bites
+    {"name": "Poha", "category": "🍛 Local Bites", "price": 50.00, "stock": 50},
+    {"name": "Aloo Paratha", "category": "🍛 Local Bites", "price": 80.00, "stock": 50},
+    {"name": "Shub Suruwat Ganesh ji", "category": "🍛 Local Bites", "price": 11.00, "stock": 50},
     
     # 🥪 Sandwiches
     {"name": "Grilled Veg Sandwich", "category": "🥪 Sandwiches", "price": 120, "stock": 50},
@@ -46,6 +50,13 @@ new_menu_items = [
     {"name": "Watermelon Cooler", "category": "🍹 Mocktails", "price": 139, "stock": 50},
     {"name": "Strawberry Basil Fizz", "category": "🍹 Mocktails", "price": 149, "stock": 50},
     {"name": "Masala Soda", "category": "🍹 Mocktails", "price": 80, "stock": 50},
+
+    # 🥤 Beverages
+    {"name": "Classic Cold Brew", "category": "Beverages", "price": 120.00, "stock": 50},
+    {"name": "Vanilla Cold Brew", "category": "Beverages", "price": 140.00, "stock": 50},
+    {"name": "Water Packet (₹11)", "category": "Beverages", "price": 11.00, "stock": 50},
+    {"name": "Water Bottle (₹15)", "category": "Beverages", "price": 15.00, "stock": 50},
+    {"name": "Water Bottle (₹20)", "category": "Beverages", "price": 20.00, "stock": 50},
     
     # ☕ Coffee & Espresso
     {"name": "Espresso (Single)", "category": "☕ Coffee & Espresso", "price": 90, "stock": 50},
