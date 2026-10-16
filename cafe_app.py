@@ -469,12 +469,10 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 st.dataframe(cart_df[['Item', 'Qty', 'Total']], hide_index=True, use_container_width=True)
                 
                 subtotal = sum(item['Total'] for item in st.session_state.cart)
-                tax = subtotal * 0.05  # 5% GST
-                grand_total = subtotal + tax
+                grand_total = subtotal
                 
                 st.divider()
                 st.markdown(f"**Subtotal:** ₹{subtotal:.2f}")
-                st.markdown(f"**GST (5%):** ₹{tax:.2f}")
                 st.markdown(f"### *Grand Total:* ₹{grand_total:.2f}")
                 
                 col_a, col_b = st.columns(2)
@@ -543,7 +541,6 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         direct_print_html += f"""
                             <hr style="border: 1px solid #000;">
                             <p style="font-weight: bold;">Subtotal: ₹{subtotal:.2f}</p>
-                            <p style="font-weight: bold;">GST (5%): ₹{tax:.2f}</p>
                             <h3 style="color: #000 !important; font-weight: 900;">Grand Total: ₹{grand_total:.2f}</h3>
                         """
                         if clean_payment_mode == "Cash":
