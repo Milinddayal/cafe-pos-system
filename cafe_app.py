@@ -34,6 +34,9 @@ if 'cart' not in st.session_state:
 if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
 
+if 'bill_counter' not in st.session_state:
+    st.session_state.bill_counter = 101
+
 if 'target_mod_time' not in st.session_state:
     st.session_state.target_mod_time = None
 
@@ -526,13 +529,17 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                     else:
                         current_cart_snapshot = list(st.session_state.cart)
                         order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
+                        current_bill_no = f"GF-{st.session_state.bill_counter}"
+                        st.session_state.bill_counter += 1
                         
                         direct_print_html = f"""
                         <div id="bill-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
-                            <h2 style="font-weight: 900; margin: 0 0 5px 0;">GREEN FUSION</h2>
+                            <h2 style="font-weight: 900; margin: 0 0 2px 0; text-align: center;">GREEN FUSION</h2>
                             <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
-                            <p style="text-align: center; font-size: 11px; color: #000;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
-                            <p style="text-align: center; font-size: 11px; color: #000;">Payment Mode: <b>{escape(str(clean_payment_mode))}</b></p>
+                            <hr style="border: 0.5px dashed #000;">
+                            <p style="text-align: center; font-size: 14px; font-weight: 900; margin: 4px 0;">BILL NO: {current_bill_no}</p>
+                            <p style="text-align: center; font-size: 11px; color: #000; margin: 2px 0;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
+                            <p style="text-align: center; font-size: 11px; color: #000; margin: 2px 0;">Payment Mode: <b>{escape(str(clean_payment_mode))}</b></p>
                             <hr style="border: 1px solid #000;">
                         """
                         for item in current_cart_snapshot:
@@ -554,6 +561,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         <div id="kot-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                             <div style="page-break-before: always; break-before: page; padding-top: 10px;"></div>
                             <h3 style="text-align: center; margin: 0; font-weight: 900;">KITCHEN ORDER TICKET</h3>
+                            <p style="text-align: center; font-size: 13px; font-weight: 900; margin: 3px 0;">BILL NO: {current_bill_no}</p>
                             <p style="text-align: center; font-size: 11px; margin: 3px 0; font-weight: bold;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
                             <hr style="border: 1px solid #000;">
                             <ul style="list-style-type: none; padding: 0; margin: 5px 0;">
