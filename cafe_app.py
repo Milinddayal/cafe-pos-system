@@ -43,6 +43,12 @@ if 'order_history' not in st.session_state:
 if 'sales_history' not in st.session_state:
     st.session_state.sales_history = []
 
+if '_session_sales_reset_applied' not in st.session_state:
+    st.session_state.sales_history = []
+    st.session_state.order_history = []
+    st.session_state.bill_counter = 1
+    st.session_state._session_sales_reset_applied = True
+
 if 'target_mod_time' not in st.session_state:
     st.session_state.target_mod_time = None
 
