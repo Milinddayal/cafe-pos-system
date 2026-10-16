@@ -35,7 +35,7 @@ if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
 
 if 'bill_counter' not in st.session_state:
-    st.session_state.bill_counter = 101
+    st.session_state.bill_counter = 1
 
 if 'target_mod_time' not in st.session_state:
     st.session_state.target_mod_time = None
