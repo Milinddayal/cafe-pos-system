@@ -395,20 +395,24 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
             
             # --- SMART UI CATEGORIZER ---
             def get_ui_category(item_name, default_cat):
-                """Automatically sorts items into specific granular tabs for the POS UI."""
-                name = item_name.lower()
-                if "coffee" in name or "latte" in name or "brew" in name or "espresso" in name or "americano" in name or "cappuccino" in name: return "☕ Coffee"
-                if "maggi" in name or "noodle" in name: return "🍜 Maggi"
-                if "fries" in name: return "🍟 Fries"
-                if "burger" in name: return "🍔 Burgers"
-                if "shake" in name or "frappe" in name: return "🥤 Shakes"
-                if "pizza" in name: return "🍕 Pizza"
-                if "sandwich" in name: return "🥪 Sandwiches"
-                if "water" in name or "mojito" in name or "drink" in name or "coke" in name: return "🍹 Other Beverages"
-                if "ice cream" in name or "sundae" in name: return "🍦 Ice Creams"
-                if "cake" in name or "pastry" in name or "croissant" in name or "donut" in name: return "🍰 Bakery & Desserts"
-                if "cheese ball" in name or "nugget" in name: return "🧀 Snacks"
-                return default_cat # Fallback to database category if no keywords match
+                """Maps Supabase categories directly with neat UI icons."""
+                category_mapping = {
+                    "Fresh Juices": "🧃 Fresh Juices",
+                    "Fruit Chart": "🥗 Fruit Chart",
+                    "Snacks": "🍟 Snacks",
+                    "Pasta": "🍝 Pasta",
+                    "Maggiee": "🍜 Maggiee",
+                    "Sandwich": "🥪 Sandwich",
+                    "Mocktails": "🍹 Mocktails",
+                    "Pastry Section": "🍰 Pastry Section",
+                    "Soup": "🍲 Soup",
+                    "Sweet Corn Chart": "🌽 Sweet Corn Chart",
+                    "Shakes Section": "🥤 Shakes Section",
+                    "Coffee": "☕ Coffee",
+                    "Cold Coffee": "🧊 Cold Coffee",
+                    "Packed Items": "🥤 Packed Items",
+                }
+                return category_mapping.get(default_cat, f"🍽️ {default_cat}")
 
             # Group all items dynamically into the new smart categories
             ui_menu_groups = {}
