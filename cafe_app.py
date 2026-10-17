@@ -178,32 +178,37 @@ if os.path.exists(LOGO_PATH):
 # --- DATABASE LOGGING & LOADING FUNCTIONS ---
 def log_sale(total_amount, payment_mode, cart_items, counter_id):
     order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-    supabase.table("sales").insert({
-        "date": order_date,
-        "total": float(total_amount),
-        "payment_mode": payment_mode
-    }).execute()
-    
-    items_to_insert = []
-    for item in cart_items:
-        items_to_insert.append({
-            "date": order_date,
-            "item_name": item['Item'],
-            "unit_price": float(item['Price']),
-            "quantity": int(item['Qty']),
-            "subtotal": float(item['Total']),
-            "counter": counter_id,
-            "status": "Completed",
-            "modification_reason": ""
-        })
-        
-        item_name = item['Item']
-        if item_name in current_menu:
-            new_stock = max(0, current_menu[item_name]['stock'] - item['Qty'])
-            supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
 
-    supabase.table("order_items").insert(items_to_insert).execute()
+    try:
+        supabase.table("sales").insert({
+            "date": order_date,
+            "total": float(total_amount),
+            "payment_mode": payment_mode
+        }).execute()
+
+        items_to_insert = []
+        for item in cart_items:
+            items_to_insert.append({
+                "date": order_date,
+                "item_name": item['Item'],
+                "unit_price": float(item['Price']),
+                "quantity": int(item['Qty']),
+                "subtotal": float(item['Total']),
+                "counter": counter_id,
+                "status": "Completed",
+                "modification_reason": ""
+            })
+
+            item_name = item['Item']
+            if item_name in current_menu:
+                new_stock = max(0, current_menu[item_name]['stock'] - item['Qty'])
+                supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
+
+        supabase.table("order_items").insert(items_to_insert).execute()
+    except Exception as e:
+        st.error(f"Failed to save sale to the database: {e}")
+        raise
+
     return order_date
 
 def load_sales_data():
