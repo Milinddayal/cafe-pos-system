@@ -213,6 +213,12 @@ st.sidebar.divider()
 upi_id = st.sidebar.text_input("UPI ID / Paytm ID", "greenfusion@paytm")
 qr_image_file = st.sidebar.file_uploader("Upload QR Code Image", type=["png", "jpg", "jpeg"])
 
+st.sidebar.divider()
+if st.sidebar.button("🔄 Refresh Menu & Cache", use_container_width=True):
+    st.cache_data.clear()
+    st.success("Menu cache cleared! Reloading...")
+    st.rerun()
+
 # --- WATERMARK BACKGROUND & STYLING CSS ---
 if logo_base64:
     bg_watermark_css = f"""
