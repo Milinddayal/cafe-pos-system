@@ -61,7 +61,6 @@
   }
   .item-name { font-size: 2.8vw; font-weight: 800 !important; color: #2B2822; }
   .item-price { font-size: 3.2vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
-  .price-divider { color: rgba(43,40,34,0.4); margin: 0 1vw; font-weight: 400; font-family: 'Jost', sans-serif; font-size: 2.5vw;}
 </style>
 </head>
 <body>
@@ -106,28 +105,24 @@
 
   const menuData = [
     {
-      category: "Gelato Amor",
-      legend: "( Single | Double )",
+      category: "Ice Cream",
+      legend: "",
       items: [
-        { name: "Chocolate", price: "79 <span class='price-divider'>|</span> 119" },
-        { name: "Vanilla", price: "79 <span class='price-divider'>|</span> 119" },
-        { name: "Strawberry", price: "79 <span class='price-divider'>|</span> 119" },
-        { name: "Mango", price: "79 <span class='price-divider'>|</span> 119" },
-        { name: "Coffee", price: "79 <span class='price-divider'>|</span> 119" },
-        { name: "Choco Chips", price: "79 <span class='price-divider'>|</span> 119" },
-        { name: "Black Currant", price: "79 <span class='price-divider'>|</span> 119" }
+        { name: "Butter Scotch", price: "₹79" },
+        { name: "Vanilla", price: "₹79" },
+        { name: "Chocolate", price: "₹79" },
+        { name: "Strawberry", price: "₹79" },
+        { name: "Kesar Pista", price: "₹79" }
       ]
     },
     {
-      category: "Premium Shakes",
+      category: "Shakes Section",
       legend: "",
       items: [
-        { name: "Protein Shake", price: "₹119" },
-        { name: "Banana Shake", price: "₹89" },
-        { name: "Strawberry Shake", price: "₹99" },
         { name: "Chocolate Shake", price: "₹99" },
-        { name: "Badam Shake", price: "₹99" },
-        { name: "Sweet Lassi", price: "₹89" }
+        { name: "Strawberry Shake", price: "₹99" },
+        { name: "Protein Shake", price: "₹129" },
+        { name: "Banana Shake", price: "₹89" }
       ]
     }
   ];
@@ -182,11 +177,6 @@
         setInterval(nextSlide, 7000);
     }, 3000);
   };
-
-  // Background silent soft refresh every 5 minutes instead of full page reload
-  setInterval(() => {
-    console.log("Background state active");
-  }, 300000);
 </script>
 </body>
 </html>
