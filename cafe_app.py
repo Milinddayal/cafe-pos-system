@@ -142,6 +142,7 @@ def fetch_live_menu():
         "Strawberry Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
         "Protein Shake": {"category": "Shakes Section", "price": 129.00, "stock": 50},
         "Banana Shake": {"category": "Shakes Section", "price": 89.00, "stock": 50},
+        "Sweet Lassi": {"category": "Shakes Section", "price": 79.00, "stock": 50},
         "Butter Scotch": {"category": "Ice Cream", "price": 79.00, "stock": 50},
         "Vanilla": {"category": "Ice Cream", "price": 79.00, "stock": 50},
         "Chocolate": {"category": "Ice Cream", "price": 79.00, "stock": 50},
