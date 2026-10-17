@@ -102,13 +102,13 @@ def get_smart_icon(category_name):
     # Returns a default plate icon if the category isn't found, preventing crashes!
     return icons.get(category_name, "🍽️")
 
-# --- LOAD LIVE MENU FROM SUPABASE (CACHED FOR SPEED) ---
-@st.cache_data(ttl=30)
+# --- LOAD LIVE MENU FROM SUPABASE WITH ERROR LOGGING ---
+@st.cache_data(ttl=10)
 def fetch_live_menu():
     try:
         response = supabase.table("menu_items").select("*").execute()
         menu_dict = {}
-        if response.data and len(response.data) > 0:
+        if response.data:
             for row in response.data:
                 menu_dict[row['name']] = {
                     "category": row['category'],
@@ -118,6 +118,7 @@ def fetch_live_menu():
                 }
         return menu_dict
     except Exception as e:
+        st.error(f"Database Fetch Error: {e}")
         return {}
 
 current_menu = fetch_live_menu()
@@ -399,37 +400,16 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
         with col_menu:
             st.markdown("### 📋 Menu Categories")
             
-            # --- SMART UI CATEGORIZER ---
-            def get_ui_category(item_name, default_cat):
-                """Maps Supabase categories directly with neat UI icons."""
-                category_mapping = {
-                    "Fresh Juices": "🧃 Fresh Juices",
-                    "Fruit Chart": "🥗 Fruit Chart",
-                    "Snacks": "🍟 Snacks",
-                    "Pasta": "🍝 Pasta",
-                    "Maggiee": "🍜 Maggiee",
-                    "Sandwich": "🥪 Sandwich",
-                    "Mocktails": "🍹 Mocktails",
-                    "Pastry Section": "🍰 Pastry Section",
-                    "Soup": "🍲 Soup",
-                    "Sweet Corn Chart": "🌽 Sweet Corn Chart",
-                    "Shakes Section": "🥤 Shakes Section",
-                    "Coffee": "☕ Coffee",
-                    "Cold Coffee": "🧊 Cold Coffee",
-                    "Packed Items": "🥤 Packed Items",
-                }
-                return category_mapping.get(default_cat, f"🍽️ {default_cat}")
-
-            # Group all items dynamically into the new smart categories
+            # Group items directly by their Supabase category name
             ui_menu_groups = {}
             for item_name, data in current_menu.items():
-                ui_cat = get_ui_category(item_name, data["category"])
-                if ui_cat not in ui_menu_groups:
-                    ui_menu_groups[ui_cat] = []
-                ui_menu_groups[ui_cat].append((item_name, data))
+                cat = data["category"]
+                if cat not in ui_menu_groups:
+                    ui_menu_groups[cat] = []
+                ui_menu_groups[cat].append((item_name, data))
                 
             # Sort the categories alphabetically so the tabs are organized
-            active_categories = sorted(list(ui_menu_groups.keys()))
+            active_categories = sorted(ui_menu_groups.keys())
             
             if not active_categories:
                 st.info("No menu items available.")
