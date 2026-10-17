@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Green Fusion — Quick Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- HTML5 QR Code Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+  :root {
+    --cream: #FAF5EA;
+    --cream-card: rgba(244, 238, 220, 0.85);
+    --olive: #45552E;
+    --olive-deep: #333F20;
+    --terracotta: #BD5B34;
+    --ink: #2B2822;
+    --line: rgba(43,40,34,0.14);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background-color: var(--cream); color: var(--ink);
+    font-family: 'Jost', sans-serif; display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 20px;
+  }
+  h1, h2 { font-family: 'Cormorant Garamond', serif; color: var(--olive-deep); margin: 0; }
+  .card {
+    background: var(--cream-card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    text-align: center; margin-top: 20px; backdrop-filter: blur(4px);
+  }
+  #reader { width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); margin-bottom: 20px; }
+  .result-box {
+    background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 16px;
+    margin-top: 15px; text-align: left; display: none;
+  }
+  .result-title { font-size: 18px; font-weight: 600; color: var(--olive-deep); font-family: 'Cormorant Garamond', serif; }
+  .result-price { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--terracotta); font-weight: 600; }
+  .btn-back {
+    display: inline-block; margin-bottom: 20px; text-decoration: none; color: var(--olive-deep);
+    font-weight: 500; font-size: 14px; border-bottom: 1px solid var(--olive-deep);
+  }
+</style>
+</head>
+<body>
+
+  <div style="width: 100%; max-width: 480px; text-align: left;">
+    <a href="index.html" class="btn-back">&larr; Back to Website</a>
+  </div>
+
+  <h2>Green Fusion Scanner</h2>
+  <p style="font-size: 14px; opacity: 0.8; margin-bottom: 10px;">Scan item QR code or barcode to check live inventory</p>
+
+  <div class="card">
+    <!-- Camera Viewport -->
+    <div id="reader"></div>
+
+    <!-- Scanned Item Details Card -->
+    <div id="scan-details" class="result-box">
+      <div id="item-name" class="result-title">Item Name</div>
+      <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+        <span id="item-category" style="font-size: 13px; opacity: 0.7;">Category</span>
+        <span id="item-price" class="result-price">₹0.00</span>
+      </div>
+      <div style="margin-top: 8px; font-size: 13px;" id="item-stock">Stock: --</div>
+    </div>
+  </div>
+
+<script>
+  const SUPABASE_URL = "https://vdabufmcqzdilkhzrxim.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_D_7MmPn7tLWsxcPnuH6aHA_I_V19fJ6";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function onScanSuccess(decodedText) {
+    console.log(`Scanned Code: ${decodedText}`);
+
+    // Query Supabase for the scanned item name or ID
+    const { data, error } = await sb
+      .from('menu_items')
+      .select('*')
+      .ilike('name', `%${decodedText.trim()}%`)
+      .limit(1);
+
+    const detailsBox = document.getElementById('scan-details');
+    detailsBox.style.display = 'block';
+
+    if (error || !data || data.length === 0) {
+      document.getElementById('item-name').innerText = `Scanned: "${decodedText}"`;
+      document.getElementById('item-category').innerText = "Not found in database";
+      document.getElementById('item-price').innerText = "—";
+      document.getElementById('item-stock').innerText = "Status: Unknown item";
+      return;
+    }
+
+    const item = data[0];
+    document.getElementById('item-name').innerText = item.name;
+    document.getElementById('item-category').innerText = item.category;
+    document.getElementById('item-price').innerText = `₹${Number(item.price).toFixed(2)}`;
+    document.getElementById('item-stock').innerText = item.stock > 0 ? `Stock available: ${item.stock}` : '⚠️ Sold out';
+  }
+
+  function onScanFailure(error) {
+    // Suppress frame scan failures so the console isn't flooded while looking for a code
+  }
+
+  // Start the scanner camera
+  let html5QrcodeScanner = new Html5QrcodeScanner(
+    "reader",
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    false
+  );
+  html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+</script>
+
+</body>
+</html>
