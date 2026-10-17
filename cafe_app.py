@@ -114,6 +114,15 @@ def fetch_live_menu():
         "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 50},
         "Vada Paw": {"category": "Snacks", "price": 59.00, "stock": 50},
         "Poha": {"category": "Snacks", "price": 69.00, "stock": 50},
+        # --- French Fries Section ---
+        "Fries": {"category": "French Fries", "price": 79.00, "stock": 50},
+        "Peri Peri Fries": {"category": "French Fries", "price": 89.00, "stock": 50},
+        "Cheese Fries": {"category": "French Fries", "price": 99.00, "stock": 50},
+        # --- Potato Wedges Section ---
+        "Potato Wedges": {"category": "Potato Wedges", "price": 89.00, "stock": 50},
+        "Peri Peri Potato Wedges": {"category": "Potato Wedges", "price": 99.00, "stock": 50},
+        "Cheese Potato Wedges": {"category": "Potato Wedges", "price": 109.00, "stock": 50},
+        # ----------------------------
         "White Sauce Pasta": {"category": "Pasta", "price": 119.00, "stock": 50},
         "Red Sauce Pasta": {"category": "Pasta", "price": 109.00, "stock": 50},
         "Dry Maggiee": {"category": "Maggiee", "price": 79.00, "stock": 50},
@@ -162,7 +171,6 @@ def fetch_live_menu():
         "Cold Drink Can (Custom MRP)": {"category": "Packed Items", "price": 40.00, "stock": 100},
         "Cold Drink Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100}
     }
-
 current_menu = fetch_live_menu()
 # --- LOAD BRAND LOGO AUTOMATICALLY ---
 LOGO_PATH = "logo.jpeg"
