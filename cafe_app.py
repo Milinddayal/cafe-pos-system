@@ -102,24 +102,65 @@ def get_smart_icon(category_name):
     # Returns a default plate icon if the category isn't found, preventing crashes!
     return icons.get(category_name, "🍽️")
 
-# --- LOAD LIVE MENU FROM SUPABASE WITH ERROR LOGGING ---
-@st.cache_data(ttl=10)
+# --- HARDCODED ROBUST MENU FALLBACK ---
 def fetch_live_menu():
-    try:
-        response = supabase.table("menu_items").select("*").execute()
-        menu_dict = {}
-        if response.data:
-            for row in response.data:
-                menu_dict[row['name']] = {
-                    "category": row['category'],
-                    "price": float(row['price']),
-                    "stock": int(row['stock']),
-                    "icon": get_smart_icon(row['category']) if 'get_smart_icon' in globals() else "🍽️"
-                }
-        return menu_dict
-    except Exception as e:
-        st.error(f"Database Fetch Error: {e}")
-        return {}
+    return {
+        "Pomegranate": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
+        "Malta": {"category": "Fresh Juices", "price": 119.00, "stock": 50},
+        "Mosambi": {"category": "Fresh Juices", "price": 79.00, "stock": 50},
+        "Mix Fruit": {"category": "Fresh Juices", "price": 79.00, "stock": 50},
+        "Orange": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
+        "Pineapple": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
+        "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 50},
+        "Vada Paw": {"category": "Snacks", "price": 59.00, "stock": 50},
+        "Poha": {"category": "Snacks", "price": 69.00, "stock": 50},
+        "White Sauce Pasta": {"category": "Pasta", "price": 119.00, "stock": 50},
+        "Red Sauce Pasta": {"category": "Pasta", "price": 109.00, "stock": 50},
+        "Dry Maggiee": {"category": "Maggiee", "price": 79.00, "stock": 50},
+        "Soupy Maggiee": {"category": "Maggiee", "price": 59.00, "stock": 50},
+        "Veg Sandwich": {"category": "Sandwich", "price": 79.00, "stock": 50},
+        "Cheese Sandwich": {"category": "Sandwich", "price": 89.00, "stock": 50},
+        "Paneer Sandwich": {"category": "Sandwich", "price": 99.00, "stock": 50},
+        "Sip the Lip": {"category": "Mocktails", "price": 139.00, "stock": 50},
+        "Green Forest": {"category": "Mocktails", "price": 119.00, "stock": 50},
+        "Virgin Mojito": {"category": "Mocktails", "price": 99.00, "stock": 50},
+        "Green Apple": {"category": "Mocktails", "price": 119.00, "stock": 50},
+        "Ocean Blue": {"category": "Mocktails", "price": 139.00, "stock": 50},
+        "Guava Pink": {"category": "Mocktails", "price": 149.00, "stock": 50},
+        "Kiwi Crush": {"category": "Mocktails", "price": 129.00, "stock": 50},
+        "The Red Call": {"category": "Mocktails", "price": 129.00, "stock": 50},
+        "Irris Coffee": {"category": "Mocktails", "price": 139.00, "stock": 50},
+        "Pineapple Pastry": {"category": "Pastry Section", "price": 39.00, "stock": 50},
+        "Black Forest Pastry": {"category": "Pastry Section", "price": 49.00, "stock": 50},
+        "Red Velvet Pastry": {"category": "Pastry Section", "price": 49.00, "stock": 50},
+        "Chocolate Pastry": {"category": "Pastry Section", "price": 39.00, "stock": 50},
+        "Veg Soup": {"category": "Soup", "price": 79.00, "stock": 50},
+        "Sweet Corn Soup": {"category": "Soup", "price": 89.00, "stock": 50},
+        "Tomato Soup": {"category": "Soup", "price": 89.00, "stock": 50},
+        "Crispy Sweet Corn Chat": {"category": "Sweet Corn Chart", "price": 99.00, "stock": 50},
+        "Chocolate Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
+        "Strawberry Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
+        "Protein Shake": {"category": "Shakes Section", "price": 129.00, "stock": 50},
+        "Banana Shake": {"category": "Shakes Section", "price": 89.00, "stock": 50},
+        "Butter Scotch": {"category": "Ice Cream", "price": 79.00, "stock": 50},
+        "Vanilla": {"category": "Ice Cream", "price": 79.00, "stock": 50},
+        "Chocolate": {"category": "Ice Cream", "price": 79.00, "stock": 50},
+        "Strawberry": {"category": "Ice Cream", "price": 79.00, "stock": 50},
+        "Kesar Pista": {"category": "Ice Cream", "price": 79.00, "stock": 50},
+        "Hot Coffee": {"category": "Coffee", "price": 59.00, "stock": 50},
+        "Lavazza Gusto": {"category": "Coffee", "price": 79.00, "stock": 50},
+        "Barista Aroma Intenso": {"category": "Coffee", "price": 79.00, "stock": 50},
+        "Chocolate Coffee": {"category": "Coffee", "price": 79.00, "stock": 50},
+        "Espresso": {"category": "Coffee", "price": 79.00, "stock": 50},
+        "Cold Coffee": {"category": "Cold Coffee", "price": 89.00, "stock": 50},
+        "Espresso Bitter Cold": {"category": "Cold Coffee", "price": 109.00, "stock": 50},
+        "Chocolate Coffee (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
+        "Lavazza Gusto (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
+        "Barista Aroma Intenso (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
+        "Water Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100},
+        "Cold Drink Can (Custom MRP)": {"category": "Packed Items", "price": 40.00, "stock": 100},
+        "Cold Drink Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100}
+    }
 
 current_menu = fetch_live_menu()
 # --- LOAD BRAND LOGO AUTOMATICALLY ---
