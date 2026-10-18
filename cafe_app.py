@@ -103,6 +103,7 @@ def get_smart_icon(category_name):
     return icons.get(category_name, "🍽️")
 
 # --- HARDCODED ROBUST MENU FALLBACK ---
+# --- HARDCODED ROBUST MENU FALLBACK ---
 def fetch_live_menu():
     return {
         "Pomegranate": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
@@ -122,6 +123,10 @@ def fetch_live_menu():
         "Potato Wedges": {"category": "Potato Wedges", "price": 89.00, "stock": 50},
         "Peri Peri Potato Wedges": {"category": "Potato Wedges", "price": 99.00, "stock": 50},
         "Cheese Potato Wedges": {"category": "Potato Wedges", "price": 109.00, "stock": 50},
+        # --- Tea Section ---
+        "Masala Tea": {"category": "Tea", "price": 59.00, "stock": 50},
+        "Ice Tea": {"category": "Tea", "price": 79.00, "stock": 50},
+        "Green Tea": {"category": "Tea", "price": 59.00, "stock": 50},
         # ----------------------------
         "White Sauce Pasta": {"category": "Pasta", "price": 119.00, "stock": 50},
         "Red Sauce Pasta": {"category": "Pasta", "price": 109.00, "stock": 50},
