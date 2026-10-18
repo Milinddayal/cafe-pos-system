@@ -174,7 +174,12 @@ def fetch_live_menu():
         "Barista Aroma Intenso (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
         "Water Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100},
         "Cold Drink Can (Custom MRP)": {"category": "Packed Items", "price": 40.00, "stock": 100},
-        "Cold Drink Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100}
+        "Cold Drink Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100},
+        "Drink Can": {"category": "Packed Items", "price": 35.00, "stock": 100},
+        "Token 1": {"category": "Tokens", "price": 20.00, "stock": 100},
+        "Token 2 (₹30)": {"category": "Tokens", "price": 30.00, "stock": 100},
+        "Token 2 (₹40)": {"category": "Tokens", "price": 40.00, "stock": 100}
+        
     }
 current_menu = fetch_live_menu()
 # --- LOAD BRAND LOGO AUTOMATICALLY ---
