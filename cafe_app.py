@@ -369,14 +369,14 @@ if portal_mode != st.session_state.active_portal:
 
 st.sidebar.divider()
 if logo_img_obj is not None:
-    st.sidebar.image(logo_img_obj, use_container_width=True, caption="Green Fusion - Bite & Sip by Dayals")
+    st.sidebar.image(logo_img_obj, width="stretch", caption="Green Fusion - Bite & Sip by Dayals")
 
 st.sidebar.divider()
 upi_id = st.sidebar.text_input("UPI ID / Paytm ID", "greenfusion@paytm")
 qr_image_file = st.sidebar.file_uploader("Upload QR Code Image", type=["png", "jpg", "jpeg"])
 
 st.sidebar.divider()
-if st.sidebar.button("🔄 Refresh Menu & Cache", use_container_width=True):
+if st.sidebar.button("🔄 Refresh Menu & Cache", width="stretch"):
     st.cache_data.clear()
     st.success("Menu cache cleared! Reloading...")
     st.rerun()
@@ -603,7 +603,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                         
                                         if item_info['stock'] > 0:
                                             # Using a unique key based on item name prevents Streamlit button errors
-                                            if st.button("Add", key=f"add_tab_{item_name}", use_container_width=True):
+                                            if st.button("Add", key=f"add_tab_{item_name}", width="stretch"):
                                                 found = False
                                                 for cart_item in st.session_state.cart:
                                                     if cart_item["Item"] == item_name:
@@ -632,7 +632,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 st.info("Your cart is empty. Tap menu items.")
             else:
                 cart_df = pd.DataFrame(st.session_state.cart)
-                st.dataframe(cart_df[['Item', 'Qty', 'Total']], hide_index=True, use_container_width=True)
+                st.dataframe(cart_df[['Item', 'Qty', 'Total']], hide_index=True, width="stretch")
                 
                 subtotal = sum(item['Total'] for item in st.session_state.cart)
                 grand_total = subtotal
@@ -643,11 +643,11 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 
                 col_a, col_b = st.columns(2)
                 with col_a:
-                    if st.button("🗑️ Clear", use_container_width=True):
+                    if st.button("🗑️ Clear", width="stretch"):
                         st.session_state.cart = []
                         st.rerun()
                 with col_b:
-                    if st.button("❌ Remove", use_container_width=True):
+                    if st.button("❌ Remove", width="stretch"):
                         if st.session_state.cart:
                             st.session_state.cart.pop()
                             st.rerun()
@@ -686,7 +686,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 st.write("")
                 clean_payment_mode = "Cash" if "Cash" in payment_mode else ("UPI QR" if "UPI" in payment_mode else "Card")
 
-                if st.button("✅ Complete Order & Print", type="primary", use_container_width=True):
+                if st.button("✅ Complete Order & Print", type="primary", width="stretch"):
                     if clean_payment_mode == "Cash" and cash_given < grand_total:
                         st.error("Insufficient cash given!")
                     else:
@@ -819,7 +819,7 @@ elif st.session_state.active_portal == "🛠️ Order Modification & Cancellatio
             if not counter_orders.empty:
                 st.markdown("#### *📋 Recent Orders & Status Tracker*")
                 summary_df = counter_orders[['date', 'item_name', 'quantity', 'unit_price', 'subtotal', 'status']]
-                st.dataframe(summary_df, hide_index=True, use_container_width=True)
+                st.dataframe(summary_df, hide_index=True, width="stretch")
                 
                 approved_orders = counter_orders[counter_orders['status'] == "Approved & Modified"]
                 if not approved_orders.empty:
@@ -1220,7 +1220,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                         'subtotal': 'Total Daily Revenue (₹)'
                     })
                     
-                    st.dataframe(daily_item_summary, hide_index=True, use_container_width=True)
+                    st.dataframe(daily_item_summary, hide_index=True, width="stretch")
                     
                     fig_daily_items = px.bar(
                         daily_item_summary, 
@@ -1231,7 +1231,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                         color_discrete_sequence=['#45552E']
                     )
                     fig_daily_items.update_layout(xaxis_title="", yaxis_title="Units Sold", template="plotly_white")
-                    st.plotly_chart(fig_daily_items, use_container_width=True)
+                    st.plotly_chart(fig_daily_items, width="stretch")
                 else:
                     st.info("No item details available yet.")
 
@@ -1244,7 +1244,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                     data=excel_file,
                     file_name=f"green_fusion_report_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
+                    width="stretch"
                 )
                 
                 st.divider()
@@ -1267,7 +1267,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                     fig = px.bar(data, x='Date', y='total', title="Yearly Revenue Performance (₹)", color_discrete_sequence=['#3b4e1e'])
                 
                 fig.update_layout(xaxis_title="", yaxis_title="Revenue (₹)", template="plotly_white")
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width="stretch")
                 
                 st.divider()
                 st.subheader("*⚡ Quick Performance Metrics*")
