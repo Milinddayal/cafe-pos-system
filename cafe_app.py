@@ -1087,6 +1087,57 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 m1.metric("Total Lifetime Revenue", f"₹{overall_total:,.2f}")
                 m2.metric("Average Daily Sales", f"₹{df_sales_indexed.resample('D').sum(numeric_only=True)['total'].mean():,.2f}")
                 m3.metric("Highest Single Bill", f"₹{df_sales['total'].max():,.2f}")
+
+                st.divider()
+                st.subheader("*📅 Daily Revenue & Bills Summary*")
+                df_sales['Day'] = df_sales['Date'].dt.date
+                daily_summary = (
+                    df_sales.groupby('Day')
+                    .agg(total_bills=('total', 'size'), total_revenue=('total', 'sum'))
+                    .reset_index()
+                    .sort_values('Day', ascending=False)
+                )
+                st.dataframe(
+                    daily_summary.rename(columns={
+                        'Day': 'Date',
+                        'total_bills': 'Total Bills',
+                        'total_revenue': 'Total Revenue (₹)'
+                    }),
+                    hide_index=True,
+                    use_container_width=True
+                )
+
+                st.subheader("*🧾 Bill Details by Date*")
+                available_bill_days = daily_summary['Day'].astype(str).tolist()
+                selected_bill_day = st.selectbox(
+                    "Select Date to View Bills",
+                    available_bill_days,
+                    key="admin_bill_date"
+                )
+                selected_bills = df_sales[df_sales['Day'].astype(str) == selected_bill_day]
+                st.write(f"Showing **{len(selected_bills)}** bill(s) generated on **{selected_bill_day}**:")
+
+                for _, bill in selected_bills.iterrows():
+                    bill_items = df_items[df_items['Date'] == bill['Date']] if not df_items.empty else pd.DataFrame()
+                    if not bill_items.empty:
+                        bill_items = bill_items[bill_items['status'] != "Refunded & Closed"]
+                        item_summary = ", ".join(
+                            f"{int(item['quantity'])}x {item['item_name']}"
+                            for _, item in bill_items.iterrows()
+                        )
+                        counters = ", ".join(sorted(bill_items['counter'].dropna().astype(str).unique()))
+                    else:
+                        item_summary = ""
+                        counters = ""
+
+                    bill_id = bill.get('id', bill['Date'].strftime('%H%M%S'))
+                    bill_time = bill['Date'].strftime('%H:%M:%S')
+                    with st.expander(
+                        f"Bill #{bill_id} — Time: {bill_time} — Total: ₹{bill['total']:.2f}"
+                    ):
+                        st.write(f"**Counter:** {counters or 'Unavailable'}")
+                        st.write(f"**Items Ordered:** {item_summary or 'Details unavailable'}")
+                        st.write(f"**Payment Mode:** {bill.get('payment_mode', 'Unavailable')}")
     else:
         if admin_password != "":
             st.error("Incorrect Admin Password.")
