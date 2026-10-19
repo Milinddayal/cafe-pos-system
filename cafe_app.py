@@ -110,7 +110,7 @@ def fetch_live_menu():
         "Malta": {"category": "Fresh Juices", "price": 119.00, "stock": 50},
         "Mosambi": {"category": "Fresh Juices", "price": 79.00, "stock": 50},
         "Mix Fruit": {"category": "Fresh Juices", "price": 79.00, "stock": 50},
-        "Orange": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
+        "Orange": {"category": "Fresh Juices", "price": 119.00, "stock": 50},
         "Pineapple": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
         "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 50},
         "Vada Paw": {"category": "Snacks", "price": 59.00, "stock": 50},
