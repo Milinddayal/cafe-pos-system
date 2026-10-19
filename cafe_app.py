@@ -138,7 +138,7 @@ def fetch_live_menu():
         "Sip the Lip": {"category": "Mocktails", "price": 139.00, "stock": 50},
         "Green Forest": {"category": "Mocktails", "price": 119.00, "stock": 50},
         "Virgin Mojito": {"category": "Mocktails", "price": 99.00, "stock": 50},
-        "Green Apple": {"category": "Mocktails", "price": 119. 00, "stock": 50},
+        "Green Apple": {"category": "Mocktails", "price": 119.00, "stock": 50},
         "Ocean Blue": {"category": "Mocktails", "price": 139.00, "stock": 50},
         "Guava Pink": {"category": "Mocktails", "price": 149.00, "stock": 50},
         "Kiwi Crush": {"category": "Mocktails", "price": 129.00, "stock": 50},
