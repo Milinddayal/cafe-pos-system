@@ -130,8 +130,8 @@ def fetch_live_menu():
         # ----------------------------
         "White Sauce Pasta": {"category": "Pasta", "price": 119.00, "stock": 50},
         "Red Sauce Pasta": {"category": "Pasta", "price": 109.00, "stock": 50},
-        "Dry Maggiee": {"category": "Maggiee", "price": 79.00, "stock": 50},
-        "Soupy Maggiee": {"category": "Maggiee", "price": 59.00, "stock": 50},
+        "Dry Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
+        "Soupy Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
         "Veg Sandwich": {"category": "Sandwich", "price": 79.00, "stock": 50},
         "Cheese Sandwich": {"category": "Sandwich", "price": 89.00, "stock": 50},
         "Paneer Sandwich": {"category": "Sandwich", "price": 99.00, "stock": 50},
