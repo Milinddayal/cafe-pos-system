@@ -195,7 +195,8 @@ if os.path.exists(LOGO_PATH):
 
 # --- DATABASE LOGGING & LOADING FUNCTIONS ---
 def log_sale(total_amount, payment_mode, cart_items, counter_id):
-    order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    order_datetime = datetime.now()
+    order_date = order_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
     try:
         supabase.table("sales").insert({
@@ -223,6 +224,14 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id):
                 supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
 
         supabase.table("order_items").insert(items_to_insert).execute()
+
+        bill_data = {
+            "bill_number": f"GF-{order_datetime.strftime('%Y%m%d%H%M%S%f')}",
+            "total_amount": float(total_amount),
+            "items": cart_items,
+            "created_at": order_datetime.isoformat()
+        }
+        supabase.table("orders").insert(bill_data).execute()
     except Exception as e:
         st.error(f"Failed to save sale to the database: {e}")
         raise
@@ -997,6 +1006,79 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
             st.subheader("*📊 Detailed Item Sales & Daily Revenue Report*")
             df_sales = load_sales_data()
             df_items = load_item_sales_data()
+
+            st.divider()
+            st.subheader("*📅 Daily Revenue & Bills Summary*")
+            try:
+                orders_response = supabase.table("orders").select("*").order(
+                    "created_at", desc=True
+                ).execute()
+                df_orders = pd.DataFrame(orders_response.data)
+
+                if df_orders.empty:
+                    st.info("No sales or bills generated yet.")
+                else:
+                    df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
+                    df_orders['Day'] = df_orders['created_at'].dt.date
+                    df_orders['total_amount'] = pd.to_numeric(df_orders['total_amount'])
+
+                    daily_summary = (
+                        df_orders.groupby('Day')
+                        .agg(
+                            total_bills=('total_amount', 'count'),
+                            total_revenue=('total_amount', 'sum')
+                        )
+                        .reset_index()
+                        .sort_values('Day', ascending=False)
+                    )
+                    st.dataframe(
+                        daily_summary.rename(columns={
+                            'Day': 'Date',
+                            'total_bills': 'Total Bills',
+                            'total_revenue': 'Total Revenue (₹)'
+                        }),
+                        hide_index=True,
+                        use_container_width=True
+                    )
+
+                    st.subheader("*🧾 Bill Details by Date*")
+                    available_bill_days = daily_summary['Day'].tolist()
+                    selected_bill_day = st.selectbox(
+                        "Select Date to View Bills",
+                        available_bill_days,
+                        format_func=str,
+                        key="admin_bill_date"
+                    )
+                    selected_bills = df_orders[df_orders['Day'] == selected_bill_day]
+                    st.write(
+                        f"Showing **{len(selected_bills)}** bill(s) generated on "
+                        f"**{selected_bill_day}**:"
+                    )
+
+                    for _, bill in selected_bills.iterrows():
+                        exact_bill_number = bill.get(
+                            'bill_number', f"Bill #{bill.get('id', 'N/A')}"
+                        )
+                        bill_time = bill['created_at'].strftime('%H:%M:%S')
+                        bill_total = bill['total_amount']
+                        with st.expander(
+                            f"Bill ID: {exact_bill_number} — Time: {bill_time} "
+                            f"— Total: ₹{bill_total:.2f}"
+                        ):
+                            st.write(f"**Exact Bill Number:** {exact_bill_number}")
+                            st.write(
+                                f"**Customer / Table:** "
+                                f"{bill.get('customer_name', 'Walk-in')}"
+                            )
+                            st.write(
+                                f"**Items Ordered:** "
+                                f"{bill.get('items_summary', bill.get('items', 'Details unavailable'))}"
+                            )
+                            st.write(
+                                f"**Payment Status:** {bill.get('payment_status', 'Paid')}"
+                            )
+            except Exception as e:
+                st.error(f"Error loading revenue and bill data: {e}")
             
             if df_sales.empty:
                 st.warning("No sales recorded yet across cloud counters.")
@@ -1088,56 +1170,6 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 m2.metric("Average Daily Sales", f"₹{df_sales_indexed.resample('D').sum(numeric_only=True)['total'].mean():,.2f}")
                 m3.metric("Highest Single Bill", f"₹{df_sales['total'].max():,.2f}")
 
-                st.divider()
-                st.subheader("*📅 Daily Revenue & Bills Summary*")
-                df_sales['Day'] = df_sales['Date'].dt.date
-                daily_summary = (
-                    df_sales.groupby('Day')
-                    .agg(total_bills=('total', 'size'), total_revenue=('total', 'sum'))
-                    .reset_index()
-                    .sort_values('Day', ascending=False)
-                )
-                st.dataframe(
-                    daily_summary.rename(columns={
-                        'Day': 'Date',
-                        'total_bills': 'Total Bills',
-                        'total_revenue': 'Total Revenue (₹)'
-                    }),
-                    hide_index=True,
-                    use_container_width=True
-                )
-
-                st.subheader("*🧾 Bill Details by Date*")
-                available_bill_days = daily_summary['Day'].astype(str).tolist()
-                selected_bill_day = st.selectbox(
-                    "Select Date to View Bills",
-                    available_bill_days,
-                    key="admin_bill_date"
-                )
-                selected_bills = df_sales[df_sales['Day'].astype(str) == selected_bill_day]
-                st.write(f"Showing **{len(selected_bills)}** bill(s) generated on **{selected_bill_day}**:")
-
-                for _, bill in selected_bills.iterrows():
-                    bill_items = df_items[df_items['Date'] == bill['Date']] if not df_items.empty else pd.DataFrame()
-                    if not bill_items.empty:
-                        bill_items = bill_items[bill_items['status'] != "Refunded & Closed"]
-                        item_summary = ", ".join(
-                            f"{int(item['quantity'])}x {item['item_name']}"
-                            for _, item in bill_items.iterrows()
-                        )
-                        counters = ", ".join(sorted(bill_items['counter'].dropna().astype(str).unique()))
-                    else:
-                        item_summary = ""
-                        counters = ""
-
-                    bill_id = bill.get('id', bill['Date'].strftime('%H%M%S'))
-                    bill_time = bill['Date'].strftime('%H:%M:%S')
-                    with st.expander(
-                        f"Bill #{bill_id} — Time: {bill_time} — Total: ₹{bill['total']:.2f}"
-                    ):
-                        st.write(f"**Counter:** {counters or 'Unavailable'}")
-                        st.write(f"**Items Ordered:** {item_summary or 'Details unavailable'}")
-                        st.write(f"**Payment Mode:** {bill.get('payment_mode', 'Unavailable')}")
     else:
         if admin_password != "":
             st.error("Incorrect Admin Password.")
