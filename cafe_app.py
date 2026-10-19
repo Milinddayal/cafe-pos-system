@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 import plotly.express as px
 import base64
+import ast
 from html import escape
 from io import BytesIO
 from datetime import datetime
@@ -34,9 +35,6 @@ if 'cart' not in st.session_state:
 if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
 
-if 'bill_counter' not in st.session_state:
-    st.session_state.bill_counter = 1
-
 if 'order_history' not in st.session_state:
     st.session_state.order_history = []
 
@@ -46,7 +44,6 @@ if 'sales_history' not in st.session_state:
 if '_session_sales_reset_applied' not in st.session_state:
     st.session_state.sales_history = []
     st.session_state.order_history = []
-    st.session_state.bill_counter = 1
     st.session_state._session_sales_reset_applied = True
 
 if 'target_mod_time' not in st.session_state:
@@ -194,11 +191,108 @@ if os.path.exists(LOGO_PATH):
     logo_base64 = base64.b64encode(buffered.getvalue()).decode()
 
 # --- DATABASE LOGGING & LOADING FUNCTIONS ---
-def log_sale(total_amount, payment_mode, cart_items, counter_id):
+def save_or_print_bill(bill_number, cart_items, total_amount, customer_name="Walk-in"):
+    existing = (
+        supabase.table("orders")
+        .select("*")
+        .eq("bill_number", bill_number)
+        .execute()
+    )
+    if existing.data:
+        st.info(f"Bill #{bill_number} is already recorded. Reusing the existing bill.")
+        return existing.data[0]
+
+    new_order = {
+        "bill_number": bill_number,
+        "total_amount": float(total_amount),
+        "items": str(cart_items),
+        "customer_name": customer_name,
+        "payment_status": "Paid",
+        "created_at": datetime.now().isoformat()
+    }
+    response = supabase.table("orders").insert(new_order).execute()
+    if not response.data:
+        raise RuntimeError("Supabase did not return the newly saved bill.")
+    return response.data[0]
+
+
+def build_bill_print_html(bill):
+    items = bill.get("items", [])
+    if isinstance(items, str):
+        try:
+            items = ast.literal_eval(items)
+        except (SyntaxError, ValueError):
+            items = []
+
+    item_lines = []
+    if isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict):
+                quantity = escape(str(item.get("Qty", "")))
+                name = escape(str(item.get("Item", "Item")))
+                line_total = pd.to_numeric(item.get("Total", 0), errors="coerce")
+                if pd.isna(line_total):
+                    line_total = 0
+                item_lines.append(
+                    f"<p>{quantity}x {name}<span>₹{line_total:.2f}</span></p>"
+                )
+    if not item_lines:
+        item_lines.append("<p>Item details unavailable</p>")
+
+    bill_number = escape(str(bill.get("bill_number", bill.get("id", "N/A"))))
+    customer_name = escape(str(bill.get("customer_name", "Walk-in")))
+    payment_status = escape(str(bill.get("payment_status", "Paid")))
+    total_amount = pd.to_numeric(bill.get("total_amount", 0), errors="coerce")
+    if pd.isna(total_amount):
+        total_amount = 0
+    created_at = pd.to_datetime(bill.get("created_at"), errors="coerce")
+    bill_time = created_at.strftime("%Y-%m-%d %H:%M:%S") if not pd.isna(created_at) else ""
+
+    return f"""
+        <div class="receipt">
+            <h2>GREEN FUSION</h2>
+            <p class="center">Bite &amp; Sip by Dayals</p>
+            <hr>
+            <p>Bill: {bill_number}</p>
+            <p>Customer / Table: {customer_name}</p>
+            <p>Date: {bill_time}</p>
+            <p>Payment Status: {payment_status}</p>
+            <hr>
+            {''.join(item_lines)}
+            <hr>
+            <h3>Total: ₹{total_amount:.2f}</h3>
+            <p class="center">*** THANK YOU! VISIT AGAIN ***</p>
+            <button onclick="window.print()">Print Bill</button>
+        </div>
+        <style>
+            body {{ font-family: 'Courier New', monospace; color: #000; }}
+            .receipt {{ max-width: 320px; margin: auto; font-weight: bold; }}
+            h2, .center {{ text-align: center; }}
+            p span {{ float: right; }}
+            button {{ width: 100%; padding: 10px; margin-top: 12px; cursor: pointer; }}
+            @media print {{ button {{ display: none; }} }}
+        </style>
+    """
+
+
+def log_sale(total_amount, payment_mode, cart_items, counter_id, bill_number):
     order_datetime = datetime.now()
     order_date = order_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
     try:
+        existing = (
+            supabase.table("orders")
+            .select("*")
+            .eq("bill_number", bill_number)
+            .execute()
+        )
+        if existing.data:
+            st.info(f"Bill #{bill_number} is already recorded. Reusing the existing bill.")
+            existing_created_at = existing.data[0].get("created_at")
+            if existing_created_at:
+                return pd.to_datetime(existing_created_at).strftime('%Y-%m-%d %H:%M:%S')
+            return order_date
+
         supabase.table("sales").insert({
             "date": order_date,
             "total": float(total_amount),
@@ -224,14 +318,7 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id):
                 supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
 
         supabase.table("order_items").insert(items_to_insert).execute()
-
-        bill_data = {
-            "bill_number": f"GF-{order_datetime.strftime('%Y%m%d%H%M%S%f')}",
-            "total_amount": float(total_amount),
-            "items": cart_items,
-            "created_at": order_datetime.isoformat()
-        }
-        supabase.table("orders").insert(bill_data).execute()
+        save_or_print_bill(bill_number, cart_items, total_amount)
     except Exception as e:
         st.error(f"Failed to save sale to the database: {e}")
         raise
@@ -604,9 +691,14 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         st.error("Insufficient cash given!")
                     else:
                         current_cart_snapshot = list(st.session_state.cart)
-                        order_time = log_sale(grand_total, clean_payment_mode, current_cart_snapshot, counter_id)
-                        current_bill_no = f"GF-{st.session_state.bill_counter}"
-                        st.session_state.bill_counter += 1
+                        current_bill_no = f"GF-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+                        order_time = log_sale(
+                            grand_total,
+                            clean_payment_mode,
+                            current_cart_snapshot,
+                            counter_id,
+                            current_bill_no
+                        )
                         
                         direct_print_html = f"""
                         <div id="bill-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
@@ -1038,7 +1130,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                             'total_revenue': 'Total Revenue (₹)'
                         }),
                         hide_index=True,
-                        use_container_width=True
+                        width="stretch"
                     )
 
                     st.subheader("*🧾 Bill Details by Date*")
@@ -1065,18 +1157,32 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                             f"Bill ID: {exact_bill_number} — Time: {bill_time} "
                             f"— Total: ₹{bill_total:.2f}"
                         ):
-                            st.write(f"**Exact Bill Number:** {exact_bill_number}")
-                            st.write(
-                                f"**Customer / Table:** "
-                                f"{bill.get('customer_name', 'Walk-in')}"
-                            )
-                            st.write(
-                                f"**Items Ordered:** "
-                                f"{bill.get('items_summary', bill.get('items', 'Details unavailable'))}"
-                            )
-                            st.write(
-                                f"**Payment Status:** {bill.get('payment_status', 'Paid')}"
-                            )
+                            col_bill_details, col_bill_print = st.columns([3, 1])
+                            with col_bill_details:
+                                st.write(f"**Exact Bill Number:** {exact_bill_number}")
+                                st.write(
+                                    f"**Customer / Table:** "
+                                    f"{bill.get('customer_name', 'Walk-in')}"
+                                )
+                                st.write(
+                                    f"**Items Ordered:** "
+                                    f"{bill.get('items_summary', bill.get('items', 'Details unavailable'))}"
+                                )
+                                st.write(
+                                    f"**Payment Status:** "
+                                    f"{bill.get('payment_status', 'Paid')}"
+                                )
+                            with col_bill_print:
+                                if st.button(
+                                    "🖨️ Print Bill",
+                                    key=f"print_bill_{bill.get('id', index)}"
+                                ):
+                                    st.success(f"Print view ready for {exact_bill_number}.")
+                                    components.html(
+                                        build_bill_print_html(bill),
+                                        height=520,
+                                        scrolling=True
+                                    )
             except Exception as e:
                 st.error(f"Error loading revenue and bill data: {e}")
             
