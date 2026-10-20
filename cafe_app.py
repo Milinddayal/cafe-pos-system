@@ -32,6 +32,9 @@ supabase: Client = init_supabase()
 if 'cart' not in st.session_state:
     st.session_state.cart = []
 
+if 'order_submitted' not in st.session_state:
+    st.session_state.order_submitted = False
+
 if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
 
@@ -566,6 +569,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
 
             if st.button("✖ Close Receipt & Start New Order"):
                 st.session_state.last_receipt = None
+                st.session_state.order_submitted = False
                 st.rerun()
             st.markdown("---")
 
@@ -618,6 +622,8 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                             # Using a unique key based on item name prevents Streamlit button errors
                                             if st.button("Add", key=f"add_tab_{item_name}", width="stretch"):
                                                 found = False
+                                                if not st.session_state.cart:
+                                                    st.session_state.order_submitted = False
                                                 for cart_item in st.session_state.cart:
                                                     if cart_item["Item"] == item_name:
                                                         cart_item["Qty"] += 1
@@ -658,6 +664,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 with col_a:
                     if st.button("🗑️ Clear", width="stretch"):
                         st.session_state.cart = []
+                        st.session_state.order_submitted = False
                         st.rerun()
                 with col_b:
                     if st.button("❌ Remove", width="stretch"):
@@ -699,10 +706,16 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 st.write("")
                 clean_payment_mode = "Cash" if "Cash" in payment_mode else ("UPI QR" if "UPI" in payment_mode else "Card")
 
-                if st.button("✅ Complete Order & Print", type="primary", width="stretch"):
+                if st.button(
+                    "✅ Complete Order & Print",
+                    type="primary",
+                    width="stretch",
+                    disabled=st.session_state.order_submitted
+                ) and not st.session_state.order_submitted:
                     if clean_payment_mode == "Cash" and cash_given < grand_total:
                         st.error("Insufficient cash given!")
                     else:
+                        st.session_state.order_submitted = True
                         current_cart_snapshot = list(st.session_state.cart)
                         current_bill_no = get_next_bill_number(supabase)
                         order_time = log_sale(
