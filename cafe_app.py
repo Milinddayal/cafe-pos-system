@@ -1110,6 +1110,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 if df_orders.empty:
                     st.info("No sales or bills generated yet.")
                 else:
+                    df_orders = df_orders.drop_duplicates(subset=['bill_number'])
                     df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
                     df_orders['Day'] = df_orders['created_at'].dt.date
                     df_orders['total_amount'] = pd.to_numeric(df_orders['total_amount'])
@@ -1117,21 +1118,29 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                     daily_summary = (
                         df_orders.groupby('Day')
                         .agg(
-                            total_bills=('total_amount', 'count'),
+                            total_bills=('bill_number', 'count'),
                             total_revenue=('total_amount', 'sum')
                         )
                         .reset_index()
                         .sort_values('Day', ascending=False)
                     )
+                    display_summary = daily_summary.rename(columns={
+                        'Day': 'Date',
+                        'total_bills': 'Total Bills',
+                        'total_revenue': 'Total Revenue (₹)'
+                    })
+                    display_summary['Total Revenue (₹)'] = display_summary[
+                        'Total Revenue (₹)'
+                    ].apply(lambda amount: f"₹{amount:,.2f}")
                     st.dataframe(
-                        daily_summary.rename(columns={
-                            'Day': 'Date',
-                            'total_bills': 'Total Bills',
-                            'total_revenue': 'Total Revenue (₹)'
-                        }),
+                        display_summary,
                         hide_index=True,
                         width="stretch"
                     )
+
+                    st.subheader("*📊 Daily Sales Chart*")
+                    chart_data = daily_summary.set_index('Day')['total_revenue']
+                    st.bar_chart(chart_data)
 
                     st.subheader("*🧾 Bill Details by Date*")
                     available_bill_days = daily_summary['Day'].tolist()
