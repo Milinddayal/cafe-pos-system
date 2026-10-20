@@ -228,6 +228,37 @@ def render_instant_print_button(bill_html, height=450):
     components.html(print_code, height=height, scrolling=True)
 
 
+def render_printable_bill(bill_number, cart_items, total_amount, order_time=None):
+    st.markdown("---")
+    st.subheader(f"🧾 Receipt: {bill_number}")
+
+    with st.container(border=True):
+        st.markdown("### **Green Fusion — Bite & Sip by Dayals**")
+        st.write(f"**Bill Number:** {bill_number}")
+        st.write(
+            f"**Date:** {order_time or datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        st.markdown("---")
+
+        for item in cart_items:
+            item_name = item.get("Item", item.get("item", "Item"))
+            quantity = item.get("Qty", item.get("qty", 0))
+            line_total = item.get("Total", item.get("total"))
+            if line_total is None:
+                price = item.get("Price", item.get("price", 0))
+                line_total = price * quantity
+            st.text(f"{item_name} x {quantity} — ₹{float(line_total):.2f}")
+
+        st.markdown("---")
+        st.markdown(f"### **Grand Total: ₹{float(total_amount):.2f}**")
+        st.success("Thank you for visiting Green Fusion!")
+
+    st.info(
+        "💡 To print this bill, press **Ctrl + P** (or **Cmd + P** on Mac). "
+        "The receipt button above prints just the bill."
+    )
+
+
 def save_or_print_bill(bill_number, cart_items, total_amount, customer_name="Walk-in"):
     existing = (
         supabase.table("orders")
@@ -582,6 +613,12 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
         if st.session_state.get('last_receipt'):
             st.markdown("---")
             st.success("🎉 Order Completed Successfully! Click the button below to print.")
+            render_printable_bill(
+                st.session_state.last_receipt['bill_number'],
+                st.session_state.last_receipt['cart_items'],
+                st.session_state.last_receipt['total_amount'],
+                st.session_state.last_receipt['order_time']
+            )
             render_instant_print_button(
                 st.session_state.last_receipt['receipt_html'],
                 height=st.session_state.last_receipt.get('receipt_height', 450)
@@ -827,6 +864,9 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         st.session_state.last_receipt = {
                             "receipt_html": direct_print_html,
                             "receipt_height": 650 + len(current_cart_snapshot) * 60,
+                            "bill_number": current_bill_no,
+                            "cart_items": current_cart_snapshot,
+                            "total_amount": grand_total,
                             "token_html": "",
                             "order_time": order_time
                         }
