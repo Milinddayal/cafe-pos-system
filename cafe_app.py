@@ -207,6 +207,27 @@ def get_next_bill_number(sb):
     return f"GF-{today_str}-{next_seq:03d}"
 
 
+def render_instant_print_button(bill_html, height=450):
+    print_code = f"""
+    <div style="text-align: center; margin: 20px;">
+        <button class="instant-print-button" onclick="window.print();" style="background-color: #ff4b4b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer;">
+            🖨️ Click Here to Print Receipt
+        </button>
+    </div>
+    <div id="printable-receipt">
+        {bill_html}
+    </div>
+    <style>
+        @media print {{
+            .instant-print-button, .print-controls, #kot-only-section {{
+                display: none !important;
+            }}
+        }}
+    </style>
+    """
+    components.html(print_code, height=height, scrolling=True)
+
+
 def save_or_print_bill(bill_number, cart_items, total_amount, customer_name="Walk-in"):
     existing = (
         supabase.table("orders")
@@ -561,10 +582,9 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
         if st.session_state.get('last_receipt'):
             st.markdown("---")
             st.success("🎉 Order Completed Successfully! Click the button below to print.")
-            components.html(
+            render_instant_print_button(
                 st.session_state.last_receipt['receipt_html'],
-                height=st.session_state.last_receipt.get('receipt_height', 450),
-                scrolling=False
+                height=st.session_state.last_receipt.get('receipt_height', 450)
             )
 
             if st.button("✖ Close Receipt & Start New Order"):
@@ -768,7 +788,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                             <hr style="border: 1px solid #000;">
                             <p style="text-align: center; font-size: 11px; font-weight: 900; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                         </div>
-                        <div style="text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                        <div class="print-controls" style="text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
                             <button onclick="triggerPrint(false)" style="background-color: #45552E; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
                                 🖨️ Print Bill Only
                             </button>
