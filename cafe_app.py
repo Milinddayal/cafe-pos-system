@@ -191,6 +191,19 @@ if os.path.exists(LOGO_PATH):
     logo_base64 = base64.b64encode(buffered.getvalue()).decode()
 
 # --- DATABASE LOGGING & LOADING FUNCTIONS ---
+def get_next_bill_number(sb):
+    today_str = datetime.now().strftime('%Y%m%d')
+    response = (
+        sb.table('orders')
+        .select('bill_number')
+        .like('bill_number', f"GF-{today_str}-%")
+        .execute()
+    )
+    existing_bills = response.data or []
+    next_seq = len(existing_bills) + 1
+    return f"GF-{today_str}-{next_seq:03d}"
+
+
 def save_or_print_bill(bill_number, cart_items, total_amount, customer_name="Walk-in"):
     existing = (
         supabase.table("orders")
@@ -691,7 +704,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                         st.error("Insufficient cash given!")
                     else:
                         current_cart_snapshot = list(st.session_state.cart)
-                        current_bill_no = f"GF-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+                        current_bill_no = get_next_bill_number(supabase)
                         order_time = log_sale(
                             grand_total,
                             clean_payment_mode,
