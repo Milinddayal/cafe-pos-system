@@ -229,10 +229,42 @@ def render_instant_print_button(bill_html, height=450):
 
 
 def render_printable_bill(bill_number, cart_items, total_amount, order_time=None):
-    st.markdown("---")
-    st.subheader(f"🧾 Receipt: {bill_number}")
+    st.markdown("""
+        <style>
+        .st-key-printable_receipt {
+            border: 1px dashed #ccc !important;
+            border-radius: 5px !important;
+            max-width: 400px !important;
+            margin: 0 auto !important;
+            padding: 20px !important;
+            background: white !important;
+            color: black !important;
+        }
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            .st-key-printable_receipt,
+            .st-key-printable_receipt * {
+                visibility: visible !important;
+            }
+            .st-key-printable_receipt {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: 400px !important;
+                margin: 0 !important;
+                padding: 20px !important;
+                background: white !important;
+                color: black !important;
+            }
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
-    with st.container(border=True):
+    with st.container(key="printable_receipt", border=True):
+        st.subheader(f"🧾 Receipt: {bill_number}")
         st.markdown("### **Green Fusion — Bite & Sip by Dayals**")
         st.write(f"**Bill Number:** {bill_number}")
         st.write(
