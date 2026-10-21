@@ -286,8 +286,8 @@ def render_printable_bill(bill_number, cart_items, total_amount, order_time=None
         st.success("Thank you for visiting Green Fusion!")
 
     st.info(
-        "💡 To print this bill, press **Ctrl + P** (or **Cmd + P** on Mac). "
-        "The receipt button above prints just the bill."
+        "🖨️ **Ready to print:** Press **Ctrl + P** (Windows) or **Cmd + P** (Mac) "
+        "to print the receipt only, or use **Print Bill Only** below."
     )
 
 
@@ -644,7 +644,10 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
 
         if st.session_state.get('last_receipt'):
             st.markdown("---")
-            st.success("🎉 Order Completed Successfully! Click the button below to print.")
+            st.success(
+                "✅ Order saved successfully! Bill: "
+                f"{st.session_state.last_receipt['bill_number']}"
+            )
             render_printable_bill(
                 st.session_state.last_receipt['bill_number'],
                 st.session_state.last_receipt['cart_items'],
