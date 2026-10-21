@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 import base64
 import ast
+import json
 from html import escape
 from io import BytesIO
 from datetime import datetime, timedelta
@@ -266,6 +267,24 @@ def render_instant_print_button(bill_html, height=450):
     </style>
     """
     components.html(print_code, height=height, scrolling=True)
+
+
+def render_auto_print_receipt(bill_number):
+    bill_number_json = json.dumps(str(bill_number))
+    components.html(f"""
+        <script>
+            const billNumber = {bill_number_json};
+            const appWindow = window.parent;
+            const printedBills = appWindow.__greenFusionPrintedBills ||
+                (appWindow.__greenFusionPrintedBills = {{}});
+            if (!printedBills[billNumber]) {{
+                printedBills[billNumber] = true;
+                setTimeout(function() {{
+                    appWindow.print();
+                }}, 500);
+            }}
+        </script>
+    """, height=0, width=0)
 
 
 def render_printable_bill(bill_number, cart_items, total_amount, order_time=None):
@@ -900,6 +919,9 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 st.session_state.last_receipt['total_amount'],
                 st.session_state.last_receipt['order_time']
             )
+            if st.session_state.get('_auto_printed_bill') != st.session_state.current_bill:
+                render_auto_print_receipt(st.session_state.current_bill)
+                st.session_state._auto_printed_bill = st.session_state.current_bill
             render_instant_print_button(
                 st.session_state.last_receipt['receipt_html'],
                 height=st.session_state.last_receipt.get('receipt_height', 450)
