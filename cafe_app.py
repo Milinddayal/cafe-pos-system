@@ -256,25 +256,15 @@ def get_next_bill_number(sb):
     return f"GF-{today_str}-{next_seq:03d}"
 
 
-def render_instant_print_button(bill_html, height=450):
-    print_code = f"""
-    <div style="text-align: center; margin-top: 10px;">
-        <button class="instant-print-button" onclick="parent.window.print();" style="background-color: #2e7d32; color: white; padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+def render_instant_print_button():
+    print_code = """
+    <div style="text-align: center;">
+        <button class="instant-print-button" onclick="parent.window.print();" style="background-color: #2e7d32; color: white; padding: 10px 15px; font-size: 15px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             🖨️ Click Here to Print Receipt
         </button>
     </div>
-    <div id="printable-receipt">
-        {bill_html}
-    </div>
-    <style>
-        @media print {{
-            .instant-print-button, .print-controls, #kot-only-section {{
-                display: none !important;
-            }}
-        }}
-    </style>
     """
-    components.html(print_code, height=height, scrolling=True)
+    components.html(print_code, height=50)
 
 
 def render_auto_print_receipt(bill_number):
@@ -930,11 +920,6 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
             if st.session_state.get('_auto_printed_bill') != st.session_state.current_bill:
                 render_auto_print_receipt(st.session_state.current_bill)
                 st.session_state._auto_printed_bill = st.session_state.current_bill
-            render_instant_print_button(
-                st.session_state.last_receipt['receipt_html'],
-                height=st.session_state.last_receipt.get('receipt_height', 450)
-            )
-
             receipt = st.session_state.last_receipt
             receipt_lines = [
                 "GREEN FUSION",
@@ -962,13 +947,18 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 "Please come again."
             ])
             receipt_text = "\n".join(receipt_lines) + "\n"
-            st.download_button(
-                label="📥 Download Bill",
-                data=receipt_text,
-                file_name=f"{receipt['bill_number']}.txt",
-                mime="text/plain",
-                width="stretch"
-            )
+            print_col, download_col = st.columns(2)
+            with print_col:
+                render_instant_print_button()
+            with download_col:
+                st.download_button(
+                    label="📥 Download Bill",
+                    data=receipt_text,
+                    file_name=f"{receipt['bill_number']}.txt",
+                    mime="text/plain",
+                    width="stretch",
+                    key=f"download_btn_{receipt['bill_number']}"
+                )
 
             if st.button(
                 "🔄 Start New Order",
