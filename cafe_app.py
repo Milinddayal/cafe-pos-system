@@ -265,14 +265,17 @@ def render_instant_print_button(bill_html, height=450):
 def render_printable_bill(bill_number, cart_items, total_amount, order_time=None):
     st.markdown("""
         <style>
-        .st-key-printable_receipt {
+        .printable-receipt {
             border: 1px dashed #ccc !important;
             border-radius: 5px !important;
-            max-width: 400px !important;
+            width: 300px;
+            max-width: 100%;
+            box-sizing: border-box;
             margin: 0 auto !important;
-            padding: 20px !important;
+            padding: 15px !important;
             background: white !important;
             color: black !important;
+            font-family: 'Courier New', Courier, monospace !important;
         }
         @media print {
             body * {
@@ -282,50 +285,63 @@ def render_printable_bill(bill_number, cart_items, total_amount, order_time=None
             footer,
             [data-testid="stSidebar"],
             button,
-            .stButton {
+            .stButton,
+            .stAlert {
                 display: none !important;
             }
-            .st-key-printable_receipt,
-            .st-key-printable_receipt * {
+            .printable-receipt,
+            .printable-receipt * {
                 visibility: visible !important;
             }
-            .st-key-printable_receipt {
+            .printable-receipt {
                 display: block !important;
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
-                width: 100% !important;
-                max-width: 400px !important;
+                width: 80mm !important;
+                max-width: 80mm !important;
+                box-sizing: border-box !important;
                 margin: 0 !important;
-                padding: 20px !important;
+                padding: 5mm !important;
                 background: white !important;
                 color: black !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: 12px !important;
+                border: none !important;
+                border-radius: 0 !important;
             }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    with st.container(key="printable_receipt", border=True):
-        st.subheader(f"🧾 Receipt: {bill_number}")
-        st.markdown("### **Green Fusion — Bite & Sip by Dayals**")
-        st.write(f"**Bill Number:** {bill_number}")
-        st.write(
-            f"**Date:** {order_time or datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    item_lines = []
+    for item in cart_items:
+        item_name = escape(str(item.get("Item", item.get("item", "Item"))))
+        quantity = item.get("Qty", item.get("qty", 0))
+        line_total = item.get("Total", item.get("total"))
+        if line_total is None:
+            price = item.get("Price", item.get("price", 0))
+            line_total = price * quantity
+        item_lines.append(
+            f"<p style='margin: 2px 0;'>{item_name} x{quantity} — "
+            f"₹{float(line_total):.2f}</p>"
         )
-        st.markdown("---")
 
-        for item in cart_items:
-            item_name = item.get("Item", item.get("item", "Item"))
-            quantity = item.get("Qty", item.get("qty", 0))
-            line_total = item.get("Total", item.get("total"))
-            if line_total is None:
-                price = item.get("Price", item.get("price", 0))
-                line_total = price * quantity
-            st.text(f"{item_name} x {quantity} — ₹{float(line_total):.2f}")
-
-        st.markdown("---")
-        st.markdown(f"### **Grand Total: ₹{float(total_amount):.2f}**")
-        st.success("Thank you for visiting Green Fusion!")
+    receipt_time = order_time or datetime.now().strftime('%Y-%m-%d %H:%M')
+    st.markdown(f"""
+        <div class="printable-receipt">
+            <h3 style="text-align: center; margin: 0; font-size: 16px;">Green Fusion</h3>
+            <p style="text-align: center; font-size: 10px; margin: 2px 0 10px 0;">Bite &amp; Sip by Dayals</p>
+            <hr style="border-top: 1px dashed #000;">
+            <p style="margin: 4px 0;"><b>Bill No:</b> {escape(str(bill_number))}</p>
+            <p style="margin: 4px 0;"><b>Date:</b> {escape(str(receipt_time))}</p>
+            <hr style="border-top: 1px dashed #000;">
+            {''.join(item_lines)}
+            <hr style="border-top: 1px dashed #000;">
+            <h4 style="text-align: right; margin: 5px 0;">Total: ₹{float(total_amount):.2f}</h4>
+            <p style="text-align: center; font-size: 10px; margin-top: 15px;">Thank you for visiting!<br>Please come again.</p>
+        </div>
+    """, unsafe_allow_html=True)
 
     st.info(
         "🖨️ **Ready to print:** Press **Ctrl + P** (Windows) or **Cmd + P** (Mac) "
