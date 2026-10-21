@@ -38,6 +38,15 @@ if 'order_submitted' not in st.session_state:
 if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
 
+if 'order_completed' not in st.session_state:
+    st.session_state.order_completed = bool(st.session_state.last_receipt)
+
+if 'current_bill' not in st.session_state:
+    st.session_state.current_bill = (
+        st.session_state.last_receipt.get('bill_number')
+        if st.session_state.last_receipt else None
+    )
+
 if 'order_history' not in st.session_state:
     st.session_state.order_history = []
 
@@ -412,50 +421,46 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id, bill_number):
     order_datetime = datetime.now()
     order_date = order_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
-    try:
-        existing = (
-            supabase.table("orders")
-            .select("*")
-            .eq("bill_number", bill_number)
-            .execute()
-        )
-        if existing.data:
-            st.info(f"Bill #{bill_number} is already recorded. Reusing the existing bill.")
-            existing_created_at = existing.data[0].get("created_at")
-            if existing_created_at:
-                return pd.to_datetime(existing_created_at).strftime('%Y-%m-%d %H:%M:%S')
-            return order_date
+    existing = (
+        supabase.table("orders")
+        .select("*")
+        .eq("bill_number", bill_number)
+        .execute()
+    )
+    if existing.data:
+        st.info(f"Bill #{bill_number} is already recorded. Reusing the existing bill.")
+        existing_created_at = existing.data[0].get("created_at")
+        if existing_created_at:
+            return pd.to_datetime(existing_created_at).strftime('%Y-%m-%d %H:%M:%S')
+        return order_date
 
-        supabase.table("sales").insert({
+    supabase.table("sales").insert({
+        "date": order_date,
+        "total": float(total_amount),
+        "payment_mode": payment_mode
+    }).execute()
+
+    items_to_insert = []
+    for item in cart_items:
+        items_to_insert.append({
             "date": order_date,
-            "total": float(total_amount),
-            "payment_mode": payment_mode
-        }).execute()
+            "item_name": item['Item'],
+            "unit_price": float(item['Price']),
+            "quantity": int(item['Qty']),
+            "subtotal": float(item['Total']),
+            "counter": counter_id,
+            "status": "Completed",
+            "modification_reason": ""
+        })
 
-        items_to_insert = []
-        for item in cart_items:
-            items_to_insert.append({
-                "date": order_date,
-                "item_name": item['Item'],
-                "unit_price": float(item['Price']),
-                "quantity": int(item['Qty']),
-                "subtotal": float(item['Total']),
-                "counter": counter_id,
-                "status": "Completed",
-                "modification_reason": ""
-            })
+        item_name = item['Item']
+        if item_name in current_menu:
+            new_stock = max(0, current_menu[item_name]['stock'] - item['Qty'])
+            supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
 
-            item_name = item['Item']
-            if item_name in current_menu:
-                new_stock = max(0, current_menu[item_name]['stock'] - item['Qty'])
-                supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
-
-        fetch_menu_items.clear()
-        supabase.table("order_items").insert(items_to_insert).execute()
-        save_or_print_bill(bill_number, cart_items, total_amount)
-    except Exception as e:
-        st.error(f"Failed to save sale to the database: {e}")
-        raise
+    fetch_menu_items.clear()
+    supabase.table("order_items").insert(items_to_insert).execute()
+    save_or_print_bill(bill_number, cart_items, total_amount)
 
     return order_date
 
@@ -553,7 +558,7 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
         )
 
         if st.button(
-            "✅ Complete Order & Print",
+            "🚀 Complete Order & Print",
             type="primary",
             width="stretch",
             disabled=st.session_state.order_submitted
@@ -563,14 +568,20 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
             else:
                 st.session_state.order_submitted = True
                 current_cart_snapshot = list(st.session_state.cart)
-                current_bill_no = get_next_bill_number(sb)
-                order_time = log_sale(
-                    grand_total,
-                    clean_payment_mode,
-                    current_cart_snapshot,
-                    counter_id,
-                    current_bill_no
-                )
+                try:
+                    with st.spinner("Saving order to Supabase..."):
+                        current_bill_no = get_next_bill_number(sb)
+                        order_time = log_sale(
+                            grand_total,
+                            clean_payment_mode,
+                            current_cart_snapshot,
+                            counter_id,
+                            current_bill_no
+                        )
+                except Exception as e:
+                    st.session_state.order_submitted = False
+                    st.error(f"Order could not be saved to Supabase: {e}")
+                    return
 
                 bill_items = "".join(
                     f"<p style='font-weight: bold;'>{item['Qty']}x "
@@ -652,6 +663,8 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                     "token_html": "",
                     "order_time": order_time
                 }
+                st.session_state.current_bill = current_bill_no
+                st.session_state.order_completed = True
                 st.session_state.cart = []
                 st.rerun()
 
@@ -853,11 +866,11 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
     if counter_pin == actual_counter_pin:
         st.success(f"Logged in successfully as **{counter_id}**. Ready for billing operations.")
 
-        if st.session_state.get('last_receipt'):
+        if st.session_state.get('order_completed') and st.session_state.get('last_receipt'):
             st.markdown("---")
             st.success(
                 "✅ Order saved successfully! Bill: "
-                f"{st.session_state.last_receipt['bill_number']}"
+                f"{st.session_state.current_bill}"
             )
             render_printable_bill(
                 st.session_state.last_receipt['bill_number'],
@@ -870,8 +883,10 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 height=st.session_state.last_receipt.get('receipt_height', 450)
             )
 
-            if st.button("✖ Close Receipt & Start New Order"):
+            if st.button("🔄 Start New Order"):
                 st.session_state.last_receipt = None
+                st.session_state.order_completed = False
+                st.session_state.current_bill = None
                 st.session_state.order_submitted = False
                 st.rerun()
             st.markdown("---")
