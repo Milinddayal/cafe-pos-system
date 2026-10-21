@@ -12,10 +12,18 @@ from datetime import datetime, timedelta
 from PIL import Image
 from supabase import create_client, Client
 import os
+from zoneinfo import ZoneInfo
 from streamlit_autorefresh import st_autorefresh
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Green Fusion - POS System", page_icon="☕", layout="wide")
+
+LOCAL_TIMEZONE = ZoneInfo("Asia/Kolkata")
+
+
+def get_local_time():
+    return datetime.now(LOCAL_TIMEZONE)
+
 
 # --- LIVE AUTO-REFRESH (Every 5 seconds for real-time cloud sync) ---
 st_autorefresh(interval=5000, key="greenfusion_live_sync")
@@ -230,7 +238,7 @@ if os.path.exists(LOGO_PATH):
 
 # --- DATABASE LOGGING & LOADING FUNCTIONS ---
 def get_next_bill_number(sb):
-    today_str = datetime.now().strftime('%Y%m%d')
+    today_str = get_local_time().strftime('%Y%m%d')
     response = (
         sb.table('orders')
         .select('bill_number')
@@ -352,7 +360,7 @@ def render_printable_bill(bill_number, cart_items, total_amount, order_time=None
             f"₹{float(line_total):.2f}</p>"
         )
 
-    receipt_time = order_time or datetime.now().strftime('%Y-%m-%d %H:%M')
+    receipt_time = order_time or get_local_time().strftime('%Y-%m-%d %H:%M:%S')
     st.markdown(f"""
         <div class="printable-receipt">
             <h3 style="text-align: center; margin: 0; font-size: 16px;">Green Fusion</h3>
@@ -369,8 +377,8 @@ def render_printable_bill(bill_number, cart_items, total_amount, order_time=None
     """, unsafe_allow_html=True)
 
     st.info(
-        "🖨️ **Ready to print:** Press **Ctrl + P** (Windows) or **Cmd + P** (Mac) "
-        "to print the receipt only, or use **Print Bill Only** below."
+        "🖨️ **Print Receipt:** Press **Ctrl + P** (Windows) or **Cmd + P** (Mac) "
+        "on your keyboard. The thermal bill will print automatically!"
     )
 
 
@@ -391,7 +399,7 @@ def save_or_print_bill(bill_number, cart_items, total_amount, customer_name="Wal
         "items": str(cart_items),
         "customer_name": customer_name,
         "payment_status": "Paid",
-        "created_at": datetime.now().isoformat()
+        "created_at": get_local_time().isoformat()
     }
     response = supabase.table("orders").insert(new_order).execute()
     if not response.data:
@@ -459,7 +467,7 @@ def build_bill_print_html(bill):
 
 
 def log_sale(total_amount, payment_mode, cart_items, counter_id, bill_number):
-    order_datetime = datetime.now()
+    order_datetime = get_local_time()
     order_date = order_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
     existing = (
@@ -927,7 +935,11 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 height=st.session_state.last_receipt.get('receipt_height', 450)
             )
 
-            if st.button("🔄 Start New Order"):
+            if st.button(
+                "🔄 Start New Order",
+                type="primary",
+                width="stretch"
+            ):
                 st.session_state.last_receipt = None
                 st.session_state.order_completed = False
                 st.session_state.current_bill = None
@@ -1161,7 +1173,7 @@ elif st.session_state.active_portal == "👨‍🍳 Kitchen Display (KDS)":
     if df_items.empty:
         st.info("No active orders in the kitchen queue.")
     else:
-        today_str = datetime.now().strftime('%Y-%m-%d')
+        today_str = get_local_time().strftime('%Y-%m-%d')
         today_orders = df_items[df_items['Day'].astype(str) == today_str]
         
         if today_orders.empty:
@@ -1325,13 +1337,23 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
             st.divider()
             st.subheader("*📅 Daily Revenue & Bills Summary*")
             try:
-                today = datetime.now().date()
+                today = get_local_time().date()
                 tomorrow = today + timedelta(days=1)
                 orders_response = (
                     supabase.table("orders")
                     .select("*")
-                    .gte("created_at", datetime.combine(today, datetime.min.time()).isoformat())
-                    .lt("created_at", datetime.combine(tomorrow, datetime.min.time()).isoformat())
+                    .gte(
+                        "created_at",
+                        datetime.combine(
+                            today, datetime.min.time(), tzinfo=LOCAL_TIMEZONE
+                        ).isoformat()
+                    )
+                    .lt(
+                        "created_at",
+                        datetime.combine(
+                            tomorrow, datetime.min.time(), tzinfo=LOCAL_TIMEZONE
+                        ).isoformat()
+                    )
                     .order("created_at", desc=True)
                     .execute()
                 )
@@ -1481,7 +1503,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 st.download_button(
                     label="📥 Download Comprehensive Sales & Items Report (Excel)",
                     data=excel_file,
-                    file_name=f"green_fusion_report_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
+                    file_name=f"green_fusion_report_{get_local_time().strftime('%Y-%m-%d')}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     width="stretch"
                 )
