@@ -530,7 +530,7 @@ def convert_dfs_to_excel(df_sales, df_items):
 
 @st.fragment
 def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file):
-    st.subheader("🛒 *Checkout*")
+    st.subheader("⚡ Quick Checkout")
     st.markdown('<div class="cart-box">', unsafe_allow_html=True)
 
     if not st.session_state.cart:
