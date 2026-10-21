@@ -237,7 +237,13 @@ def get_next_bill_number(sb):
         .execute()
     )
     existing_bills = response.data or []
-    next_seq = len(existing_bills) + 1
+    existing_sequences = []
+    for bill in existing_bills:
+        bill_number = str(bill.get("bill_number", ""))
+        sequence = bill_number.rsplit("-", 1)[-1]
+        if sequence.isdigit():
+            existing_sequences.append(int(sequence))
+    next_seq = max(existing_sequences, default=0) + 1
     return f"GF-{today_str}-{next_seq:03d}"
 
 
