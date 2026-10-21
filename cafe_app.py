@@ -947,18 +947,15 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 "Please come again."
             ])
             receipt_text = "\n".join(receipt_lines) + "\n"
-            print_col, download_col = st.columns(2)
-            with print_col:
-                render_instant_print_button()
-            with download_col:
-                st.download_button(
-                    label="📥 Download Bill",
-                    data=receipt_text,
-                    file_name=f"{receipt['bill_number']}.txt",
-                    mime="text/plain",
-                    width="stretch",
-                    key=f"download_btn_{receipt['bill_number']}"
-                )
+            render_instant_print_button()
+            st.download_button(
+                label="📥 Download Bill",
+                data=receipt_text,
+                file_name=f"{receipt['bill_number']}.txt",
+                mime="text/plain",
+                width="stretch",
+                key=f"download_btn_{receipt['bill_number']}"
+            )
 
             if st.button(
                 "🔄 Start New Order",
