@@ -7,7 +7,7 @@ import base64
 import ast
 from html import escape
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import Image
 from supabase import create_client, Client
 import os
@@ -102,9 +102,14 @@ def get_smart_icon(category_name):
     # Returns a default plate icon if the category isn't found, preventing crashes!
     return icons.get(category_name, "🍽️")
 
+@st.cache_data(ttl=300)
+def fetch_menu_items(_sb: Client):
+    response = _sb.table("menu_items").select("*").execute()
+    return response.data or []
+
+
 # --- HARDCODED ROBUST MENU FALLBACK ---
-# --- HARDCODED ROBUST MENU FALLBACK ---
-def fetch_live_menu():
+def fetch_fallback_menu():
     return {
         "Pomegranate": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
         "Malta": {"category": "Fresh Juices", "price": 119.00, "stock": 50},
@@ -181,7 +186,27 @@ def fetch_live_menu():
         "Token 2 (₹40)": {"category": "Tokens", "price": 40.00, "stock": 100}
         
     }
-current_menu = fetch_live_menu()
+
+
+def fetch_live_menu(sb: Client):
+    menu_items = fetch_menu_items(sb)
+    if not menu_items:
+        return fetch_fallback_menu()
+
+    live_menu = {}
+    for item in menu_items:
+        item_name = item["name"]
+        category = item.get("category") or "Uncategorized"
+        live_menu[item_name] = {
+            "category": category,
+            "price": float(item["price"]),
+            "stock": int(item.get("stock") or 0),
+            "icon": item.get("icon") or get_smart_icon(category)
+        }
+    return live_menu
+
+
+current_menu = fetch_live_menu(supabase)
 # --- LOAD BRAND LOGO AUTOMATICALLY ---
 LOGO_PATH = "logo.jpeg"
 logo_base64 = ""
@@ -244,11 +269,19 @@ def render_printable_bill(bill_number, cart_items, total_amount, order_time=None
             body * {
                 visibility: hidden !important;
             }
+            header,
+            footer,
+            [data-testid="stSidebar"],
+            button,
+            .stButton {
+                display: none !important;
+            }
             .st-key-printable_receipt,
             .st-key-printable_receipt * {
                 visibility: visible !important;
             }
             .st-key-printable_receipt {
+                display: block !important;
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
@@ -417,6 +450,7 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id, bill_number):
                 new_stock = max(0, current_menu[item_name]['stock'] - item['Qty'])
                 supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
 
+        fetch_menu_items.clear()
         supabase.table("order_items").insert(items_to_insert).execute()
         save_or_print_bill(bill_number, cart_items, total_amount)
     except Exception as e:
@@ -446,6 +480,183 @@ def convert_dfs_to_excel(df_sales, df_items):
         df_sales.to_excel(writer, index=False, sheet_name='Revenue Summary')
         df_items.to_excel(writer, index=False, sheet_name='Item Wise Sales')
     return output.getvalue()
+
+
+@st.fragment
+def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file):
+    st.subheader("🛒 *Checkout*")
+    st.markdown('<div class="cart-box">', unsafe_allow_html=True)
+
+    if not st.session_state.cart:
+        st.info("Your cart is empty. Tap menu items.")
+    else:
+        cart_snapshot = list(st.session_state.cart)
+        cart_df = pd.DataFrame(cart_snapshot)
+        st.dataframe(cart_df[['Item', 'Qty', 'Total']], hide_index=True, width="stretch")
+
+        subtotal = sum(item['Total'] for item in cart_snapshot)
+        grand_total = subtotal
+
+        st.divider()
+        st.markdown(f"**Subtotal:** ₹{subtotal:.2f}")
+        st.markdown(f"### *Grand Total:* ₹{grand_total:.2f}")
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            if st.button("🗑️ Clear", width="stretch"):
+                st.session_state.cart = []
+                st.session_state.order_submitted = False
+                st.rerun(scope="fragment")
+        with col_b:
+            if st.button("❌ Remove", width="stretch"):
+                if st.session_state.cart:
+                    st.session_state.cart.pop()
+                st.rerun(scope="fragment")
+
+        st.divider()
+        st.subheader("💳 *Payment Mode*")
+        payment_mode = st.radio(
+            "Choose Mode", ["💵 Cash", "📱 UPI QR", "💳 Card"], horizontal=True
+        )
+
+        cash_given = 0.0
+        if payment_mode == "📱 UPI QR":
+            st.markdown(f"""
+            <div style="background-color: #fdfbf7; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #d5ded0; margin-bottom: 8px;">
+                <p style="margin: 0; font-weight: bold; color: #000 !important; font-size: 14px;">Scan QR to Pay</p>
+                <p style="margin: 2px 0; font-size: 12px; color: #444 !important;">UPI ID: <b>{escape(str(upi_id))}</b></p>
+            </div>
+            """, unsafe_allow_html=True)
+            if qr_image_file is not None:
+                st.image(Image.open(qr_image_file), width=110)
+        elif payment_mode == "💳 Card":
+            st.markdown("""
+            <div style="background-color: #fdfbf7; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #d5ded0; margin-bottom: 8px;">
+                <p style="margin: 0; font-weight: bold; color: #000 !important; font-size: 14px;">Swipe / Tap Card</p>
+                <p style="margin: 2px 0; font-size: 11px; color: #555 !important;">Connected billing card machine terminal.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            cash_given = st.number_input(
+                "Cash Tendered (₹)", min_value=0.0, value=float(grand_total), step=10.0
+            )
+            change_due = cash_given - grand_total
+            if change_due >= 0:
+                st.success(f"**Change:** ₹{change_due:.2f}")
+            else:
+                st.error(f"**Shortage:** ₹{abs(change_due):.2f}")
+
+        st.write("")
+        clean_payment_mode = (
+            "Cash" if "Cash" in payment_mode
+            else ("UPI QR" if "UPI" in payment_mode else "Card")
+        )
+
+        if st.button(
+            "✅ Complete Order & Print",
+            type="primary",
+            width="stretch",
+            disabled=st.session_state.order_submitted
+        ) and not st.session_state.order_submitted:
+            if clean_payment_mode == "Cash" and cash_given < grand_total:
+                st.error("Insufficient cash given!")
+            else:
+                st.session_state.order_submitted = True
+                current_cart_snapshot = list(st.session_state.cart)
+                current_bill_no = get_next_bill_number(sb)
+                order_time = log_sale(
+                    grand_total,
+                    clean_payment_mode,
+                    current_cart_snapshot,
+                    counter_id,
+                    current_bill_no
+                )
+
+                bill_items = "".join(
+                    f"<p style='font-weight: bold;'>{item['Qty']}x "
+                    f"{escape(str(item['Item']))} — ₹{item['Total']:.2f}</p>"
+                    for item in current_cart_snapshot
+                )
+                cash_details = ""
+                if clean_payment_mode == "Cash":
+                    cash_details = (
+                        f"<p style='font-weight: bold;'>Cash Given: ₹{cash_given:.2f}</p>"
+                        f"<p style='font-weight: bold;'>Change Due: "
+                        f"₹{cash_given - grand_total:.2f}</p>"
+                    )
+
+                kot_items = "".join(
+                    f"<li style='font-size: 14px; font-weight: 900; margin-bottom: 4px;'>"
+                    f"▪ {item['Qty']}x {escape(str(item['Item']))}</li>"
+                    for item in current_cart_snapshot
+                )
+                direct_print_html = f"""
+                <div id="bill-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                    <h2 style="font-weight: 900; margin: 0 0 2px 0; text-align: center;">GREEN FUSION</h2>
+                    <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
+                    <hr style="border: 0.5px dashed #000;">
+                    <p style="text-align: center; font-size: 14px; font-weight: 900; margin: 4px 0;">BILL NO: {current_bill_no}</p>
+                    <p style="text-align: center; font-size: 11px; color: #000; margin: 2px 0;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
+                    <p style="text-align: center; font-size: 11px; color: #000; margin: 2px 0;">Payment Mode: <b>{escape(str(clean_payment_mode))}</b></p>
+                    <hr style="border: 1px solid #000;">
+                    {bill_items}
+                    <hr style="border: 1px solid #000;">
+                    <p style="font-weight: bold;">Subtotal: ₹{subtotal:.2f}</p>
+                    <h3 style="color: #000 !important; font-weight: 900;">Grand Total: ₹{grand_total:.2f}</h3>
+                    {cash_details}
+                    <p style="text-align: center; margin-top: 15px; font-size: 11px; font-weight: bold;">*** THANK YOU! VISIT AGAIN ***</p>
+                </div>
+                <div id="kot-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                    <div style="page-break-before: always; break-before: page; padding-top: 10px;"></div>
+                    <h3 style="text-align: center; margin: 0; font-weight: 900;">KITCHEN ORDER TICKET</h3>
+                    <p style="text-align: center; font-size: 13px; font-weight: 900; margin: 3px 0;">BILL NO: {current_bill_no}</p>
+                    <p style="text-align: center; font-size: 11px; margin: 3px 0; font-weight: bold;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
+                    <hr style="border: 1px solid #000;">
+                    <ul style="list-style-type: none; padding: 0; margin: 5px 0;">{kot_items}</ul>
+                    <hr style="border: 1px solid #000;">
+                    <p style="text-align: center; font-size: 11px; font-weight: 900; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
+                </div>
+                <div class="print-controls" style="text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                    <button onclick="triggerPrint(false)" style="background-color: #45552E; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill Only</button>
+                    <button onclick="triggerPrint(true)" style="background-color: #8C6D46; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill + KOT</button>
+                </div>
+                <script>
+                    function triggerPrint(includeKot) {{
+                        var bill = document.getElementById('bill-only-section').outerHTML;
+                        var kot = document.getElementById('kot-only-section').outerHTML;
+                        var content = includeKot ? bill + kot : bill;
+                        var mywindow = window.open('', '_blank', 'height=600,width=400');
+                        if (!mywindow) {{
+                            window.alert('Please allow pop-ups to print the receipt.');
+                            return;
+                        }}
+                        mywindow.document.write('<html><head><title>Print Receipt</title>');
+                        mywindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }} #kot-only-section {{ page-break-before: always; break-before: page; }}</style>');
+                        mywindow.document.write('</head><body>' + content + '</body></html>');
+                        mywindow.document.close();
+                        mywindow.focus();
+                        setTimeout(function() {{
+                            mywindow.print();
+                            mywindow.close();
+                        }}, 300);
+                    }}
+                </script>
+                """
+
+                st.session_state.last_receipt = {
+                    "receipt_html": direct_print_html,
+                    "receipt_height": 650 + len(current_cart_snapshot) * 60,
+                    "bill_number": current_bill_no,
+                    "cart_items": current_cart_snapshot,
+                    "total_amount": grand_total,
+                    "token_html": "",
+                    "order_time": order_time
+                }
+                st.session_state.cart = []
+                st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
 # --- SIDEBAR: SYSTEM PORTAL SELECTION & BRANDING ---
 st.sidebar.title("🔐 System Login Portal")
@@ -736,179 +947,7 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                         st.markdown('</div>', unsafe_allow_html=True)
 
         with col_cart:
-            st.subheader("🛒 *Checkout*")
-            st.markdown('<div class="cart-box">', unsafe_allow_html=True)
-            
-            if not st.session_state.cart:
-                st.info("Your cart is empty. Tap menu items.")
-            else:
-                cart_df = pd.DataFrame(st.session_state.cart)
-                st.dataframe(cart_df[['Item', 'Qty', 'Total']], hide_index=True, width="stretch")
-                
-                subtotal = sum(item['Total'] for item in st.session_state.cart)
-                grand_total = subtotal
-                
-                st.divider()
-                st.markdown(f"**Subtotal:** ₹{subtotal:.2f}")
-                st.markdown(f"### *Grand Total:* ₹{grand_total:.2f}")
-                
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    if st.button("🗑️ Clear", width="stretch"):
-                        st.session_state.cart = []
-                        st.session_state.order_submitted = False
-                        st.rerun()
-                with col_b:
-                    if st.button("❌ Remove", width="stretch"):
-                        if st.session_state.cart:
-                            st.session_state.cart.pop()
-                            st.rerun()
-                
-                st.divider()
-                st.subheader("💳 *Payment Mode*")
-                payment_mode = st.radio("Choose Mode", ["💵 Cash", "📱 UPI QR", "💳 Card"], horizontal=True)
-                
-                cash_given = 0.0
-                if payment_mode == "📱 UPI QR":
-                    st.markdown(f"""
-                    <div style="background-color: #fdfbf7; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #d5ded0; margin-bottom: 8px;">
-                        <p style="margin: 0; font-weight: bold; color: #000 !important; font-size: 14px;">Scan QR to Pay</p>
-                        <p style="margin: 2px 0; font-size: 12px; color: #444 !important;">UPI ID: <b>{upi_id}</b></p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    if qr_image_file is not None:
-                        st.image(Image.open(qr_image_file), width=110)
-                
-                elif payment_mode == "💳 Card":
-                    st.markdown(f"""
-                    <div style="background-color: #fdfbf7; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #d5ded0; margin-bottom: 8px;">
-                        <p style="margin: 0; font-weight: bold; color: #000 !important; font-size: 14px;">Swipe / Tap Card</p>
-                        <p style="margin: 2px 0; font-size: 11px; color: #555 !important;">Connected billing card machine terminal.</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                elif payment_mode == "💵 Cash":
-                    cash_given = st.number_input("Cash Tendered (₹)", min_value=0.0, value=float(grand_total), step=10.0)
-                    change_due = cash_given - grand_total
-                    if change_due >= 0:
-                        st.success(f"**Change:** ₹{change_due:.2f}")
-                    else:
-                        st.error(f"**Shortage:** ₹{abs(change_due):.2f}")
-
-                st.write("")
-                clean_payment_mode = "Cash" if "Cash" in payment_mode else ("UPI QR" if "UPI" in payment_mode else "Card")
-
-                if st.button(
-                    "✅ Complete Order & Print",
-                    type="primary",
-                    width="stretch",
-                    disabled=st.session_state.order_submitted
-                ) and not st.session_state.order_submitted:
-                    if clean_payment_mode == "Cash" and cash_given < grand_total:
-                        st.error("Insufficient cash given!")
-                    else:
-                        st.session_state.order_submitted = True
-                        current_cart_snapshot = list(st.session_state.cart)
-                        current_bill_no = get_next_bill_number(supabase)
-                        order_time = log_sale(
-                            grand_total,
-                            clean_payment_mode,
-                            current_cart_snapshot,
-                            counter_id,
-                            current_bill_no
-                        )
-                        
-                        direct_print_html = f"""
-                        <div id="bill-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
-                            <h2 style="font-weight: 900; margin: 0 0 2px 0; text-align: center;">GREEN FUSION</h2>
-                            <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
-                            <hr style="border: 0.5px dashed #000;">
-                            <p style="text-align: center; font-size: 14px; font-weight: 900; margin: 4px 0;">BILL NO: {current_bill_no}</p>
-                            <p style="text-align: center; font-size: 11px; color: #000; margin: 2px 0;">Terminal: {escape(str(counter_id))} | Date: {escape(str(order_time))}</p>
-                            <p style="text-align: center; font-size: 11px; color: #000; margin: 2px 0;">Payment Mode: <b>{escape(str(clean_payment_mode))}</b></p>
-                            <hr style="border: 1px solid #000;">
-                        """
-                        for item in current_cart_snapshot:
-                            direct_print_html += f"<p style='font-weight: bold;'>{item['Qty']}x {escape(str(item['Item']))} — ₹{item['Total']:.2f}</p>"
-
-                        direct_print_html += f"""
-                            <hr style="border: 1px solid #000;">
-                            <p style="font-weight: bold;">Subtotal: ₹{subtotal:.2f}</p>
-                            <h3 style="color: #000 !important; font-weight: 900;">Grand Total: ₹{grand_total:.2f}</h3>
-                        """
-                        if clean_payment_mode == "Cash":
-                            direct_print_html += f"""
-                            <p style="font-weight: bold;">Cash Given: ₹{cash_given:.2f}</p>
-                            <p style="font-weight: bold;">Change Due: ₹{cash_given - grand_total:.2f}</p>
-                            """
-                        direct_print_html += f"""
-                            <p style="text-align: center; margin-top: 15px; font-size: 11px; font-weight: bold;">*** THANK YOU! VISIT AGAIN ***</p>
-                        </div>
-                        <div id="kot-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
-                            <div style="page-break-before: always; break-before: page; padding-top: 10px;"></div>
-                            <h3 style="text-align: center; margin: 0; font-weight: 900;">KITCHEN ORDER TICKET</h3>
-                            <p style="text-align: center; font-size: 13px; font-weight: 900; margin: 3px 0;">BILL NO: {current_bill_no}</p>
-                            <p style="text-align: center; font-size: 11px; margin: 3px 0; font-weight: bold;">Terminal: {escape(str(counter_id))} | Time: {escape(str(order_time))}</p>
-                            <hr style="border: 1px solid #000;">
-                            <ul style="list-style-type: none; padding: 0; margin: 5px 0;">
-                        """
-                        for item in current_cart_snapshot:
-                            direct_print_html += f"<li style='font-size: 14px; font-weight: 900; margin-bottom: 4px;'>▪ {item['Qty']}x {escape(str(item['Item']))}</li>"
-
-                        direct_print_html += f"""
-                            </ul>
-                            <hr style="border: 1px solid #000;">
-                            <p style="text-align: center; font-size: 11px; font-weight: 900; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
-                        </div>
-                        <div class="print-controls" style="text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
-                            <button onclick="triggerPrint(false)" style="background-color: #45552E; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
-                                🖨️ Print Bill Only
-                            </button>
-                            <button onclick="triggerPrint(true)" style="background-color: #8C6D46; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
-                                🖨️ Print Bill + KOT
-                            </button>
-                        </div>
-                        <script>
-                            function triggerPrint(includeKot) {{
-                                var bill = document.getElementById('bill-only-section').outerHTML;
-                                var kot = document.getElementById('kot-only-section').outerHTML;
-                                var content = bill;
-                                if (includeKot) {{
-                                    content += kot;
-                                }}
-                                var mywindow = window.open('', '_blank', 'height=600,width=400');
-                                if (!mywindow) {{
-                                    window.alert('Please allow pop-ups to print the receipt.');
-                                    return;
-                                }}
-                                mywindow.document.write('<html><head><title>Print Receipt</title>');
-                                mywindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }} #kot-only-section {{ page-break-before: always; break-before: page; }}</style>');
-                                mywindow.document.write('</head><body>');
-                                mywindow.document.write(content);
-                                mywindow.document.write('</body></html>');
-                                mywindow.document.close();
-                                mywindow.focus();
-                                setTimeout(function() {{
-                                    mywindow.print();
-                                    mywindow.close();
-                                }}, 300);
-                            }}
-                        </script>
-                        """
-
-                        st.session_state.last_receipt = {
-                            "receipt_html": direct_print_html,
-                            "receipt_height": 650 + len(current_cart_snapshot) * 60,
-                            "bill_number": current_bill_no,
-                            "cart_items": current_cart_snapshot,
-                            "total_amount": grand_total,
-                            "token_html": "",
-                            "order_time": order_time
-                        }
-                        st.session_state.cart = []
-                        st.rerun()
-                        
-            st.markdown('</div>', unsafe_allow_html=True)
+            render_cart_section(supabase, counter_id, upi_id, qr_image_file)
             
     elif counter_pin != "":
         st.error("❌ Incorrect Counter Passcode.")
@@ -957,6 +996,7 @@ elif st.session_state.active_portal == "🛠️ Order Modification & Cancellatio
                             if item_name in current_menu:
                                 new_stock = current_menu[item_name]['stock'] + qty
                                 supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
+                                fetch_menu_items.clear()
                                 
                             sales_res = supabase.table("sales").select("*").eq("date", row['date']).execute()
                             if sales_res.data:
@@ -1130,6 +1170,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                             "stock": int(initial_stock),
                             "icon": new_item_icon
                         }).execute()
+                        fetch_menu_items.clear()
                         st.success(f"Successfully added '{new_item_name}' to Supabase! It will instantly appear on the live webpage.")
                         st.rerun()
                     else:
@@ -1173,6 +1214,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                                 "stock": int(edited_stock),
                                 "icon": edited_icon
                             }).eq("name", selected_edit_item).execute()
+                            fetch_menu_items.clear()
                             
                             st.success(f"Successfully updated '{edited_name}' in the cloud database!")
                             st.rerun()
@@ -1181,6 +1223,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                             
                     if delete_item:
                         supabase.table("menu_items").delete().eq("name", selected_edit_item).execute()
+                        fetch_menu_items.clear()
                         st.success(f"Successfully removed '{selected_edit_item}' from the cloud database.")
                         st.rerun()
 
@@ -1223,13 +1266,20 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
             st.divider()
             st.subheader("*📅 Daily Revenue & Bills Summary*")
             try:
-                orders_response = supabase.table("orders").select("*").order(
-                    "created_at", desc=True
-                ).execute()
+                today = datetime.now().date()
+                tomorrow = today + timedelta(days=1)
+                orders_response = (
+                    supabase.table("orders")
+                    .select("*")
+                    .gte("created_at", datetime.combine(today, datetime.min.time()).isoformat())
+                    .lt("created_at", datetime.combine(tomorrow, datetime.min.time()).isoformat())
+                    .order("created_at", desc=True)
+                    .execute()
+                )
                 df_orders = pd.DataFrame(orders_response.data)
 
                 if df_orders.empty:
-                    st.info("No sales or bills generated yet.")
+                    st.info("No sales or bills generated today.")
                 else:
                     df_orders = df_orders.drop_duplicates(subset=['bill_number'])
                     df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
@@ -1277,7 +1327,7 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                         f"**{selected_bill_day}**:"
                     )
 
-                    for _, bill in selected_bills.iterrows():
+                    for index, bill in selected_bills.iterrows():
                         exact_bill_number = bill.get(
                             'bill_number', f"Bill #{bill.get('id', 'N/A')}"
                         )
