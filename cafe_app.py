@@ -258,8 +258,8 @@ def get_next_bill_number(sb):
 
 def render_instant_print_button(bill_html, height=450):
     print_code = f"""
-    <div style="text-align: center; margin: 20px;">
-        <button class="instant-print-button" onclick="window.print();" style="background-color: #ff4b4b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer;">
+    <div style="text-align: center; margin-top: 10px;">
+        <button class="instant-print-button" onclick="parent.window.print();" style="background-color: #2e7d32; color: white; padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             🖨️ Click Here to Print Receipt
         </button>
     </div>
