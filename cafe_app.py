@@ -935,6 +935,41 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 height=st.session_state.last_receipt.get('receipt_height', 450)
             )
 
+            receipt = st.session_state.last_receipt
+            receipt_lines = [
+                "GREEN FUSION",
+                "Bite & Sip by Dayals",
+                "----------------------------------",
+                f"Bill No: {receipt['bill_number']}",
+                f"Date: {receipt['order_time']}",
+                "----------------------------------"
+            ]
+            for item in receipt['cart_items']:
+                item_name = item.get("Item", item.get("item", "Item"))
+                quantity = item.get("Qty", item.get("qty", 0))
+                item_total = item.get("Total", item.get("total"))
+                if item_total is None:
+                    price = item.get("Price", item.get("price", 0))
+                    item_total = price * quantity
+                receipt_lines.append(
+                    f"{item_name} x{quantity} — ₹{float(item_total):.2f}"
+                )
+            receipt_lines.extend([
+                "----------------------------------",
+                f"Total: ₹{float(receipt['total_amount']):.2f}",
+                "----------------------------------",
+                "Thank you for visiting!",
+                "Please come again."
+            ])
+            receipt_text = "\n".join(receipt_lines) + "\n"
+            st.download_button(
+                label="📥 Download Bill",
+                data=receipt_text,
+                file_name=f"{receipt['bill_number']}.txt",
+                mime="text/plain",
+                width="stretch"
+            )
+
             if st.button(
                 "🔄 Start New Order",
                 type="primary",
