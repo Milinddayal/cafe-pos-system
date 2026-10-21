@@ -256,17 +256,6 @@ def get_next_bill_number(sb):
     return f"GF-{today_str}-{next_seq:03d}"
 
 
-def render_instant_print_button():
-    print_code = """
-    <div style="text-align: center;">
-        <button class="instant-print-button" onclick="parent.window.print();" style="background-color: #2e7d32; color: white; padding: 10px 15px; font-size: 15px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            🖨️ Click Here to Print Receipt
-        </button>
-    </div>
-    """
-    components.html(print_code, height=50)
-
-
 def render_auto_print_receipt(bill_number):
     bill_number_json = json.dumps(str(bill_number))
     components.html(f"""
@@ -368,7 +357,7 @@ def render_printable_bill(bill_number, cart_items, total_amount, order_time=None
 
     st.info(
         "🖨️ **Print Receipt:** Press **Ctrl + P** (Windows) or **Cmd + P** (Mac) "
-        "on your keyboard. The thermal bill will print automatically!"
+        "to print the thermal bill."
     )
 
 
@@ -947,14 +936,17 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 "Please come again."
             ])
             receipt_text = "\n".join(receipt_lines) + "\n"
-            render_instant_print_button()
             st.download_button(
                 label="📥 Download Bill",
                 data=receipt_text,
                 file_name=f"{receipt['bill_number']}.txt",
                 mime="text/plain",
                 width="stretch",
-                key=f"download_btn_{receipt['bill_number']}"
+                key=f"download_btn_{receipt['bill_number']}_{st.session_state.get('checkout_click_count', 0)}"
+            )
+            st.info(
+                "🖨️ **Print Receipt:** Press **Ctrl + P** (Windows) or "
+                "**Cmd + P** (Mac) to print the thermal bill instantly."
             )
 
             if st.button(
