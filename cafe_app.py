@@ -256,24 +256,6 @@ def get_next_bill_number(sb):
     return f"GF-{today_str}-{next_seq:03d}"
 
 
-def render_auto_print_receipt(bill_number):
-    bill_number_json = json.dumps(str(bill_number))
-    components.html(f"""
-        <script>
-            const billNumber = {bill_number_json};
-            const appWindow = window.parent;
-            const printedBills = appWindow.__greenFusionPrintedBills ||
-                (appWindow.__greenFusionPrintedBills = {{}});
-            if (!printedBills[billNumber]) {{
-                printedBills[billNumber] = true;
-                setTimeout(function() {{
-                    appWindow.print();
-                }}, 500);
-            }}
-        </script>
-    """, height=0, width=0)
-
-
 def render_printable_bill(bill_number, cart_items, total_amount, order_time=None):
     st.markdown("""
         <style>
@@ -655,30 +637,54 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                     <hr style="border: 1px solid #000;">
                     <p style="text-align: center; font-size: 11px; font-weight: 900; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
                 </div>
+                <style>
+                    @media print {{
+                        @page {{ margin: 0; }}
+                        body {{
+                            margin: 0;
+                            padding: 0;
+                            color: #000;
+                            background: #fff;
+                        }}
+                        .print-controls {{
+                            display: none !important;
+                        }}
+                        #bill-only-section {{
+                            display: block !important;
+                            width: 78mm !important;
+                            max-width: 78mm !important;
+                            margin: 0 !important;
+                            padding: 5mm !important;
+                            box-sizing: border-box !important;
+                        }}
+                        #kot-only-section {{
+                            display: none !important;
+                        }}
+                        body[data-print-mode="bill-kot"] #kot-only-section {{
+                            display: block !important;
+                            width: 78mm !important;
+                            max-width: 78mm !important;
+                            margin: 0 !important;
+                            padding: 5mm !important;
+                            box-sizing: border-box !important;
+                            page-break-before: always;
+                            break-before: page;
+                        }}
+                    }}
+                </style>
                 <div class="print-controls" style="text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
-                    <button onclick="triggerPrint(false)" style="background-color: #45552E; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill Only</button>
-                    <button onclick="triggerPrint(true)" style="background-color: #8C6D46; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill + KOT</button>
+                    <button onclick="printReceipt('bill')" style="background-color: #45552E; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill Only</button>
+                    <button onclick="printReceipt('bill-kot')" style="background-color: #8C6D46; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill + KOT</button>
                 </div>
                 <script>
-                    function triggerPrint(includeKot) {{
-                        var bill = document.getElementById('bill-only-section').outerHTML;
-                        var kot = document.getElementById('kot-only-section').outerHTML;
-                        var content = includeKot ? bill + kot : bill;
-                        var mywindow = window.open('', '_blank', 'height=600,width=400');
-                        if (!mywindow) {{
-                            window.alert('Please allow pop-ups to print the receipt.');
-                            return;
-                        }}
-                        mywindow.document.write('<html><head><title>Print Receipt</title>');
-                        mywindow.document.write('<style>body {{ font-family: "Courier New", Courier, monospace; font-size: 12px; width: 78mm; margin: 0; padding: 10px; }} #kot-only-section {{ page-break-before: always; break-before: page; }}</style>');
-                        mywindow.document.write('</head><body>' + content + '</body></html>');
-                        mywindow.document.close();
-                        mywindow.focus();
-                        setTimeout(function() {{
-                            mywindow.print();
-                            mywindow.close();
-                        }}, 300);
+                    function printReceipt(mode) {{
+                        document.body.dataset.printMode = mode;
+                        window.focus();
+                        window.print();
                     }}
+                    window.addEventListener('afterprint', function () {{
+                        delete document.body.dataset.printMode;
+                    }});
                 </script>
                 """
 
@@ -900,16 +906,12 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 "✅ Order saved successfully! Bill: "
                 f"{st.session_state.current_bill}"
             )
-            render_printable_bill(
-                st.session_state.last_receipt['bill_number'],
-                st.session_state.last_receipt['cart_items'],
-                st.session_state.last_receipt['total_amount'],
-                st.session_state.last_receipt['order_time']
-            )
-            if st.session_state.get('_auto_printed_bill') != st.session_state.current_bill:
-                render_auto_print_receipt(st.session_state.current_bill)
-                st.session_state._auto_printed_bill = st.session_state.current_bill
             receipt = st.session_state.last_receipt
+            components.html(
+                receipt["receipt_html"],
+                height=receipt["receipt_height"],
+                scrolling=True
+            )
             receipt_lines = [
                 "GREEN FUSION",
                 "Bite & Sip by Dayals",
