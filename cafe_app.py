@@ -704,13 +704,50 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                 </div>
                 <script>
                     function printReceipt(mode) {{
-                        document.body.dataset.printMode = mode;
-                        window.focus();
-                        window.print();
+                        const bill = document.getElementById("bill-only-section");
+                        const kot = document.getElementById("kot-only-section");
+                        const printWindow = window.open("", "_blank", "width=420,height=700");
+                        if (!printWindow) {{
+                            window.alert("The print window was blocked. Allow pop-ups for this POS, then try again.");
+                            return;
+                        }}
+
+                        const receiptHtml = bill.outerHTML
+                            + (mode === "bill-kot" ? kot.outerHTML : "");
+                        printWindow.document.open();
+                        printWindow.document.write(`<!DOCTYPE html>
+                            <html>
+                            <head>
+                                <title>Green Fusion Receipt</title>
+                                <style>
+                                    @page {{ margin: 0; }}
+                                    body {{
+                                        margin: 0;
+                                        padding: 5mm;
+                                        color: #000;
+                                        background: #fff;
+                                        font-family: 'Courier New', Courier, monospace;
+                                    }}
+                                    #bill-only-section, #kot-only-section {{
+                                        width: 78mm;
+                                        max-width: 78mm;
+                                        box-sizing: border-box;
+                                    }}
+                                    #kot-only-section {{
+                                        page-break-before: always;
+                                        break-before: page;
+                                    }}
+                                    @media screen {{
+                                        body {{ padding: 12px; }}
+                                    }}
+                                </style>
+                            </head>
+                            <body>${{receiptHtml}}</body>
+                            </html>`);
+                        printWindow.document.close();
+                        printWindow.focus();
+                        printWindow.print();
                     }}
-                    window.addEventListener('afterprint', function () {{
-                        delete document.body.dataset.printMode;
-                    }});
                 </script>
                 """
 
@@ -729,6 +766,66 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                 st.session_state.order_saved = True
                 st.session_state.checkout_click_count += 1
                 st.rerun()
+
+    if st.session_state.get('order_completed') and st.session_state.get('last_receipt'):
+        receipt = st.session_state.last_receipt
+        st.markdown("---")
+        st.success(f"✅ Order saved successfully! Bill: {receipt['bill_number']}")
+        components.html(
+            receipt["receipt_html"],
+            height=receipt["receipt_height"],
+            scrolling=True
+        )
+        receipt_lines = [
+            "GREEN FUSION",
+            "Bite & Sip by Dayals",
+            "----------------------------------",
+            f"Bill No: {receipt['bill_number']}",
+            f"Date: {receipt['order_time']}",
+            "----------------------------------"
+        ]
+        for item in receipt['cart_items']:
+            item_name = item.get("Item", item.get("item", "Item"))
+            quantity = item.get("Qty", item.get("qty", 0))
+            item_total = item.get("Total", item.get("total"))
+            if item_total is None:
+                price = item.get("Price", item.get("price", 0))
+                item_total = price * quantity
+            receipt_lines.append(
+                f"{item_name} x{quantity} — ₹{float(item_total):.2f}"
+            )
+        receipt_lines.extend([
+            "----------------------------------",
+            f"Total: ₹{float(receipt['total_amount']):.2f}",
+            "----------------------------------",
+            "Thank you for visiting!",
+            "Please come again."
+        ])
+        st.download_button(
+            label="📥 Download Bill",
+            data="\n".join(receipt_lines) + "\n",
+            file_name=f"{receipt['bill_number']}.txt",
+            mime="text/plain",
+            width="stretch",
+            key=f"download_btn_{receipt['bill_number']}_{st.session_state.checkout_click_count}"
+        )
+        st.info(
+            "🖨️ **Print Receipt:** Use the print buttons above the receipt, or "
+            "press **Ctrl + P** (Windows) or **Cmd + P** (Mac)."
+        )
+        if st.button(
+            "🔄 Start New Order",
+            type="primary",
+            width="stretch"
+        ):
+            st.session_state.last_receipt = None
+            st.session_state.order_completed = False
+            st.session_state.current_bill = None
+            st.session_state.order_submitted = False
+            st.session_state.order_saved = False
+            st.session_state.cart = []
+            st.rerun()
+        st.markdown("---")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -927,71 +1024,6 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
     
     if counter_pin == actual_counter_pin:
         st.success(f"Logged in successfully as **{counter_id}**. Ready for billing operations.")
-
-        if st.session_state.get('order_completed') and st.session_state.get('last_receipt'):
-            st.markdown("---")
-            st.success(
-                "✅ Order saved successfully! Bill: "
-                f"{st.session_state.current_bill}"
-            )
-            receipt = st.session_state.last_receipt
-            components.html(
-                receipt["receipt_html"],
-                height=receipt["receipt_height"],
-                scrolling=True
-            )
-            receipt_lines = [
-                "GREEN FUSION",
-                "Bite & Sip by Dayals",
-                "----------------------------------",
-                f"Bill No: {receipt['bill_number']}",
-                f"Date: {receipt['order_time']}",
-                "----------------------------------"
-            ]
-            for item in receipt['cart_items']:
-                item_name = item.get("Item", item.get("item", "Item"))
-                quantity = item.get("Qty", item.get("qty", 0))
-                item_total = item.get("Total", item.get("total"))
-                if item_total is None:
-                    price = item.get("Price", item.get("price", 0))
-                    item_total = price * quantity
-                receipt_lines.append(
-                    f"{item_name} x{quantity} — ₹{float(item_total):.2f}"
-                )
-            receipt_lines.extend([
-                "----------------------------------",
-                f"Total: ₹{float(receipt['total_amount']):.2f}",
-                "----------------------------------",
-                "Thank you for visiting!",
-                "Please come again."
-            ])
-            receipt_text = "\n".join(receipt_lines) + "\n"
-            st.download_button(
-                label="📥 Download Bill",
-                data=receipt_text,
-                file_name=f"{receipt['bill_number']}.txt",
-                mime="text/plain",
-                width="stretch",
-                key=f"download_btn_{receipt['bill_number']}_{st.session_state.get('checkout_click_count', 0)}"
-            )
-            st.info(
-                "🖨️ **Print Receipt:** Press **Ctrl + P** (Windows) or "
-                "**Cmd + P** (Mac) to print the thermal bill instantly."
-            )
-
-            if st.button(
-                "🔄 Start New Order",
-                type="primary",
-                width="stretch"
-            ):
-                st.session_state.last_receipt = None
-                st.session_state.order_completed = False
-                st.session_state.current_bill = None
-                st.session_state.order_submitted = False
-                st.session_state.order_saved = False
-                st.session_state.cart = []
-                st.rerun()
-            st.markdown("---")
 
         col_menu, col_cart = st.columns([1.6, 1], gap="large")
         
