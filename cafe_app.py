@@ -44,6 +44,9 @@ if 'cart' not in st.session_state:
 if 'order_submitted' not in st.session_state:
     st.session_state.order_submitted = False
 
+if 'checkout_click_count' not in st.session_state:
+    st.session_state.checkout_click_count = 0
+
 if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
 
@@ -571,7 +574,8 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
             "🚀 Complete Order & Print",
             type="primary",
             width="stretch",
-            disabled=st.session_state.order_submitted
+            disabled=st.session_state.order_submitted,
+            key=f"complete_order_btn_{st.session_state.checkout_click_count}"
         ) and not st.session_state.order_submitted:
             if clean_payment_mode == "Cash" and cash_given < grand_total:
                 st.error("Insufficient cash given!")
@@ -700,6 +704,8 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                 st.session_state.current_bill = current_bill_no
                 st.session_state.order_completed = True
                 st.session_state.cart = []
+                st.session_state.order_submitted = False
+                st.session_state.checkout_click_count += 1
                 st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
