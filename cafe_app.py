@@ -25,9 +25,6 @@ def get_local_time():
     return datetime.now(LOCAL_TIMEZONE)
 
 
-# --- LIVE AUTO-REFRESH (Every 5 seconds for real-time cloud sync) ---
-st_autorefresh(interval=5000, key="greenfusion_live_sync")
-
 # --- INITIALIZE SUPABASE CONNECTION ---
 @st.cache_resource
 def init_supabase():
@@ -43,9 +40,6 @@ if 'cart' not in st.session_state:
 
 if 'order_submitted' not in st.session_state:
     st.session_state.order_submitted = False
-
-if 'checkout_click_count' not in st.session_state:
-    st.session_state.checkout_click_count = 0
 
 if 'last_receipt' not in st.session_state:
     st.session_state.last_receipt = None
@@ -592,11 +586,10 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
             "🚀 Complete Order & Print",
             type="primary",
             width="stretch",
-            key=f"complete_order_btn_{st.session_state.checkout_click_count}"
+            key="complete_order_btn"
         ):
             if st.session_state.order_saved:
-                st.session_state.checkout_click_count += 1
-                st.rerun()
+                st.info("This order is already saved. Use the print buttons below.")
             elif st.session_state.order_submitted:
                 st.info("This order is already being saved.")
             elif clean_payment_mode == "Cash" and cash_given < grand_total:
@@ -638,6 +631,10 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                     for item in current_cart_snapshot
                 )
                 direct_print_html = f"""
+                <div class="print-controls" style="text-align: center; width: 100%; margin: 8px 0; display: flex; justify-content: center; gap: 10px;">
+                    <button onclick="printReceipt('bill')" style="background-color: #45552E; color: #FAF5EA; padding: 10px 16px; font-size: 14px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill</button>
+                    <button onclick="printReceipt('bill-kot')" style="background-color: #8C6D46; color: #FAF5EA; padding: 10px 16px; font-size: 14px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill + KOT</button>
+                </div>
                 <div id="bill-only-section" style="width: 78mm; max-width: 80mm; margin: 0 auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; font-weight: bold; line-height: 1.3; color: #000; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <h2 style="font-weight: 900; margin: 0 0 2px 0; text-align: center;">GREEN FUSION</h2>
                     <p style="text-align: center; font-size: 11px; margin: 2px 0; font-style: italic;">Bite & Sip by Dayals</p>
@@ -662,45 +659,6 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                     <ul style="list-style-type: none; padding: 0; margin: 5px 0;">{kot_items}</ul>
                     <hr style="border: 1px solid #000;">
                     <p style="text-align: center; font-size: 11px; font-weight: 900; margin: 0;">--- PREPARE IMMEDIATELY ---</p>
-                </div>
-                <style>
-                    @media print {{
-                        @page {{ margin: 0; }}
-                        body {{
-                            margin: 0;
-                            padding: 0;
-                            color: #000;
-                            background: #fff;
-                        }}
-                        .print-controls {{
-                            display: none !important;
-                        }}
-                        #bill-only-section {{
-                            display: block !important;
-                            width: 78mm !important;
-                            max-width: 78mm !important;
-                            margin: 0 !important;
-                            padding: 5mm !important;
-                            box-sizing: border-box !important;
-                        }}
-                        #kot-only-section {{
-                            display: none !important;
-                        }}
-                        body[data-print-mode="bill-kot"] #kot-only-section {{
-                            display: block !important;
-                            width: 78mm !important;
-                            max-width: 78mm !important;
-                            margin: 0 !important;
-                            padding: 5mm !important;
-                            box-sizing: border-box !important;
-                            page-break-before: always;
-                            break-before: page;
-                        }}
-                    }}
-                </style>
-                <div class="print-controls" style="text-align: center; width: 100%; margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
-                    <button onclick="printReceipt('bill')" style="background-color: #45552E; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill Only</button>
-                    <button onclick="printReceipt('bill-kot')" style="background-color: #8C6D46; color: #FAF5EA; padding: 12px 20px; font-size: 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖨️ Print Bill + KOT</button>
                 </div>
                 <script>
                     function printReceipt(mode) {{
@@ -745,15 +703,20 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                             <body>${{receiptHtml}}</body>
                             </html>`);
                         printWindow.document.close();
-                        printWindow.focus();
-                        printWindow.print();
+                        printWindow.addEventListener("afterprint", () => printWindow.close(), {{ once: true }});
+                        printWindow.requestAnimationFrame(() => {{
+                            printWindow.requestAnimationFrame(() => {{
+                                printWindow.focus();
+                                printWindow.print();
+                            }});
+                        }});
                     }}
                 </script>
                 """
 
                 st.session_state.last_receipt = {
                     "receipt_html": direct_print_html,
-                    "receipt_height": 650 + len(current_cart_snapshot) * 60,
+                    "receipt_height": min(600, 460 + len(current_cart_snapshot) * 28),
                     "bill_number": current_bill_no,
                     "cart_items": current_cart_snapshot,
                     "total_amount": grand_total,
@@ -764,7 +727,6 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                 st.session_state.order_completed = True
                 st.session_state.order_submitted = False
                 st.session_state.order_saved = True
-                st.session_state.checkout_click_count += 1
                 st.rerun()
 
     if st.session_state.get('order_completed') and st.session_state.get('last_receipt'):
@@ -807,12 +769,9 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
             file_name=f"{receipt['bill_number']}.txt",
             mime="text/plain",
             width="stretch",
-            key=f"download_btn_{receipt['bill_number']}_{st.session_state.checkout_click_count}"
+            key=f"download_btn_{receipt['bill_number']}"
         )
-        st.info(
-            "🖨️ **Print Receipt:** Use the print buttons above the receipt, or "
-            "press **Ctrl + P** (Windows) or **Cmd + P** (Mac)."
-        )
+        st.info("🖨️ Use the print buttons above the receipt to print the bill or bill and KOT.")
         if st.button(
             "🔄 Start New Order",
             type="primary",
@@ -849,6 +808,13 @@ portal_mode = st.sidebar.selectbox("Choose Login Gateway", portals_list, index=c
 
 if portal_mode != st.session_state.active_portal:
     st.session_state.active_portal = portal_mode
+
+# Keep live refresh on shared display portals, not during checkout or printing.
+if st.session_state.active_portal in (
+    "🍽️ Menu Display Screen",
+    "👨‍🍳 Kitchen Display (KDS)"
+):
+    st_autorefresh(interval=5000, key="greenfusion_live_sync")
 
 st.sidebar.divider()
 if logo_img_obj is not None:
