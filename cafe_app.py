@@ -53,6 +53,9 @@ if 'last_receipt' not in st.session_state:
 if 'order_completed' not in st.session_state:
     st.session_state.order_completed = bool(st.session_state.last_receipt)
 
+if 'order_saved' not in st.session_state:
+    st.session_state.order_saved = bool(st.session_state.last_receipt)
+
 if 'current_bill' not in st.session_state:
     st.session_state.current_bill = (
         st.session_state.last_receipt.get('bill_number')
@@ -521,12 +524,20 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
 
         col_a, col_b = st.columns(2)
         with col_a:
-            if st.button("🗑️ Clear", width="stretch"):
+            if st.button(
+                "🗑️ Clear",
+                width="stretch",
+                disabled=st.session_state.order_saved
+            ):
                 st.session_state.cart = []
                 st.session_state.order_submitted = False
                 st.rerun(scope="fragment")
         with col_b:
-            if st.button("❌ Remove", width="stretch"):
+            if st.button(
+                "❌ Remove",
+                width="stretch",
+                disabled=st.session_state.order_saved
+            ):
                 if st.session_state.cart:
                     st.session_state.cart.pop()
                 st.rerun(scope="fragment")
@@ -534,7 +545,10 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
         st.divider()
         st.subheader("💳 *Payment Mode*")
         payment_mode = st.radio(
-            "Choose Mode", ["💵 Cash", "📱 UPI QR", "💳 Card"], horizontal=True
+            "Choose Mode",
+            ["💵 Cash", "📱 UPI QR", "💳 Card"],
+            horizontal=True,
+            disabled=st.session_state.order_saved
         )
 
         cash_given = 0.0
@@ -556,7 +570,11 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
             """, unsafe_allow_html=True)
         else:
             cash_given = st.number_input(
-                "Cash Tendered (₹)", min_value=0.0, value=float(grand_total), step=10.0
+                "Cash Tendered (₹)",
+                min_value=0.0,
+                value=float(grand_total),
+                step=10.0,
+                disabled=st.session_state.order_saved
             )
             change_due = cash_given - grand_total
             if change_due >= 0:
@@ -574,10 +592,14 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
             "🚀 Complete Order & Print",
             type="primary",
             width="stretch",
-            disabled=st.session_state.order_submitted,
             key=f"complete_order_btn_{st.session_state.checkout_click_count}"
-        ) and not st.session_state.order_submitted:
-            if clean_payment_mode == "Cash" and cash_given < grand_total:
+        ):
+            if st.session_state.order_saved:
+                st.session_state.checkout_click_count += 1
+                st.rerun()
+            elif st.session_state.order_submitted:
+                st.info("This order is already being saved.")
+            elif clean_payment_mode == "Cash" and cash_given < grand_total:
                 st.error("Insufficient cash given!")
             else:
                 st.session_state.order_submitted = True
@@ -703,8 +725,8 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                 }
                 st.session_state.current_bill = current_bill_no
                 st.session_state.order_completed = True
-                st.session_state.cart = []
                 st.session_state.order_submitted = False
+                st.session_state.order_saved = True
                 st.session_state.checkout_click_count += 1
                 st.rerun()
 
@@ -966,6 +988,8 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                 st.session_state.order_completed = False
                 st.session_state.current_bill = None
                 st.session_state.order_submitted = False
+                st.session_state.order_saved = False
+                st.session_state.cart = []
                 st.rerun()
             st.markdown("---")
 
@@ -1016,7 +1040,12 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
                                         
                                         if item_info['stock'] > 0:
                                             # Using a unique key based on item name prevents Streamlit button errors
-                                            if st.button("Add", key=f"add_tab_{item_name}", width="stretch"):
+                                            if st.button(
+                                                "Add",
+                                                key=f"add_tab_{item_name}",
+                                                width="stretch",
+                                                disabled=st.session_state.order_saved
+                                            ):
                                                 found = False
                                                 if not st.session_state.cart:
                                                     st.session_state.order_submitted = False
