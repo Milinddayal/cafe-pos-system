@@ -228,6 +228,7 @@ def fetch_fallback_menu():
         # --- Shakes Section ---
         "Chocolate Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
         "Strawberry Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
+        "Oreo Shake": {"category": "Shakes Section", "price": 119.00, "stock": 50},
         "Protein Shake": {"category": "Shakes Section", "price": 129.00, "stock": 50},
         "Banana Shake": {"category": "Shakes Section", "price": 89.00, "stock": 50},
         "Sweet Lassi": {"category": "Shakes Section", "price": 79.00, "stock": 50},
