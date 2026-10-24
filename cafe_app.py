@@ -445,7 +445,7 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id, bill_number):
             return pd.to_datetime(existing_created_at).strftime('%Y-%m-%d %H:%M:%S')
         return order_date
 
-    supabase.table("sales").insert({
+    supabase.table("orders").insert({
         "date": order_date,
         "total": float(total_amount),
         "payment_mode": payment_mode
