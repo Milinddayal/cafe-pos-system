@@ -427,7 +427,7 @@ def build_bill_print_html(bill):
     """
 
 
-def log_sale(total_amount, payment_mode, cart_items, counter_id, bill_number):
+def log_sale(total_amount, payment_mode, cart_items, bill_number):
     order_datetime = get_local_time()
     order_date = order_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -452,7 +452,6 @@ def log_sale(total_amount, payment_mode, cart_items, counter_id, bill_number):
             "unit_price": float(item['Price']),
             "quantity": int(item['Qty']),
             "subtotal": float(item['Total']),
-            "counter": counter_id,
             "status": "Completed",
             "modification_reason": ""
         })
@@ -598,7 +597,6 @@ def render_cart_section(sb: Client, counter_id: str, upi_id: str, qr_image_file)
                             grand_total,
                             clean_payment_mode,
                             current_cart_snapshot,
-                            counter_id,
                             current_bill_no
                         )
                 except Exception as e:
@@ -1074,90 +1072,80 @@ if st.session_state.active_portal == "🛒 Counter Staff Billing":
 elif st.session_state.active_portal == "🛠️ Order Modification & Cancellation":
     st.title("🛠️ *Order Item Modification & Partial Refund Center*")
     st.markdown("*Green Fusion - Bite & Sip by Dayals*")
-    
-    col_mod_login, col_mod_empty = st.columns([1, 1])
-    with col_mod_login:
-        default_counter = st.session_state.get('target_counter', 'Counter 1')
-        counter_id = st.text_input("Enter Counter Number / Staff ID", default_counter, key="mod_counter_id")
-        
+
     st.divider()
-    
-    if counter_id:
-        st.markdown('<div class="mod-container">', unsafe_allow_html=True)
-        st.markdown("### *🔄 Item-Level Cancellation & Refund Manager*")
-        st.write("Select a specific order, choose the exact item to cancel or modify, and request admin authorization.")
-        
-        df_all_items = load_item_sales_data()
-        if not df_all_items.empty:
-            counter_orders = df_all_items[df_all_items['counter'] == counter_id]
-            if not counter_orders.empty:
-                st.markdown("#### *📋 Recent Orders & Status Tracker*")
-                summary_df = counter_orders[['date', 'item_name', 'quantity', 'unit_price', 'subtotal', 'status']]
-                st.dataframe(summary_df, hide_index=True, width="stretch")
-                
-                approved_orders = counter_orders[counter_orders['status'] == "Approved & Modified"]
-                if not approved_orders.empty:
-                    st.markdown("---")
-                    st.warning("⚠️ **Admin Approved Item Modifications Ready for Partial Refund:**")
-                    
-                    for idx, row in approved_orders.iterrows():
-                        st.markdown(f"**Order:** {row['date']} | **Item:** {row['quantity']}x {row['item_name']} | **Refund Due:** ₹{row['subtotal']:.2f}")
-                        if st.button(f"✅ Process Refund for {row['item_name']} ({row['date']})", key=f"proc_ref_{row['date']}_{row['item_name']}"):
-                            supabase.table("order_items").update({"status": "Refunded & Closed"}).eq("date", row['date']).eq("counter", counter_id).eq("item_name", row['item_name']).execute()
-                            
-                            item_name = row['item_name']
-                            qty = row['quantity']
-                            if item_name in current_menu:
-                                new_stock = current_menu[item_name]['stock'] + qty
-                                supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
-                                fetch_menu_items.clear()
-                                
-                            sales_res = supabase.table("sales").select("*").eq("date", row['date']).execute()
-                            if sales_res.data:
-                                old_total = float(sales_res.data[0]['total'])
-                                new_total = max(0.0, old_total - float(row['subtotal']))
-                                supabase.table("sales").update({"total": new_total}).eq("date", row['date']).execute()
 
-                            st.success(f"Successfully refunded ₹{row['subtotal']:.2f} for {item_name} and adjusted true sales & inventory!")
-                            st.rerun()
+    st.markdown('<div class="mod-container">', unsafe_allow_html=True)
+    st.markdown("### *🔄 Item-Level Cancellation & Refund Manager*")
+    st.write("Select an order item, choose a change or cancellation, and request admin authorization.")
 
-                st.markdown("---")
-                st.markdown("#### *📤 Request Item-Level Change or Cancellation*")
-                active_orders = counter_orders[counter_orders['status'] == "Completed"]
-                if not active_orders.empty:
-                    active_order_times = sorted(active_orders['date'].astype(str).unique(), reverse=True)
-                    
-                    target_time = st.session_state.get('target_mod_time')
-                    default_time_index = 0
-                    if target_time in active_order_times:
-                        default_time_index = active_order_times.index(target_time)
-                        st.session_state.target_mod_time = None
+    df_all_items = load_item_sales_data()
+    if not df_all_items.empty:
+        st.markdown("#### *📋 Recent Orders & Status Tracker*")
+        summary_df = df_all_items[['date', 'item_name', 'quantity', 'unit_price', 'subtotal', 'status']]
+        st.dataframe(summary_df, hide_index=True, width="stretch")
 
-                    selected_order_time = st.selectbox("Select Order Timestamp", active_order_times, index=default_time_index, key="sel_ord_time")
-                    
-                    order_items_subset = active_orders[active_orders['date'].astype(str) == selected_order_time]
-                    item_choices = order_items_subset['item_name'].tolist()
-                    
-                    selected_item_to_mod = st.selectbox("Select Exact Item to Cancel / Modify", item_choices, key="sel_item_mod")
-                    mod_reason = st.text_area("Reason for Item Cancellation/Change", placeholder="e.g., Customer canceled this burger / wanted fries instead...")
-                    
-                    if st.button("📤 Submit Item Modification Request"):
-                        if mod_reason.strip() != "":
-                            supabase.table("order_items").update({
-                                "status": "Modification Requested",
-                                "modification_reason": mod_reason
-                            }).eq("date", selected_order_time).eq("counter", counter_id).eq("item_name", selected_item_to_mod).execute()
-                            st.success(f"Modification request for '{selected_item_to_mod}' sent to Admin successfully!")
-                            st.rerun()
-                        else:
-                            st.error("Please provide a reason for the modification.")
+        approved_orders = df_all_items[df_all_items['status'] == "Approved & Modified"]
+        if not approved_orders.empty:
+            st.markdown("---")
+            st.warning("⚠️ **Admin Approved Item Modifications Ready for Partial Refund:**")
+
+            for idx, row in approved_orders.iterrows():
+                st.markdown(f"**Order:** {row['date']} | **Item:** {row['quantity']}x {row['item_name']} | **Refund Due:** ₹{row['subtotal']:.2f}")
+                if st.button(f"✅ Process Refund for {row['item_name']} ({row['date']})", key=f"proc_ref_{idx}_{row['date']}_{row['item_name']}"):
+                    supabase.table("order_items").update({"status": "Refunded & Closed"}).eq("date", row['date']).eq("item_name", row['item_name']).eq("status", "Approved & Modified").execute()
+
+                    item_name = row['item_name']
+                    qty = row['quantity']
+                    if item_name in current_menu:
+                        new_stock = current_menu[item_name]['stock'] + qty
+                        supabase.table("menu_items").update({"stock": new_stock}).eq("name", item_name).execute()
+                        fetch_menu_items.clear()
+
+                    sales_res = supabase.table("sales").select("*").eq("date", row['date']).execute()
+                    if sales_res.data:
+                        old_total = float(sales_res.data[0]['total'])
+                        new_total = max(0.0, old_total - float(row['subtotal']))
+                        supabase.table("sales").update({"total": new_total}).eq("date", row['date']).execute()
+
+                    st.success(f"Successfully refunded ₹{row['subtotal']:.2f} for {item_name} and adjusted true sales & inventory!")
+                    st.rerun()
+
+        st.markdown("---")
+        st.markdown("#### *📤 Request Item-Level Change or Cancellation*")
+        active_orders = df_all_items[df_all_items['status'] == "Completed"]
+        if not active_orders.empty:
+            active_order_times = sorted(active_orders['date'].astype(str).unique(), reverse=True)
+
+            target_time = st.session_state.get('target_mod_time')
+            default_time_index = 0
+            if target_time in active_order_times:
+                default_time_index = active_order_times.index(target_time)
+                st.session_state.target_mod_time = None
+
+            selected_order_time = st.selectbox("Select Order Timestamp", active_order_times, index=default_time_index, key="sel_ord_time")
+
+            order_items_subset = active_orders[active_orders['date'].astype(str) == selected_order_time]
+            item_choices = order_items_subset['item_name'].tolist()
+
+            selected_item_to_mod = st.selectbox("Select Exact Item to Cancel / Modify", item_choices, key="sel_item_mod")
+            mod_reason = st.text_area("Reason for Item Cancellation/Change", placeholder="e.g., Customer canceled this burger / wanted fries instead...")
+
+            if st.button("📤 Submit Item Modification Request"):
+                if mod_reason.strip() != "":
+                    supabase.table("order_items").update({
+                        "status": "Modification Requested",
+                        "modification_reason": mod_reason
+                    }).eq("date", selected_order_time).eq("item_name", selected_item_to_mod).eq("status", "Completed").execute()
+                    st.success(f"Modification request for '{selected_item_to_mod}' sent to Admin successfully!")
+                    st.rerun()
                 else:
-                    st.info("No active completed orders available for modification.")
-            else:
-                st.info("No orders found for this counter yet.")
+                    st.error("Please provide a reason for the modification.")
         else:
-            st.info("No orders recorded in the system yet.")
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.info("No active completed order items available for modification.")
+    else:
+        st.info("No orders recorded in the system yet.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
 # GATEWAY 3: MENU DISPLAY SCREEN (INTERNAL APP VIEW)
@@ -1223,14 +1211,14 @@ elif st.session_state.active_portal == "👨‍🍳 Kitchen Display (KDS)":
             st.info("No orders placed yet for today.")
         else:
             st.markdown("### *🔥 Live Order Tickets*")
-            grouped_orders = today_orders.groupby(['date', 'counter'])
-            
-            for (order_time, counter), group in grouped_orders:
+            grouped_orders = today_orders.groupby('date')
+
+            for order_time, group in grouped_orders:
                 active_group = group[group['status'] != "Refunded & Closed"]
                 if active_group.empty:
                     continue
-                    
-                with st.expander(f"📦 Order from {counter} at {order_time}", expanded=True):
+
+                with st.expander(f"📦 Order at {order_time}", expanded=True):
                     col_k1, col_k2 = st.columns([2, 1])
                     with col_k1:
                         for idx, row in active_group.iterrows():
@@ -1350,24 +1338,24 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
             else:
                 pending_mods = df_items[df_items['status'] == "Modification Requested"]
                 if pending_mods.empty:
-                    st.success("No pending item modification requests from counters.")
+                    st.success("No pending item modification requests.")
                 else:
-                    st.warning("Review specific item requests submitted by counter staff below:")
+                    st.warning("Review requested item changes below:")
                     for idx, row in pending_mods.iterrows():
                         with st.container():
-                            st.markdown(f"**Counter:** {row['counter']} | **Timestamp:** {row['date']}")
+                            st.markdown(f"**Timestamp:** {row['date']}")
                             st.markdown(f"📦 **Requested Item Change:** `{row['quantity']}x {row['item_name']}` (Subtotal: ₹{row['subtotal']:.2f})")
                             st.markdown(f"📝 **Reason:** `{row['modification_reason']}`")
                             
                             col_app1, col_app2 = st.columns(2)
                             with col_app1:
-                                if st.button(f"✅ Approve Item Modification", key=f"app_{row['date']}_{row['item_name']}"):
-                                    supabase.table("order_items").update({"status": "Approved & Modified"}).eq("date", row['date']).eq("counter", row['counter']).eq("item_name", row['item_name']).execute()
-                                    st.success(f"Approved change for {row['item_name']}! Counter can now process the partial refund.")
+                                if st.button(f"✅ Approve Item Modification", key=f"app_{idx}_{row['date']}_{row['item_name']}"):
+                                    supabase.table("order_items").update({"status": "Approved & Modified"}).eq("date", row['date']).eq("item_name", row['item_name']).eq("status", "Modification Requested").execute()
+                                    st.success(f"Approved change for {row['item_name']}! Staff can now process the partial refund.")
                                     st.rerun()
                             with col_app2:
-                                if st.button(f"❌ Reject", key=f"rej_{row['date']}_{row['item_name']}"):
-                                    supabase.table("order_items").update({"status": "Completed"}).eq("date", row['date']).eq("counter", row['counter']).eq("item_name", row['item_name']).execute()
+                                if st.button(f"❌ Reject", key=f"rej_{idx}_{row['date']}_{row['item_name']}"):
+                                    supabase.table("order_items").update({"status": "Completed"}).eq("date", row['date']).eq("item_name", row['item_name']).eq("status", "Modification Requested").execute()
                                     st.info("Request rejected. Order restored.")
                                     st.rerun()
                             st.divider()
