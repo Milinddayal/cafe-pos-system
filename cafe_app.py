@@ -147,21 +147,32 @@ def fetch_fallback_menu():
         "Chilli Garlic Hakka Noodles": {"category": "Hakka Noodles", "price": 109.00, "stock": 50},
         "Paneer Hakka Noodles": {"category": "Hakka Noodles", "price": 149.00, "stock": 50},
         
+        # --- Starters Section ---
+        "Chilli Paneer Dry": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Manchurian": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Babycorn": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Paneer Pakoda": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Chilli Potato": {"category": "Starters", "price": 129.00, "stock": 50},
+        "Honey Chilli Potato": {"category": "Starters", "price": 149.00, "stock": 50},
+        
         "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 50},
         
         # --- Snacks Section ---
         "Vada Paw": {"category": "Snacks", "price": 59.00, "stock": 50},
         "Poha": {"category": "Snacks", "price": 69.00, "stock": 50},
         "Litti Chokha": {"category": "Snacks", "price": 89.00, "stock": 50},
+        "Bread Roll": {"category": "Snacks", "price": 119.00, "stock": 50},
         
-        # --- Starters Section ---
-        "Babycorn": {"category": "Starters", "price": 149.00, "stock": 50},
-        "Paneer Pakoda": {"category": "Starters", "price": 149.00, "stock": 50},
+        # --- Rolls Section ---
+        "Veg Roll": {"category": "Rolls", "price": 89.00, "stock": 50},
+        "Paneer Roll": {"category": "Rolls", "price": 119.00, "stock": 50},
+        "Veg Schezwan Paneer Roll": {"category": "Rolls", "price": 149.00, "stock": 50},
         
         # --- French Fries Section ---
         "Fries": {"category": "French Fries", "price": 79.00, "stock": 50},
         "Peri Peri Fries": {"category": "French Fries", "price": 89.00, "stock": 50},
         "Cheese Fries": {"category": "French Fries", "price": 99.00, "stock": 50},
+        "Paneer Peri Peri Fries": {"category": "French Fries", "price": 189.00, "stock": 50},
         
         # --- Potato Wedges Section ---
         "Potato Wedges": {"category": "Potato Wedges", "price": 89.00, "stock": 50},
@@ -173,11 +184,13 @@ def fetch_fallback_menu():
         "Ice Tea": {"category": "Tea", "price": 79.00, "stock": 50},
         "Green Tea": {"category": "Tea", "price": 59.00, "stock": 50},
         
-        # --- Pasta & Maggiee ---
+        # --- Pasta, Maggiee & Ramen ---
         "White Sauce Pasta": {"category": "Pasta", "price": 139.00, "stock": 50},
         "Red Sauce Pasta": {"category": "Pasta", "price": 119.00, "stock": 50},
         "Dry Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
         "Soupy Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
+        "Ramen Veg": {"category": "Ramen", "price": 169.00, "stock": 50},
+        "Japanese Ramen": {"category": "Ramen", "price": 189.00, "stock": 50},
         
         # --- Sandwich Section ---
         "Veg Sandwich": {"category": "Sandwich", "price": 89.00, "stock": 50},
@@ -210,6 +223,7 @@ def fetch_fallback_menu():
         "Manchow Soup": {"category": "Soup", "price": 99.00, "stock": 50},
         
         "Crispy Sweet Corn Chat": {"category": "Sweet Corn Chart", "price": 99.00, "stock": 50},
+        "Wai Wai Chart": {"category": "Wai Wai Chaat", "price": 89.00, "stock": 50},
         
         # --- Shakes Section ---
         "Chocolate Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
