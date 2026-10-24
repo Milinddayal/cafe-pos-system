@@ -344,7 +344,7 @@ def render_printable_bill(bill_number, cart_items, total_amount, order_time=None
     )
 
 
-def save_or_print_bill(bill_number, cart_items, total_amount, customer_name="Walk-in"):
+def save_or_print_bill(bill_number, cart_items, total_amount):
     existing = (
         supabase.table("orders")
         .select("*")
@@ -355,15 +355,14 @@ def save_or_print_bill(bill_number, cart_items, total_amount, customer_name="Wal
         st.info(f"Bill #{bill_number} is already recorded. Reusing the existing bill.")
         return existing.data[0]
 
-    new_order = {
+    order_data = {
         "bill_number": bill_number,
         "total_amount": float(total_amount),
         "items": str(cart_items),
-        "customer_name": customer_name,
         "payment_status": "Paid",
         "created_at": get_local_time().isoformat()
     }
-    response = supabase.table("orders").insert(new_order).execute()
+    response = supabase.table("orders").insert(order_data).execute()
     if not response.data:
         raise RuntimeError("Supabase did not return the newly saved bill.")
     return response.data[0]
