@@ -167,6 +167,7 @@ def fetch_fallback_menu():
         "Kiwi Crush": {"category": "Mocktails", "price": 129.00, "stock": 50},
         "The Red Call": {"category": "Mocktails", "price": 129.00, "stock": 50},
         "Irris Coffee": {"category": "Mocktails", "price": 139.00, "stock": 50},
+        "The Yellow Call": {"category": "Mocktails", "price": 139.00, "stock": 50},
         "Pineapple Pastry": {"category": "Pastry Section", "price": 69.00, "stock": 50},
         "Black Forest Pastry": {"category": "Pastry Section", "price": 69.00, "stock": 50},
         "Red Velvet Pastry": {"category": "Pastry Section", "price": 69.00, "stock": 50},
