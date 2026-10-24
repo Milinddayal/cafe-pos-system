@@ -135,32 +135,57 @@ def fetch_fallback_menu():
         "Mix Fruit": {"category": "Fresh Juices", "price": 79.00, "stock": 50},
         "Orange": {"category": "Fresh Juices", "price": 119.00, "stock": 50},
         "Pineapple": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
+        
+        # --- Momo Section ---
         "Momo": {"category": "Momo", "price": 79.00, "stock": 50},
         "Fry Momo": {"category": "Momo", "price": 99.00, "stock": 50},
         "Chilli Momo": {"category": "Momo", "price": 119.00, "stock": 50},
+        
+        # --- Hakka Noodles Section ---
+        "Veg Hakka Noodles": {"category": "Hakka Noodles", "price": 99.00, "stock": 50},
+        "Schezwan Hakka Noodles": {"category": "Hakka Noodles", "price": 109.00, "stock": 50},
+        "Chilli Garlic Hakka Noodles": {"category": "Hakka Noodles", "price": 109.00, "stock": 50},
+        "Paneer Hakka Noodles": {"category": "Hakka Noodles", "price": 149.00, "stock": 50},
+        
         "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 50},
+        
+        # --- Snacks Section ---
         "Vada Paw": {"category": "Snacks", "price": 59.00, "stock": 50},
         "Poha": {"category": "Snacks", "price": 69.00, "stock": 50},
+        "Litti Chokha": {"category": "Snacks", "price": 89.00, "stock": 50},
+        
+        # --- Starters Section ---
+        "Babycorn": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Paneer Pakoda": {"category": "Starters", "price": 149.00, "stock": 50},
+        
         # --- French Fries Section ---
         "Fries": {"category": "French Fries", "price": 79.00, "stock": 50},
         "Peri Peri Fries": {"category": "French Fries", "price": 89.00, "stock": 50},
         "Cheese Fries": {"category": "French Fries", "price": 99.00, "stock": 50},
+        
         # --- Potato Wedges Section ---
         "Potato Wedges": {"category": "Potato Wedges", "price": 89.00, "stock": 50},
         "Peri Peri Potato Wedges": {"category": "Potato Wedges", "price": 99.00, "stock": 50},
         "Cheese Potato Wedges": {"category": "Potato Wedges", "price": 109.00, "stock": 50},
+        
         # --- Tea Section ---
         "Masala Tea": {"category": "Tea", "price": 59.00, "stock": 50},
         "Ice Tea": {"category": "Tea", "price": 79.00, "stock": 50},
         "Green Tea": {"category": "Tea", "price": 59.00, "stock": 50},
-        # ----------------------------
+        
+        # --- Pasta & Maggiee ---
         "White Sauce Pasta": {"category": "Pasta", "price": 139.00, "stock": 50},
         "Red Sauce Pasta": {"category": "Pasta", "price": 119.00, "stock": 50},
         "Dry Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
         "Soupy Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
+        
+        # --- Sandwich Section ---
         "Veg Sandwich": {"category": "Sandwich", "price": 89.00, "stock": 50},
         "Cheese Sandwich": {"category": "Sandwich", "price": 109.00, "stock": 50},
         "Paneer Sandwich": {"category": "Sandwich", "price": 119.00, "stock": 50},
+        "Paneer Toast": {"category": "Sandwich", "price": 149.00, "stock": 50},
+        
+        # --- Mocktails Section ---
         "Sip the Lip": {"category": "Mocktails", "price": 139.00, "stock": 50},
         "Green Forest": {"category": "Mocktails", "price": 119.00, "stock": 50},
         "Virgin Mojito": {"category": "Mocktails", "price": 99.00, "stock": 50},
@@ -171,35 +196,50 @@ def fetch_fallback_menu():
         "The Red Call": {"category": "Mocktails", "price": 129.00, "stock": 50},
         "Irris Coffee": {"category": "Mocktails", "price": 139.00, "stock": 50},
         "The Yellow Call": {"category": "Mocktails", "price": 139.00, "stock": 50},
-        "Pineapple Pastry": {"category": "Pastry Section", "price": 69.00, "stock": 50},
-        "Black Forest Pastry": {"category": "Pastry Section", "price": 69.00, "stock": 50},
-        "Red Velvet Pastry": {"category": "Pastry Section", "price": 69.00, "stock": 50},
-        "Chocolate Pastry": {"category": "Pastry Section", "price": 69.00, "stock": 50},
+        
+        # --- Pastry Section ---
+        "Pineapple Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 50},
+        "Black Forest Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 50},
+        "Red Velvet Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 50},
+        "Chocolate Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 50},
+        
+        # --- Soup Section ---
         "Veg Soup": {"category": "Soup", "price": 79.00, "stock": 50},
         "Sweet Corn Soup": {"category": "Soup", "price": 89.00, "stock": 50},
         "Tomato Soup": {"category": "Soup", "price": 89.00, "stock": 50},
         "Manchow Soup": {"category": "Soup", "price": 99.00, "stock": 50},
+        
         "Crispy Sweet Corn Chat": {"category": "Sweet Corn Chart", "price": 99.00, "stock": 50},
+        
+        # --- Shakes Section ---
         "Chocolate Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
         "Strawberry Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
         "Protein Shake": {"category": "Shakes Section", "price": 129.00, "stock": 50},
         "Banana Shake": {"category": "Shakes Section", "price": 89.00, "stock": 50},
         "Sweet Lassi": {"category": "Shakes Section", "price": 79.00, "stock": 50},
+        
+        # --- Ice Cream Section ---
         "Butter Scotch": {"category": "Ice Cream", "price": 79.00, "stock": 50},
         "Vanilla": {"category": "Ice Cream", "price": 79.00, "stock": 50},
         "Chocolate": {"category": "Ice Cream", "price": 79.00, "stock": 50},
         "Strawberry": {"category": "Ice Cream", "price": 79.00, "stock": 50},
         "Kesar Pista": {"category": "Ice Cream", "price": 79.00, "stock": 50},
+        
+        # --- Coffee Section ---
         "Hot Coffee": {"category": "Coffee", "price": 59.00, "stock": 50},
-        "Lavazza Gusto": {"category": "Coffee", "price": 79.00, "stock": 50},
-        "Barista Aroma Intenso": {"category": "Coffee", "price": 79.00, "stock": 50},
-        "Chocolate Coffee": {"category": "Coffee", "price": 79.00, "stock": 50},
+        "Lavazza Gusto": {"category": "Coffee", "price": 89.00, "stock": 50},
+        "Barista Aroma Intenso": {"category": "Coffee", "price": 89.00, "stock": 50},
+        "Chocolate Coffee": {"category": "Coffee", "price": 89.00, "stock": 50},
         "Espresso": {"category": "Coffee", "price": 79.00, "stock": 50},
+        
+        # --- Cold Coffee Section ---
         "Cold Coffee": {"category": "Cold Coffee", "price": 89.00, "stock": 50},
         "Espresso Bitter Cold": {"category": "Cold Coffee", "price": 109.00, "stock": 50},
         "Chocolate Coffee (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
         "Lavazza Gusto (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
         "Barista Aroma Intenso (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
+        
+        # --- Packed Items & Tokens ---
         "Water Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100},
         "Cold Drink Can (Custom MRP)": {"category": "Packed Items", "price": 40.00, "stock": 100},
         "Cold Drink Bottle (Custom MRP)": {"category": "Packed Items", "price": 20.00, "stock": 100},
@@ -207,9 +247,7 @@ def fetch_fallback_menu():
         "Token 1": {"category": "Tokens", "price": 20.00, "stock": 100},
         "Token 2 (₹30)": {"category": "Tokens", "price": 30.00, "stock": 100},
         "Token 2 (₹40)": {"category": "Tokens", "price": 40.00, "stock": 100}
-        
     }
-
 
 def fetch_live_menu(sb: Client):
     menu_items = fetch_menu_items(sb)
