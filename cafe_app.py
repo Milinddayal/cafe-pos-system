@@ -451,7 +451,6 @@ def log_sale(total_amount, payment_mode, cart_items, bill_number):
             "item_name": item['Item'],
             "unit_price": float(item['Price']),
             "quantity": int(item['Qty']),
-            "subtotal": float(item['Total']),
             "status": "Completed",
             "modification_reason": ""
         })
@@ -478,6 +477,15 @@ def load_item_sales_data():
     response = supabase.table("order_items").select("*").execute()
     df = pd.DataFrame(response.data)
     if not df.empty:
+        calculated_subtotal = (
+            pd.to_numeric(df["unit_price"], errors="coerce")
+            * pd.to_numeric(df["quantity"], errors="coerce")
+        )
+        if "subtotal" in df.columns:
+            df["subtotal"] = pd.to_numeric(df["subtotal"], errors="coerce")
+            df["subtotal"] = df["subtotal"].fillna(calculated_subtotal)
+        else:
+            df["subtotal"] = calculated_subtotal
         df['Date'] = pd.to_datetime(df['date'])
         df['Day'] = df['Date'].dt.date
     return df
