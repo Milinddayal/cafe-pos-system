@@ -149,6 +149,7 @@ def fetch_fallback_menu():
         
         # --- Starters Section ---
         "Chilli Paneer Dry": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Mushroom Chilli Dry": {"category": "Starters", "price": 189.00, "stock": 50},
         "Manchurian": {"category": "Starters", "price": 149.00, "stock": 50},
         "Babycorn": {"category": "Starters", "price": 149.00, "stock": 50},
         "Paneer Pakoda": {"category": "Starters", "price": 149.00, "stock": 50},
@@ -889,28 +890,38 @@ if st.sidebar.button("🔄 Refresh Menu & Cache", width="stretch"):
     st.success("Menu cache cleared! Reloading...")
     st.rerun()
 
-with st.sidebar.expander("⚙️ Manage Item Visibility"):
+st.sidebar.title("⚙️ Counter Management")
+st.sidebar.markdown("Toggle items to hide or show them on the live menu.")
+
+with st.sidebar.expander("🛠️ Hide/Show Menu Items"):
     visibility_password = st.text_input(
         "Admin password to manage visibility",
         type="password",
         key="menu_visibility_admin_password",
     )
-    actual_admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
+    visibility_admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
 
-    if visibility_password == actual_admin_password:
+    if visibility_password == visibility_admin_password:
         try:
             all_items_res = (
                 supabase.table("menu_items")
-                .select("id, name, is_active")
+                .select("id, name, category, is_active")
+                .order("category")
                 .execute()
             )
         except Exception as e:
-            st.error(f"Error loading menu visibility settings: {e}")
+            st.sidebar.error(f"Could not load item toggles: {e}")
         else:
             if all_items_res.data:
+                current_category = None
                 for db_item in all_items_res.data:
+                    category = db_item.get("category") or "General"
+                    if category != current_category:
+                        current_category = category
+                        st.sidebar.markdown(f"**📂 {category}**")
+
                     current_status = bool(db_item.get("is_active", True))
-                    new_status = st.checkbox(
+                    new_status = st.sidebar.checkbox(
                         db_item["name"],
                         value=current_status,
                         key=f"toggle_{db_item['id']}",
@@ -924,7 +935,7 @@ with st.sidebar.expander("⚙️ Manage Item Visibility"):
                                 .execute()
                             )
                         except Exception as e:
-                            st.error(
+                            st.sidebar.error(
                                 f"Error updating visibility for "
                                 f"'{db_item['name']}': {e}"
                             )
@@ -932,9 +943,9 @@ with st.sidebar.expander("⚙️ Manage Item Visibility"):
                             fetch_menu_items.clear()
                             st.rerun()
             else:
-                st.info("No menu items found.")
+                st.sidebar.info("No menu items found.")
     elif visibility_password:
-        st.error("Incorrect admin password.")
+        st.sidebar.error("Incorrect admin password.")
 
 # --- WATERMARK BACKGROUND & STYLING CSS ---
 if logo_base64:
