@@ -891,9 +891,9 @@ if st.sidebar.button("🔄 Refresh Menu & Cache", width="stretch"):
     st.rerun()
 
 st.sidebar.title("⚙️ Counter Management")
-st.sidebar.markdown("Toggle items to hide or show them on the live menu.")
+st.sidebar.markdown("Uncheck items to hide them from the public website and live menu.")
 
-with st.sidebar.expander("🛠️ Hide/Show Menu Items"):
+with st.sidebar.expander("🛠️ Hide/Show Menu Items", expanded=True):
     visibility_password = st.text_input(
         "Admin password to manage visibility",
         type="password",

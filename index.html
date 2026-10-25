@@ -247,7 +247,7 @@
 
   async function fetchLiveWebsiteMenu() {
     try {
-      const { data, error } = await sb.from('menu_items').select('*').order('category').order('name');
+      const { data, error } = await sb.from('menu_items').select('*').eq('is_active', true).order('category').order('name');
       if (error) throw error;
 
       document.getElementById('live-sync-status').textContent = "● Live inventory synchronized with POS";
