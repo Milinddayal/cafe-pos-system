@@ -122,7 +122,7 @@ def get_smart_icon(category_name):
 
 @st.cache_data(ttl=300)
 def fetch_menu_items(_sb: Client):
-    response = _sb.table("menu_items").select("*").execute()
+    response = _sb.table("menu_items").select("*").eq("is_active", True).execute()
     return response.data or []
 
 
@@ -265,9 +265,11 @@ def fetch_fallback_menu():
     }
 
 def fetch_live_menu(sb: Client):
-    menu_items = fetch_menu_items(sb)
-    if not menu_items:
-        return fetch_fallback_menu()
+    try:
+        menu_items = fetch_menu_items(sb)
+    except Exception as e:
+        st.error(f"Error loading menu from Supabase: {e}")
+        return {}
 
     live_menu = {}
     for item in menu_items:
@@ -886,6 +888,53 @@ if st.sidebar.button("🔄 Refresh Menu & Cache", width="stretch"):
     st.cache_data.clear()
     st.success("Menu cache cleared! Reloading...")
     st.rerun()
+
+with st.sidebar.expander("⚙️ Manage Item Visibility"):
+    visibility_password = st.text_input(
+        "Admin password to manage visibility",
+        type="password",
+        key="menu_visibility_admin_password",
+    )
+    actual_admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
+
+    if visibility_password == actual_admin_password:
+        try:
+            all_items_res = (
+                supabase.table("menu_items")
+                .select("id, name, is_active")
+                .execute()
+            )
+        except Exception as e:
+            st.error(f"Error loading menu visibility settings: {e}")
+        else:
+            if all_items_res.data:
+                for db_item in all_items_res.data:
+                    current_status = bool(db_item.get("is_active", True))
+                    new_status = st.checkbox(
+                        db_item["name"],
+                        value=current_status,
+                        key=f"toggle_{db_item['id']}",
+                    )
+                    if new_status != current_status:
+                        try:
+                            (
+                                supabase.table("menu_items")
+                                .update({"is_active": new_status})
+                                .eq("id", db_item["id"])
+                                .execute()
+                            )
+                        except Exception as e:
+                            st.error(
+                                f"Error updating visibility for "
+                                f"'{db_item['name']}': {e}"
+                            )
+                        else:
+                            fetch_menu_items.clear()
+                            st.rerun()
+            else:
+                st.info("No menu items found.")
+    elif visibility_password:
+        st.error("Incorrect admin password.")
 
 # --- WATERMARK BACKGROUND & STYLING CSS ---
 if logo_base64:
