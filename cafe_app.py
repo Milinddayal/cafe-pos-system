@@ -191,7 +191,7 @@ def fetch_fallback_menu():
         "Dry Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
         "Soupy Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
         "Ramen Veg": {"category": "Ramen", "price": 169.00, "stock": 50},
-        "Japanese Ramen": {"category": "Ramen", "price": 189.00, "stock": 50},
+        "Japanese Ramen": {"category": "Ramen", "price": 199.00, "stock": 50},
         
         # --- Sandwich Section ---
         "Veg Sandwich": {"category": "Sandwich", "price": 89.00, "stock": 50},
