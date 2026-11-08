@@ -567,9 +567,15 @@ def convert_dfs_to_excel(df_sales, df_items):
     for df in (df_sales, df_items):
         for col in df.columns:
             df[col] = df[col].map(
-                lambda value: str(value)
-                if isinstance(value, (list, dict))
-                else value
+                lambda value: (
+                    value.tz_localize(None)
+                    if isinstance(value, pd.Timestamp) and value.tzinfo is not None
+                    else value.replace(tzinfo=None)
+                    if isinstance(value, datetime) and value.tzinfo is not None
+                    else str(value)
+                    if isinstance(value, (list, dict))
+                    else value
+                )
             )
 
     output = BytesIO()
