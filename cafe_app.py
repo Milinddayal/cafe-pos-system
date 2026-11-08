@@ -129,13 +129,14 @@ def fetch_menu_items(_sb: Client):
 # --- HARDCODED ROBUST MENU FALLBACK ---
 def fetch_fallback_menu():
     return {
+       # --- Fresh Juices Section ---
+        "Small Juice": {"category": "Fresh Juices", "price": 49.00, "stock": 50},
         "Pomegranate": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
         "Malta": {"category": "Fresh Juices", "price": 119.00, "stock": 50},
         "Mosambi": {"category": "Fresh Juices", "price": 79.00, "stock": 50},
         "Mix Fruit": {"category": "Fresh Juices", "price": 79.00, "stock": 50},
         "Orange": {"category": "Fresh Juices", "price": 119.00, "stock": 50},
         "Pineapple": {"category": "Fresh Juices", "price": 99.00, "stock": 50},
-        
         # --- Momo Section ---
         "Momo": {"category": "Momo", "price": 79.00, "stock": 50},
         "Fry Momo": {"category": "Momo", "price": 99.00, "stock": 50},
@@ -200,6 +201,7 @@ def fetch_fallback_menu():
         "Paneer Toast": {"category": "Sandwich", "price": 149.00, "stock": 50},
         
         # --- Mocktails Section ---
+        "Watermelon": {"category": "Mocktails", "price": 149.00, "stock": 50},
         "Sip the Lip": {"category": "Mocktails", "price": 139.00, "stock": 50},
         "Green Forest": {"category": "Mocktails", "price": 119.00, "stock": 50},
         "Virgin Mojito": {"category": "Mocktails", "price": 99.00, "stock": 50},
@@ -210,7 +212,6 @@ def fetch_fallback_menu():
         "The Red Call": {"category": "Mocktails", "price": 129.00, "stock": 50},
         "Irris Coffee": {"category": "Mocktails", "price": 139.00, "stock": 50},
         "The Yellow Call": {"category": "Mocktails", "price": 139.00, "stock": 50},
-        
         # --- Pastry Section ---
         "Pineapple Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 50},
         "Black Forest Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 50},
@@ -527,11 +528,20 @@ def log_sale(total_amount, payment_mode, cart_items, bill_number):
     return order_date
 
 def load_sales_data():
-    response = supabase.table("sales").select("*").execute()
-    df = pd.DataFrame(response.data)
-    if not df.empty:
-        df['Date'] = pd.to_datetime(df['date'])
-    return df
+    try:
+        response = supabase.table("orders").select("*").execute()
+        df = pd.DataFrame(response.data)
+        if not df.empty:
+            if "total_amount" not in df.columns or "created_at" not in df.columns:
+                raise ValueError(
+                    "Orders must include total_amount and created_at fields."
+                )
+            df["total"] = pd.to_numeric(df["total_amount"], errors="raise")
+            df["Date"] = pd.to_datetime(df["created_at"])
+        return df
+    except Exception as e:
+        st.error(f"Error loading sales data: {e}")
+        return pd.DataFrame()
 
 def load_item_sales_data():
     response = supabase.table("order_items").select("*").execute()
@@ -1606,18 +1616,26 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
             if df_sales.empty:
                 st.warning("No sales recorded yet across cloud counters.")
             else:
-                payment_summary = df_sales.groupby('payment_mode')['total'].sum().to_dict()
-                cash_total = payment_summary.get('Cash', 0.0)
-                upi_total = payment_summary.get('UPI QR', 0.0)
-                card_total = payment_summary.get('Card', 0.0)
                 overall_total = df_sales['total'].sum()
 
-                st.markdown("### *💰 Revenue Breakdown by Payment Mode*")
-                pm1, pm2, pm3, pm4 = st.columns(4)
-                pm1.metric("💵 Cash", f"₹{cash_total:,.2f}")
-                pm2.metric("📱 UPI", f"₹{upi_total:,.2f}")
-                pm3.metric("💳 Card", f"₹{card_total:,.2f}")
-                pm4.metric("🌟 Total", f"₹{overall_total:,.2f}")
+                if 'payment_mode' in df_sales.columns:
+                    payment_summary = (
+                        df_sales.groupby('payment_mode')['total'].sum().to_dict()
+                    )
+                    cash_total = payment_summary.get('Cash', 0.0)
+                    upi_total = payment_summary.get('UPI QR', 0.0)
+                    card_total = payment_summary.get('Card', 0.0)
+
+                    st.markdown("### *💰 Revenue Breakdown by Payment Mode*")
+                    pm1, pm2, pm3, pm4 = st.columns(4)
+                    pm1.metric("💵 Cash", f"₹{cash_total:,.2f}")
+                    pm2.metric("📱 UPI", f"₹{upi_total:,.2f}")
+                    pm3.metric("💳 Card", f"₹{card_total:,.2f}")
+                    pm4.metric("🌟 Total", f"₹{overall_total:,.2f}")
+                else:
+                    st.markdown("### *💰 Total Revenue*")
+                    st.metric("🌟 Total", f"₹{overall_total:,.2f}")
+                    st.info("Payment-mode totals are unavailable in the orders table.")
                 
                 st.divider()
 
