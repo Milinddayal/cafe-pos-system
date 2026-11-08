@@ -561,10 +561,21 @@ def load_item_sales_data():
     return df
 
 def convert_dfs_to_excel(df_sales, df_items):
+    df_sales = df_sales.copy()
+    df_items = df_items.copy()
+
+    for df in (df_sales, df_items):
+        for col in df.columns:
+            df[col] = df[col].map(
+                lambda value: str(value)
+                if isinstance(value, (list, dict))
+                else value
+            )
+
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df_sales.to_excel(writer, index=False, sheet_name='Revenue Summary')
-        df_items.to_excel(writer, index=False, sheet_name='Item Wise Sales')
+        df_items.to_excel(writer, index=False, sheet_name='Menu Stock')
     return output.getvalue()
 
 
