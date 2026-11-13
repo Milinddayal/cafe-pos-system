@@ -56,11 +56,11 @@
   
   .items-container { width: 100%; display: flex; flex-direction: column; gap: 1.5vh; }
   .item-row { 
-    display: flex; justify-content: space-between; align-items: center; 
+    display: flex; justify-content: space-between; align-items: center; gap: 1vw;
     border-bottom: 0.15vw dashed rgba(51,63,32,0.2); padding-bottom: 0.5vh; width: 100%;
   }
-  .item-name { flex-grow: 1; text-align: left; padding-right: 15px; font-size: 2.8vw; font-weight: 800 !important; color: #2B2822; }
-  .item-price { white-space: nowrap; text-align: right; font-size: 3.2vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
+  .item-name { flex: 1 1 0; min-width: 0; text-align: left; padding-right: 15px; font-size: 2.8vw; font-weight: 800 !important; color: #2B2822; }
+  .item-price { flex: 0 0 auto; white-space: nowrap; text-align: right; font-size: 3.2vw; font-family: 'Cormorant Garamond', serif; font-weight: 800 !important; color: #BD5B34; }
   .price-divider { color: rgba(43,40,34,0.4); margin: 0 1vw; font-weight: 400; font-family: 'Jost', sans-serif; font-size: 2.5vw;}
 </style>
 </head>
