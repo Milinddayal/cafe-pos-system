@@ -143,19 +143,20 @@ def fetch_fallback_menu():
         "Chilli Momo": {"category": "Momo", "price": 119.00, "stock": 50},
         
         # --- Hakka Noodles Section ---
-        "Veg Hakka Noodles": {"category": "Hakka Noodles", "price": 99.00, "stock": 50},
-        "Schezwan Hakka Noodles": {"category": "Hakka Noodles", "price": 109.00, "stock": 50},
-        "Chilli Garlic Hakka Noodles": {"category": "Hakka Noodles", "price": 109.00, "stock": 50},
-        "Paneer Hakka Noodles": {"category": "Hakka Noodles", "price": 149.00, "stock": 50},
+        "Veg Hakka Noodles": {"category": "Hakka Noodles", "price": 119.00, "stock": 50},
+        "Schezwan Hakka Noodles": {"category": "Hakka Noodles", "price": 129.00, "stock": 50},
+        "Chilli Garlic Hakka Noodles": {"category": "Hakka Noodles", "price": 129.00, "stock": 50},
+        "Paneer Hakka Noodles": {"category": "Hakka Noodles", "price": 159.00, "stock": 50},
+        "Mix Noodles": {"category": "Hakka Noodles", "price": 219.00, "stock": 200},
         
         # --- Starters Section ---
-        "Chilli Paneer Dry": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Chilli Paneer Dry": {"category": "Starters", "price": 189.00, "stock": 50},
         "Mushroom Chilli Dry": {"category": "Starters", "price": 189.00, "stock": 50},
         "Veg Manchurian": {"category": "Starters", "price": 149.00, "stock": 50},
-        "Babycorn": {"category": "Starters", "price": 179.00, "stock": 50},
+        "Babycorn": {"category": "Starters", "price": 189.00, "stock": 50},
         "Paneer Pakoda": {"category": "Starters", "price": 149.00, "stock": 50},
-        "Chilli Potato": {"category": "Starters", "price": 129.00, "stock": 50},
-        "Honey Chilli Potato": {"category": "Starters", "price": 149.00, "stock": 50},
+        "Chilli Potato": {"category": "Starters", "price": 159.00, "stock": 50},
+        "Honey Chilli Potato": {"category": "Starters", "price": 179.00, "stock": 50},
         
         "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 50},
         
@@ -171,15 +172,15 @@ def fetch_fallback_menu():
         "Veg Schezwan Paneer Roll": {"category": "Rolls", "price": 149.00, "stock": 50},
         
         # --- French Fries Section ---
-        "Fries": {"category": "French Fries", "price": 79.00, "stock": 50},
-        "Peri Peri Fries": {"category": "French Fries", "price": 89.00, "stock": 50},
-        "Cheese Fries": {"category": "French Fries", "price": 99.00, "stock": 50},
-        "Paneer Peri Peri Fries": {"category": "French Fries", "price": 189.00, "stock": 50},
+        "Fries": {"category": "French Fries", "price": 99.00, "stock": 50},
+        "Peri Peri Fries": {"category": "French Fries", "price": 119.00, "stock": 50},
+        "Cheese Fries": {"category": "French Fries", "price": 129.00, "stock": 50},
+        "Paneer Peri Peri Fries": {"category": "French Fries", "price": 129.00, "stock": 50},
         
         # --- Potato Wedges Section ---
-        "Potato Wedges": {"category": "Potato Wedges", "price": 89.00, "stock": 50},
-        "Peri Peri Potato Wedges": {"category": "Potato Wedges", "price": 99.00, "stock": 50},
-        "Cheese Potato Wedges": {"category": "Potato Wedges", "price": 109.00, "stock": 50},
+        "Potato Wedges": {"category": "Potato Wedges", "price": 99.00, "stock": 50},
+        "Peri Peri Potato Wedges": {"category": "Potato Wedges", "price": 129.00, "stock": 50},
+        "Cheese Potato Wedges": {"category": "Potato Wedges", "price": 129.00, "stock": 50},
         
         # --- Tea Section ---
         "Masala Tea": {"category": "Tea", "price": 59.00, "stock": 50},
@@ -187,18 +188,26 @@ def fetch_fallback_menu():
         "Green Tea": {"category": "Tea", "price": 59.00, "stock": 50},
         
         # --- Pasta, Maggiee & Ramen ---
-        "White Sauce Pasta": {"category": "Pasta", "price": 139.00, "stock": 50},
-        "Red Sauce Pasta": {"category": "Pasta", "price": 119.00, "stock": 50},
+        "White Sauce Pasta": {"category": "Pasta", "price": 189.00, "stock": 50},
+        "Red Sauce Pasta": {"category": "Pasta", "price": 169.00, "stock": 50},
         "Dry Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
         "Soupy Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 50},
         "Ramen Veg": {"category": "Ramen", "price": 169.00, "stock": 50},
         "Japanese Ramen": {"category": "Ramen", "price": 199.00, "stock": 50},
         
         # --- Sandwich Section ---
-        "Veg Sandwich": {"category": "Sandwich", "price": 89.00, "stock": 50},
-        "Cheese Sandwich": {"category": "Sandwich", "price": 109.00, "stock": 50},
-        "Paneer Sandwich": {"category": "Sandwich", "price": 119.00, "stock": 50},
+        "Veg Sandwich": {"category": "Sandwich", "price": 99.00, "stock": 50},
+        "Cheese Sandwich": {"category": "Sandwich", "price": 119.00, "stock": 50},
+        "Paneer Sandwich": {"category": "Sandwich", "price": 139.00, "stock": 50},
         "Paneer Toast": {"category": "Sandwich", "price": 149.00, "stock": 50},
+        "Paneer Tikka Sandwich": {"category": "Sandwich", "price": 149.00, "stock": 200},
+
+        # --- Rice Section ---
+        "Veg Fried Rice": {"category": "Rice", "price": 189.00, "stock": 200},
+        "Paneer Fried Rice": {"category": "Rice", "price": 219.00, "stock": 200},
+
+        # --- Combos Section ---
+        "Laccha Paratha & Chilli Paneer Combo": {"category": "Combos", "price": 359.00, "stock": 200},
         
         # --- Mocktails Section ---
         "Watermelon": {"category": "Mocktails", "price": 149.00, "stock": 50},
@@ -219,20 +228,24 @@ def fetch_fallback_menu():
         "Chocolate Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 50},
         
         # --- Soup Section ---
-        "Veg Soup": {"category": "Soup", "price": 79.00, "stock": 50},
-        "Sweet Corn Soup": {"category": "Soup", "price": 89.00, "stock": 50},
-        "Tomato Soup": {"category": "Soup", "price": 89.00, "stock": 50},
-        "Manchow Soup": {"category": "Soup", "price": 99.00, "stock": 50},
+        "Veg Soup": {"category": "Soup", "price": 99.00, "stock": 50},
+        "Sweet Corn Soup": {"category": "Soup", "price": 119.00, "stock": 50},
+        "Tomato Soup": {"category": "Soup", "price": 99.00, "stock": 50},
+        "Manchow Soup": {"category": "Soup", "price": 139.00, "stock": 50},
+        "Veg Hot and Sour Soup": {"category": "Soup", "price": 99.00, "stock": 200},
+
+        # --- Salad Section ---
+        "Green Salad": {"category": "Salad", "price": 99.00, "stock": 200},
         
-        "Crispy Sweet Corn Chat": {"category": "Sweet Corn Chart", "price": 99.00, "stock": 50},
+        "Crispy Sweet Corn Chat": {"category": "Sweet Corn Chart", "price": 129.00, "stock": 50},
         "Wai Wai Chart": {"category": "Wai Wai Chaat", "price": 89.00, "stock": 50},
         
         # --- Shakes Section ---
-        "Chocolate Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
-        "Strawberry Shake": {"category": "Shakes Section", "price": 99.00, "stock": 50},
-        "Oreo Shake": {"category": "Shakes Section", "price": 119.00, "stock": 50},
+        "Chocolate Shake": {"category": "Shakes Section", "price": 129.00, "stock": 50},
+        "Strawberry Shake": {"category": "Shakes Section", "price": 129.00, "stock": 50},
+        "Oreo Shake": {"category": "Shakes Section", "price": 139.00, "stock": 50},
         "Protein Shake": {"category": "Shakes Section", "price": 129.00, "stock": 50},
-        "Banana Shake": {"category": "Shakes Section", "price": 89.00, "stock": 50},
+        "Banana Shake": {"category": "Shakes Section", "price": 119.00, "stock": 50},
         "Sweet Lassi": {"category": "Shakes Section", "price": 79.00, "stock": 50},
         
         # --- Ice Cream Section ---
@@ -250,7 +263,7 @@ def fetch_fallback_menu():
         "Espresso": {"category": "Coffee", "price": 79.00, "stock": 50},
         
         # --- Cold Coffee Section ---
-        "Cold Coffee": {"category": "Cold Coffee", "price": 89.00, "stock": 50},
+        "Cold Coffee": {"category": "Cold Coffee", "price": 99.00, "stock": 50},
         "Espresso Bitter Cold": {"category": "Cold Coffee", "price": 109.00, "stock": 50},
         "Chocolate Coffee (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
         "Lavazza Gusto (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 50},
