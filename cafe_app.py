@@ -129,16 +129,7 @@ def fetch_menu_items(_sb: Client):
 # --- HARDCODED ROBUST MENU FALLBACK ---
 def fetch_fallback_menu():
     return {
-        # --- Combos Section ---
-        "Laccha Paratha & Chilli Paneer Combo": {"category": "Combos", "price": 359.00, "stock": 200},
-        "Fried Rice & Manchurian Combo": {"category": "Combos", "price": 249.00, "stock": 200},
-
-        # --- Rice Section ---
-        "Veg Fried Rice": {"category": "Rice", "price": 189.00, "stock": 200},
-        "Paneer Fried Rice": {"category": "Rice", "price": 219.00, "stock": 200},
-        "Veg Schezwan Fried Rice": {"category": "Rice", "price": 199.00, "stock": 200},
-
-       # --- Fresh Juices Section ---
+        # --- Fresh Juices Section ---
         "Small Juice": {"category": "Fresh Juices", "price": 49.00, "stock": 200},
         "Pomegranate": {"category": "Fresh Juices", "price": 99.00, "stock": 200},
         "Malta": {"category": "Fresh Juices", "price": 119.00, "stock": 200},
@@ -286,7 +277,10 @@ def fetch_live_menu(sb: Client):
         menu_items = fetch_menu_items(sb)
     except Exception as e:
         st.error(f"Error loading menu from Supabase: {e}")
-        return {}
+        return fetch_fallback_menu()
+
+    if not menu_items:
+        return fetch_fallback_menu()
 
     live_menu = {}
     for item in menu_items:
