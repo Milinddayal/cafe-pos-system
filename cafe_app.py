@@ -151,6 +151,7 @@ def fetch_fallback_menu():
         
         # --- Starters Section ---
         "Chilli Paneer Dry": {"category": "Starters", "price": 189.00, "stock": 200},
+        "Paneer 65": {"category": "Starters", "price": 199.00, "stock": 200},
         "Mushroom Chilli Dry": {"category": "Starters", "price": 189.00, "stock": 200},
         "Veg Manchurian": {"category": "Starters", "price": 149.00, "stock": 200},
         "Babycorn": {"category": "Starters", "price": 189.00, "stock": 200},
