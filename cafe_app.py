@@ -156,6 +156,7 @@ def fetch_fallback_menu():
         "Veg Manchurian": {"category": "Starters", "price": 149.00, "stock": 200},
         "Babycorn": {"category": "Starters", "price": 189.00, "stock": 200},
         "Paneer Pakoda": {"category": "Starters", "price": 149.00, "stock": 200},
+        "Theet Paneer": {"category": "Starters", "price": 219.00, "stock": 200},
         "Chilli Potato": {"category": "Starters", "price": 159.00, "stock": 200},
         "Honey Chilli Potato": {"category": "Starters", "price": 179.00, "stock": 200},
         
@@ -259,6 +260,7 @@ def fetch_fallback_menu():
         # --- Cold Coffee Section ---
         "Cold Coffee": {"category": "Cold Coffee", "price": 99.00, "stock": 200},
         "Espresso Bitter Cold": {"category": "Cold Coffee", "price": 109.00, "stock": 200},
+        "Honey Ice Americano": {"category": "Cold Coffee", "price": 149.00, "stock": 200},
         "Chocolate Coffee (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 200},
         "Lavazza Gusto (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 200},
         "Barista Aroma Intenso (Cold)": {"category": "Cold Coffee", "price": 129.00, "stock": 200},
