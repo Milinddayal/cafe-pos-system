@@ -200,6 +200,7 @@ def fetch_fallback_menu():
         # --- Pasta, Maggiee & Ramen ---
         "White Sauce Pasta": {"category": "Pasta", "price": 189.00, "stock": 200},
         "Red Sauce Pasta": {"category": "Pasta", "price": 169.00, "stock": 200},
+        "Home Style Pasta": {"category": "Pasta", "price": 149.00, "stock": 200},
         "Dry Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 200},
         "Soupy Maggiee": {"category": "Maggiee", "price": 99.00, "stock": 200},
         "Ramen Veg": {"category": "Ramen", "price": 169.00, "stock": 200},
