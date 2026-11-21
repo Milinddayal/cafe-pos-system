@@ -75,6 +75,14 @@ MENU_ITEMS = {
         "Green Forest": 129.00,
         "Ocean Rain": 129.00,
     },
+    "Starters": {
+        "Potato Cheese Ball": 199.00,
+        "Paneer Honey Chilli": 229.00,
+    },
+    "Meals": {
+        "Protein Oats Meal": 299.00,
+        "Oats Meal": 199.00,
+    },
     "Cold Brews": {
         "Hard Rock": 110.00,
         "Brew Ice": 99.00,

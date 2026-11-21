@@ -115,7 +115,9 @@ def get_smart_icon(category_name):
         "Warm Coffee": "☕",
         "Cold Brews": "🧊",
         "Mocktails": "🍹",
-        "Fresh Juices": "🧃"
+        "Fresh Juices": "🧃",
+        "Starters": "🥟",
+        "Meals": "🥣"
     }
     # Returns a default plate icon if the category isn't found, preventing crashes!
     return icons.get(category_name, "🍽️")
@@ -159,6 +161,12 @@ def fetch_fallback_menu():
         "Theet Paneer": {"category": "Starters", "price": 219.00, "stock": 200},
         "Chilli Potato": {"category": "Starters", "price": 159.00, "stock": 200},
         "Honey Chilli Potato": {"category": "Starters", "price": 179.00, "stock": 200},
+        "Potato Cheese Ball": {"category": "Starters", "price": 199.00, "stock": 200},
+        "Paneer Honey Chilli": {"category": "Starters", "price": 229.00, "stock": 200},
+
+        # --- Meals Section ---
+        "Protein Oats Meal": {"category": "Meals", "price": 299.00, "stock": 200},
+        "Oats Meal": {"category": "Meals", "price": 199.00, "stock": 200},
         
         "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 200},
         
@@ -177,7 +185,7 @@ def fetch_fallback_menu():
         "Fries": {"category": "French Fries", "price": 99.00, "stock": 200},
         "Peri Peri Fries": {"category": "French Fries", "price": 119.00, "stock": 200},
         "Cheese Fries": {"category": "French Fries", "price": 129.00, "stock": 200},
-        "Paneer Peri Peri Fries": {"category": "French Fries", "price": 129.00, "stock": 200},
+        "Paneer Peri Peri Fries": {"category": "French Fries", "price": 169.00, "stock": 200},
         
         # --- Potato Wedges Section ---
         "Potato Wedges": {"category": "Potato Wedges", "price": 99.00, "stock": 200},
