@@ -168,7 +168,7 @@ def fetch_fallback_menu():
         "Protein Oats Meal": {"category": "Meals", "price": 299.00, "stock": 200},
         "Oats Meal": {"category": "Meals", "price": 199.00, "stock": 200},
         
-        "Fruit Chart": {"category": "Fruit Chart", "price": 69.00, "stock": 200},
+        "Fruit Chart": {"category": "Fruit Chart", "price": 129.00, "stock": 200},
         
         # --- Snacks Section ---
         "Vada Paw": {"category": "Snacks", "price": 59.00, "stock": 200},
