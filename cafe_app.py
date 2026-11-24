@@ -225,6 +225,11 @@ def fetch_fallback_menu():
         "The Red Call": {"category": "Mocktails", "price": 129.00, "stock": 200},
         "Irris Coffee": {"category": "Mocktails", "price": 139.00, "stock": 200},
         "The Yellow Call": {"category": "Mocktails", "price": 139.00, "stock": 200},
+        "Mango Crush": {"category": "Mocktails", "price": 149.00, "stock": 200},
+        "Guava Crush": {"category": "Mocktails", "price": 149.00, "stock": 200},
+        "Strawberry Crush": {"category": "Mocktails", "price": 149.00, "stock": 200},
+        "Blueberry Crush": {"category": "Mocktails", "price": 149.00, "stock": 200},
+        "Black Call the Khatta": {"category": "Mocktails", "price": 149.00, "stock": 200},
         # --- Pastry Section ---
         "Pineapple Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 200},
         "Black Forest Pastry": {"category": "Pastry Section", "price": 59.00, "stock": 200},
