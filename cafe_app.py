@@ -553,10 +553,27 @@ def log_sale(total_amount, payment_mode, cart_items, bill_number):
 
     return order_date
 
+def load_all_table_rows(table_name, page_size=1000):
+    rows = []
+    offset = 0
+    while True:
+        response = (
+            supabase.table(table_name)
+            .select("*")
+            .order("id")
+            .range(offset, offset + page_size - 1)
+            .execute()
+        )
+        page = response.data or []
+        rows.extend(page)
+        if len(page) < page_size:
+            return rows
+        offset += page_size
+
+
 def load_sales_data():
     try:
-        response = supabase.table("orders").select("*").execute()
-        df = pd.DataFrame(response.data)
+        df = pd.DataFrame(load_all_table_rows("orders"))
         if not df.empty:
             if "total_amount" not in df.columns or "created_at" not in df.columns:
                 raise ValueError(
@@ -570,8 +587,7 @@ def load_sales_data():
         return pd.DataFrame()
 
 def load_item_sales_data():
-    response = supabase.table("order_items").select("*").execute()
-    df = pd.DataFrame(response.data)
+    df = pd.DataFrame(load_all_table_rows("order_items"))
     if not df.empty:
         calculated_subtotal = (
             pd.to_numeric(df["unit_price"], errors="coerce")
@@ -1682,7 +1698,6 @@ elif st.session_state.active_portal == "🔑 Admin Management Login":
                 
                 st.divider()
 
-                st.markdown("### *📋 Daily Itemized Sales Report*")
                 if not df_items.empty:
                     valid_items = df_items[df_items['status'] != "Refunded & Closed"]
                     available_days = sorted(valid_items['Day'].astype(str).unique(), reverse=True)
