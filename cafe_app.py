@@ -161,6 +161,7 @@ def fetch_fallback_menu():
         "Theet Paneer": {"category": "Starters", "price": 219.00, "stock": 200},
         "Chilli Potato": {"category": "Starters", "price": 159.00, "stock": 200},
         "Honey Chilli Potato": {"category": "Starters", "price": 179.00, "stock": 200},
+        "Paneer Manchurian": {"category": "Starters", "price": 219.00, "stock": 200},
         "Potato Cheese Ball": {"category": "Starters", "price": 199.00, "stock": 200},
         "Paneer Honey Chilli": {"category": "Starters", "price": 229.00, "stock": 200},
 
